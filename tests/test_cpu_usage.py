@@ -187,7 +187,7 @@ def main():
                 print(f"  - {issue}")
 
         # Save sample for debugging
-        sample_file = Path(f"/tmp/cmux_cpu_test_sample_{pid}.txt")
+        sample_file = Path(f"/tmp/gmux_cpu_test_sample_{pid}.txt")
         sample_file.write_text(sample_output)
         print(f"\nFull sample saved to: {sample_file}")
 

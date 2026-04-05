@@ -3953,7 +3953,7 @@ final class WorkspaceRemoteSessionController {
         bootstrapRemoteTTYFetchInFlight = true
         defer { bootstrapRemoteTTYFetchInFlight = false }
 
-        let command = "sh -c \(Self.shellSingleQuoted("tty_path=\"$HOME/.cmux/relay/\(relayPort).tty\"; if [ -r \"$tty_path\" ]; then cat \"$tty_path\"; fi"))"
+        let command = "sh -c \(Self.shellSingleQuoted("tty_path=\"$HOME/.gmux/relay/\(relayPort).tty\"; if [ -r \"$tty_path\" ]; then cat \"$tty_path\"; fi"))"
         do {
             let result = try sshExec(
                 arguments: sshCommonArguments(batchMode: true) + [configuration.destination, command],
@@ -4395,11 +4395,11 @@ final class WorkspaceRemoteSessionController {
     static func remoteRelayMetadataCleanupScript(relayPort: Int) -> String {
         """
         relay_socket='127.0.0.1:\(relayPort)'
-        socket_addr_file="$HOME/.cmux/socket_addr"
+        socket_addr_file="$HOME/.gmux/socket_addr"
         if [ -r "$socket_addr_file" ] && [ "$(tr -d '\\r\\n' < "$socket_addr_file")" = "$relay_socket" ]; then
           rm -f "$socket_addr_file"
         fi
-        rm -f "$HOME/.cmux/relay/\(relayPort).auth" "$HOME/.cmux/relay/\(relayPort).daemon_path" "$HOME/.cmux/relay/\(relayPort).tty"
+        rm -f "$HOME/.gmux/relay/\(relayPort).auth" "$HOME/.gmux/relay/\(relayPort).daemon_path" "$HOME/.gmux/relay/\(relayPort).tty"
         """
     }
 
@@ -4419,7 +4419,7 @@ final class WorkspaceRemoteSessionController {
           armv7l) cmux_go_arch=arm ;;
           *) exit 71 ;;
         esac
-        cmux_remote_path="$HOME/.cmux/bin/cmuxd-remote/\(version)/${cmux_go_os}-${cmux_go_arch}/cmuxd-remote"
+        cmux_remote_path="$HOME/.gmux/bin/cmuxd-remote/\(version)/${cmux_go_os}-${cmux_go_arch}/cmuxd-remote"
         if [ -x "$cmux_remote_path" ]; then
           printf '%syes\\n' '\(Self.remotePlatformProbeExistsMarker)'
         else
@@ -4816,7 +4816,7 @@ final class WorkspaceRemoteSessionController {
     static func remoteDropPath(for fileURL: URL, uuid: UUID = UUID()) -> String {
         let extensionSuffix = fileURL.pathExtension.trimmingCharacters(in: .whitespacesAndNewlines)
         let lowercasedSuffix = extensionSuffix.isEmpty ? "" : ".\(extensionSuffix.lowercased())"
-        return "/tmp/cmux-drop-\(uuid.uuidString.lowercased())\(lowercasedSuffix)"
+        return "/tmp/gmux-drop-\(uuid.uuidString.lowercased())\(lowercasedSuffix)"
     }
 
     private func cleanupUploadedRemotePaths(_ remotePaths: [String]) {
@@ -4935,15 +4935,15 @@ final class WorkspaceRemoteSessionController {
         #!/bin/sh
         set -eu
 
-        daemon="$HOME/.cmux/bin/cmuxd-remote-current"
+        daemon="$HOME/.gmux/bin/cmuxd-remote-current"
         socket_path="${CMUX_SOCKET_PATH:-}"
-        if [ -z "$socket_path" ] && [ -r "$HOME/.cmux/socket_addr" ]; then
-          socket_path="$(tr -d '\\r\\n' < "$HOME/.cmux/socket_addr")"
+        if [ -z "$socket_path" ] && [ -r "$HOME/.gmux/socket_addr" ]; then
+          socket_path="$(tr -d '\\r\\n' < "$HOME/.gmux/socket_addr")"
         fi
 
         if [ -n "$socket_path" ] && [ "${socket_path#/}" = "$socket_path" ] && [ "${socket_path#*:}" != "$socket_path" ]; then
           relay_port="${socket_path##*:}"
-          relay_map="$HOME/.cmux/relay/${relay_port}.daemon_path"
+          relay_map="$HOME/.gmux/relay/${relay_port}.daemon_path"
           if [ -r "$relay_map" ]; then
             mapped_daemon="$(tr -d '\\r\\n' < "$relay_map")"
             if [ -n "$mapped_daemon" ] && [ -x "$mapped_daemon" ]; then
@@ -4959,14 +4959,14 @@ final class WorkspaceRemoteSessionController {
     static func remoteCLIWrapperInstallScript(daemonRemotePath: String) -> String {
         let trimmedRemotePath = daemonRemotePath.trimmingCharacters(in: .whitespacesAndNewlines)
         return """
-        mkdir -p "$HOME/.cmux/bin" "$HOME/.cmux/relay"
-        ln -sf "$HOME/\(trimmedRemotePath)" "$HOME/.cmux/bin/cmuxd-remote-current"
-        wrapper_tmp="$HOME/.cmux/bin/.cmux-wrapper.tmp.$$"
+        mkdir -p "$HOME/.gmux/bin" "$HOME/.gmux/relay"
+        ln -sf "$HOME/\(trimmedRemotePath)" "$HOME/.gmux/bin/cmuxd-remote-current"
+        wrapper_tmp="$HOME/.gmux/bin/.gmux-wrapper.tmp.$$"
         cat > "$wrapper_tmp" <<'CMUXWRAPPER'
         \(remoteCLIWrapperScript())
         CMUXWRAPPER
         chmod 755 "$wrapper_tmp"
-        mv -f "$wrapper_tmp" "$HOME/.cmux/bin/cmux"
+        mv -f "$wrapper_tmp" "$HOME/.gmux/bin/gmux"
         """
     }
 
@@ -4982,15 +4982,15 @@ final class WorkspaceRemoteSessionController {
         """
         return """
         umask 077
-        mkdir -p "$HOME/.cmux" "$HOME/.cmux/relay"
-        chmod 700 "$HOME/.cmux/relay"
+        mkdir -p "$HOME/.gmux" "$HOME/.gmux/relay"
+        chmod 700 "$HOME/.gmux/relay"
         \(remoteCLIWrapperInstallScript(daemonRemotePath: trimmedRemotePath))
-        printf '%s' "$HOME/\(trimmedRemotePath)" > "$HOME/.cmux/relay/\(relayPort).daemon_path"
-        cat > "$HOME/.cmux/relay/\(relayPort).auth" <<'CMUXRELAYAUTH'
+        printf '%s' "$HOME/\(trimmedRemotePath)" > "$HOME/.gmux/relay/\(relayPort).daemon_path"
+        cat > "$HOME/.gmux/relay/\(relayPort).auth" <<'CMUXRELAYAUTH'
         \(authPayload)
         CMUXRELAYAUTH
-        chmod 600 "$HOME/.cmux/relay/\(relayPort).auth"
-        printf '%s' '127.0.0.1:\(relayPort)' > "$HOME/.cmux/socket_addr"
+        chmod 600 "$HOME/.gmux/relay/\(relayPort).auth"
+        printf '%s' '127.0.0.1:\(relayPort)' > "$HOME/.gmux/socket_addr"
         """
     }
 
@@ -5077,7 +5077,7 @@ final class WorkspaceRemoteSessionController {
     }
 
     private static func remoteDaemonPath(version: String, goOS: String, goArch: String) -> String {
-        ".cmux/bin/cmuxd-remote/\(version)/\(goOS)-\(goArch)/cmuxd-remote"
+        ".gmux/bin/cmuxd-remote/\(version)/\(goOS)-\(goArch)/cmuxd-remote"
     }
 
     static func orphanedCMUXRemoteSSHPIDs(

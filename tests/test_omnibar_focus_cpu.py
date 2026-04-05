@@ -164,7 +164,7 @@ def main() -> int:
             sample_text = sample.stdout + sample.stderr
             if "updateNSView" in sample_text or "makeFirstResponder" in sample_text:
                 print("  Confirmed: sample shows updateNSView / makeFirstResponder loop")
-            sample_path = f"/tmp/cmux_omnibar_focus_cpu_{pid}.txt"
+            sample_path = f"/tmp/gmux_omnibar_focus_cpu_{pid}.txt"
             with open(sample_path, "w") as f:
                 f.write(sample_text)
             print(f"  Sample saved to {sample_path}")

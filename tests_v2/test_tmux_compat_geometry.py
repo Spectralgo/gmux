@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cmux import cmux, cmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/cmux-debug.sock")
+SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/gmux-debug.sock")
 
 
 def _must(cond: bool, msg: str) -> None:
@@ -37,12 +37,12 @@ def _find_cli_binary() -> str:
         return env_cli
 
     candidates = glob.glob(os.path.expanduser(
-        "~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/cmux"
+        "~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/gmux"
     ), recursive=True)
-    candidates += glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux")
+    candidates += glob.glob("/tmp/gmux-*/Build/Products/Debug/gmux")
     candidates = [p for p in candidates if os.path.isfile(p) and os.access(p, os.X_OK)]
     if not candidates:
-        raise cmuxError("Could not locate cmux CLI binary; set CMUXTERM_CLI")
+        raise cmuxError("Could not locate gmux CLI binary; set CMUXTERM_CLI")
     candidates.sort(key=lambda p: os.path.getmtime(p), reverse=True)
     return candidates[0]
 

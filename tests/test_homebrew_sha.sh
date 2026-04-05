@@ -4,7 +4,7 @@
 # condition caused the cask to contain the SHA of a 404 page instead of the DMG.
 set -euo pipefail
 
-CASK_FILE="$(dirname "$0")/../homebrew-cmux/Casks/cmux.rb"
+CASK_FILE="$(dirname "$0")/../homebrew-cmux/Casks/gmux.rb"
 
 if [ ! -f "$CASK_FILE" ]; then
   echo "SKIP: homebrew-cmux submodule not initialized"
@@ -22,7 +22,7 @@ fi
 echo "Cask version: $VERSION"
 echo "Cask SHA256:  $CASK_SHA"
 
-URL="https://github.com/manaflow-ai/cmux/releases/download/v${VERSION}/cmux-macos.dmg"
+URL="https://github.com/manaflow-ai/cmux/releases/download/v${VERSION}/gmux-macos.dmg"
 TMPFILE=$(mktemp)
 trap 'rm -f "$TMPFILE"' EXIT
 

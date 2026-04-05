@@ -3,7 +3,7 @@ import Foundation
 /// Manages trusted directories for cmux.json command execution.
 /// When a directory (or its git repo root) is trusted, `confirm: true` commands
 /// from that directory's cmux.json skip the confirmation dialog.
-/// Global config (~/.config/cmux/cmux.json) is always trusted.
+/// Global config (~/.config/gmux/cmux.json) is always trusted.
 final class CmuxDirectoryTrust {
     static let shared = CmuxDirectoryTrust()
     static let didChangeNotification = Notification.Name("cmux.directoryTrustDidChange")
@@ -14,7 +14,7 @@ final class CmuxDirectoryTrust {
     private init() {
         let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
-        ).first!.appendingPathComponent("cmux")
+        ).first!.appendingPathComponent("gmux")
         storePath = appSupport.appendingPathComponent("trusted-directories.json").path
 
         let fm = FileManager.default

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regression test: `cmux claude-teams` reuses an existing tmux shim.
+Regression test: `gmux claude-teams` reuses an existing tmux shim.
 """
 
 from __future__ import annotations
@@ -26,20 +26,20 @@ def main() -> int:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-teams-shim-") as td:
+    with tempfile.TemporaryDirectory(prefix="gmux-claude-teams-shim-") as td:
         tmp = Path(td)
         home = tmp / "home"
         real_bin = tmp / "real-bin"
         home.mkdir(parents=True, exist_ok=True)
         real_bin.mkdir(parents=True, exist_ok=True)
 
-        shim_dir = home / ".cmuxterm" / "claude-teams-bin"
+        shim_dir = home / ".gmuxterm" / "claude-teams-bin"
         shim_dir.mkdir(parents=True, exist_ok=True)
         shim_path = shim_dir / "tmux"
         shim_path.write_text(
             "#!/usr/bin/env bash\n"
             "set -euo pipefail\n"
-            "exec \"${CMUX_CLAUDE_TEAMS_CMUX_BIN:-cmux}\" __tmux-compat \"$@\"\n",
+            "exec \"${CMUX_CLAUDE_TEAMS_CMUX_BIN:-gmux}\" __tmux-compat \"$@\"\n",
             encoding="utf-8",
         )
         shim_path.chmod(0o555)
@@ -70,7 +70,7 @@ printf 'shim=%s\\n' "$(command -v tmux)"
         shim_path.chmod(0o755)
 
         if proc.returncode != 0:
-            print("FAIL: `cmux claude-teams --version` failed with an existing shim")
+            print("FAIL: `gmux claude-teams --version` failed with an existing shim")
             print(f"exit={proc.returncode}")
             print(f"stdout={proc.stdout.strip()}")
             print(f"stderr={proc.stderr.strip()}")
@@ -82,7 +82,7 @@ printf 'shim=%s\\n' "$(command -v tmux)"
             print(f"FAIL: expected existing shim path {expected!r}, got {actual!r}")
             return 1
 
-    print("PASS: cmux claude-teams reuses an existing tmux shim")
+    print("PASS: gmux claude-teams reuses an existing tmux shim")
     return 0
 
 

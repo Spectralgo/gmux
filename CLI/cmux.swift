@@ -336,7 +336,7 @@ private struct ClaudeHookSessionStoreFile: Codable {
 }
 
 private final class ClaudeHookSessionStore {
-    private static let defaultStatePath = "~/.cmuxterm/claude-hook-sessions.json"
+    private static let defaultStatePath = "~/.gmuxterm/claude-hook-sessions.json"
     private static let maxStateAgeSeconds: TimeInterval = 60 * 60 * 24 * 7
 
     private let statePath: String
@@ -536,9 +536,9 @@ enum CLIIDFormat: String {
 }
 
 enum SocketPasswordResolver {
-    private static let service = "com.cmuxterm.app.socket-control"
+    private static let service = "com.gmuxterm.app.socket-control"
     private static let account = "local-socket-password"
-    private static let directoryName = "cmux"
+    private static let directoryName = "gmux"
     private static let fileName = "socket-control-password"
 
     static func resolve(explicit: String?, socketPath: String) -> String? {
@@ -598,7 +598,7 @@ enum SocketPasswordResolver {
         }
 
         let candidate = URL(fileURLWithPath: socketPath).lastPathComponent
-        let prefixes = ["cmux-debug-", "cmux-"]
+        let prefixes = ["gmux-debug-", "gmux-"]
         for prefix in prefixes {
             guard candidate.hasPrefix(prefix), candidate.hasSuffix(".sock") else { continue }
             let start = candidate.index(candidate.startIndex, offsetBy: prefix.count)
@@ -667,13 +667,13 @@ private enum CLISocketPathSource {
 }
 
 private enum CLISocketPathResolver {
-    private static let appSupportDirectoryName = "cmux"
-    private static let stableSocketFileName = "cmux.sock"
+    private static let appSupportDirectoryName = "gmux"
+    private static let stableSocketFileName = "gmux.sock"
     private static let lastSocketPathFileName = "last-socket-path"
-    static let legacyDefaultSocketPath = "/tmp/cmux.sock"
-    private static let fallbackSocketPath = "/tmp/cmux-debug.sock"
-    private static let stagingSocketPath = "/tmp/cmux-staging.sock"
-    private static let legacyLastSocketPathFile = "/tmp/cmux-last-socket-path"
+    static let legacyDefaultSocketPath = "/tmp/gmux.sock"
+    private static let fallbackSocketPath = "/tmp/gmux-debug.sock"
+    private static let stagingSocketPath = "/tmp/gmux-staging.sock"
+    private static let legacyLastSocketPathFile = "/tmp/gmux-last-socket-path"
 
     static var defaultSocketPath: String {
         let stablePath: String? = stableSocketDirectoryURL()?
@@ -715,8 +715,8 @@ private enum CLISocketPathResolver {
 
         if let tag = normalized(environment["CMUX_TAG"]) {
             let slug = sanitizeTagSlug(tag)
-            candidates.append("/tmp/cmux-debug-\(slug).sock")
-            candidates.append("/tmp/cmux-\(slug).sock")
+            candidates.append("/tmp/gmux-debug-\(slug).sock")
+            candidates.append("/tmp/gmux-\(slug).sock")
         }
 
         candidates.append(requestedPath)
@@ -755,7 +755,7 @@ private enum CLISocketPathResolver {
                 continue
             }
             discovered.reserveCapacity(min(limit, discovered.count + entries.count))
-            for name in entries where name.hasPrefix("cmux") && name.hasSuffix(".sock") {
+            for name in entries where name.hasPrefix("gmux") && name.hasSuffix(".sock") {
                 let path = URL(fileURLWithPath: directory)
                     .appendingPathComponent(name, isDirectory: false)
                     .path
@@ -1062,7 +1062,7 @@ final class SocketClient {
         }
 
         let authURL = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
-            .appendingPathComponent(".cmux/relay/\(endpoint.port).auth", isDirectory: false)
+            .appendingPathComponent(".gmux/relay/\(endpoint.port).auth", isDirectory: false)
         guard let authData = try? Data(contentsOf: authURL),
               let authObject = try? JSONSerialization.jsonObject(with: authData) as? [String: Any],
               let relayID = trimmedEnvValue(authObject["relay_id"] as? String),
@@ -1566,7 +1566,7 @@ enum CLIProcessRunner {
 struct CMUXCLI {
     let args: [String]
 
-    private static let debugLastSocketHintPath = "/tmp/cmux-last-socket-path"
+    private static let debugLastSocketHintPath = "/tmp/gmux-last-socket-path"
 
     private static func normalizedEnvValue(_ value: String?) -> String? {
         guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -1588,7 +1588,7 @@ struct CMUXCLI {
             return nil
         }
         guard let hinted = normalizedEnvValue(raw),
-              hinted.hasPrefix("/tmp/cmux-debug"),
+              hinted.hasPrefix("/tmp/gmux-debug"),
               hinted.hasSuffix(".sock"),
               pathIsSocket(hinted) else {
             return nil
@@ -1607,9 +1607,9 @@ struct CMUXCLI {
         if let hinted = debugSocketPathFromHintFile() {
             return hinted
         }
-        return "/tmp/cmux-debug.sock"
+        return "/tmp/gmux-debug.sock"
 #else
-        return "/tmp/cmux.sock"
+        return "/tmp/gmux.sock"
 #endif
     }
 
@@ -1862,7 +1862,7 @@ struct CMUXCLI {
         case "rpc":
             guard let method = commandArgs.first?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !method.isEmpty else {
-                throw CLIError(message: "Usage: cmux rpc <method> [json-params]")
+                throw CLIError(message: "Usage: gmux rpc <method> [json-params]")
             }
             let params = try parseRPCParams(Array(commandArgs.dropFirst()))
             let response = try client.sendV2(method: method, params: params)
@@ -2815,31 +2815,31 @@ struct CMUXCLI {
             if let first = args.first, first.hasPrefix("-") {
                 throw CLIError(
                     message:
-                        "markdown open: unknown flag '\(first)'. Usage: cmux markdown open <path> [--workspace <id|ref|index>] [--surface <id|ref|index>] [--window <id|ref|index>] [--direction right|down|left|up]"
+                        "markdown open: unknown flag '\(first)'. Usage: gmux markdown open <path> [--workspace <id|ref|index>] [--surface <id|ref|index>] [--window <id|ref|index>] [--direction right|down|left|up]"
                 )
             } else if let first = args.first, looksLikePath(first) || first.contains(".") {
                 subArgs = args
             } else if let first = args.first {
-                throw CLIError(message: "Unknown markdown subcommand: \(first). Usage: cmux markdown open <path>")
+                throw CLIError(message: "Unknown markdown subcommand: \(first). Usage: gmux markdown open <path>")
             } else {
                 subArgs = []
             }
         }
 
         guard let rawPath = subArgs.first, !rawPath.isEmpty else {
-            throw CLIError(message: "markdown open requires a file path. Usage: cmux markdown open <path>")
+            throw CLIError(message: "markdown open requires a file path. Usage: gmux markdown open <path>")
         }
         let trailingArgs = Array(subArgs.dropFirst())
         if let unknownFlag = trailingArgs.first(where: { $0.hasPrefix("-") }) {
             throw CLIError(
                 message:
-                    "markdown open: unknown flag '\(unknownFlag)'. Usage: cmux markdown open <path> [--workspace <id|ref|index>] [--surface <id|ref|index>] [--window <id|ref|index>] [--direction right|down|left|up]"
+                    "markdown open: unknown flag '\(unknownFlag)'. Usage: gmux markdown open <path> [--workspace <id|ref|index>] [--surface <id|ref|index>] [--window <id|ref|index>] [--direction right|down|left|up]"
             )
         }
         if let extraArg = trailingArgs.first {
             throw CLIError(
                 message:
-                    "markdown open: unexpected argument '\(extraArg)'. Usage: cmux markdown open <path> [--workspace <id|ref|index>] [--surface <id|ref|index>] [--window <id|ref|index>] [--direction right|down|left|up]"
+                    "markdown open: unexpected argument '\(extraArg)'. Usage: gmux markdown open <path> [--workspace <id|ref|index>] [--surface <id|ref|index>] [--window <id|ref|index>] [--direction right|down|left|up]"
             )
         }
 
@@ -4141,7 +4141,7 @@ struct CMUXCLI {
             if let workspaceWindowId, !workspaceWindowId.isEmpty {
                 selectParams["window_id"] = workspaceWindowId
             }
-            // `cmux ssh` is an explicit "open this remote workspace now" action,
+            // `gmux ssh` is an explicit "open this remote workspace now" action,
             // so we intentionally select the newly created workspace after wiring
             // up the remote connection — unless --no-focus is passed.
             if !sshOptions.noFocus {
@@ -4264,7 +4264,7 @@ struct CMUXCLI {
         }
 
         guard let destination else {
-            throw CLIError(message: "ssh requires a destination (example: cmux ssh user@host)")
+            throw CLIError(message: "ssh requires a destination (example: gmux ssh user@host)")
         }
         return SSHCommandOptions(
             destination: destination,
@@ -4371,7 +4371,7 @@ struct CMUXCLI {
         remoteRelayPort: Int
     ) -> String {
         var lines = remoteBootstrapTTYCaptureLines(remoteRelayPort: remoteRelayPort, includeRelayRPC: true)
-        lines.append("/bin/sh \"$HOME/.cmux/relay/\(remoteRelayPort).bootstrap.sh\"")
+        lines.append("/bin/sh \"$HOME/.gmux/relay/\(remoteRelayPort).bootstrap.sh\"")
         return lines.joined(separator: "\n")
     }
 
@@ -4379,8 +4379,8 @@ struct CMUXCLI {
         [
             "set -eu",
             "umask 077",
-            "cmux_bootstrap_path=\"$HOME/.cmux/relay/\(remoteRelayPort).bootstrap.sh\"",
-            "mkdir -p \"$HOME/.cmux/relay\"",
+            "cmux_bootstrap_path=\"$HOME/.gmux/relay/\(remoteRelayPort).bootstrap.sh\"",
+            "mkdir -p \"$HOME/.gmux/relay\"",
             "cat > \"$cmux_bootstrap_path\"",
             "chmod 700 \"$cmux_bootstrap_path\" >/dev/null 2>&1 || true",
         ].joined(separator: "\n")
@@ -4392,7 +4392,7 @@ struct CMUXCLI {
     ) -> String {
         var lines = remoteBootstrapTTYCaptureLines(remoteRelayPort: remoteRelayPort, includeRelayRPC: false)
         lines += [
-            "cmux_tmp=$(mktemp \"${TMPDIR:-/tmp}/cmux-ssh-bootstrap.XXXXXX\") || exit 1",
+            "cmux_tmp=$(mktemp \"${TMPDIR:-/tmp}/gmux-ssh-bootstrap.XXXXXX\") || exit 1",
             "(printf %s '\(base64Placeholder)' | base64 -d 2>/dev/null || printf %s '\(base64Placeholder)' | base64 -D 2>/dev/null) > \"$cmux_tmp\" || { rm -f \"$cmux_tmp\"; exit 1; }",
             "chmod 700 \"$cmux_tmp\" >/dev/null 2>&1 || true",
             "/bin/sh \"$cmux_tmp\"",
@@ -4413,15 +4413,15 @@ struct CMUXCLI {
             "cmux_bootstrap_tty=\"$(tty 2>/dev/null || true)\"",
             "cmux_bootstrap_tty=\"${cmux_bootstrap_tty##*/}\"",
             "if [ -n \"$cmux_bootstrap_tty\" ] && [ \"$cmux_bootstrap_tty\" != \"not a tty\" ]; then",
-            "  mkdir -p \"$HOME/.cmux/relay\" >/dev/null 2>&1 || true",
-            "  printf '%s' \"$cmux_bootstrap_tty\" > \"$HOME/.cmux/relay/\(remoteRelayPort).tty\" 2>/dev/null || true",
+            "  mkdir -p \"$HOME/.gmux/relay\" >/dev/null 2>&1 || true",
+            "  printf '%s' \"$cmux_bootstrap_tty\" > \"$HOME/.gmux/relay/\(remoteRelayPort).tty\" 2>/dev/null || true",
             "  export CMUX_BOOTSTRAP_TTY=\"$cmux_bootstrap_tty\"",
         ]
 
         if includeRelayRPC {
             lines += [
-                "  cmux_relay_cli=\"$HOME/.cmux/bin/cmux\"",
-                "  if [ ! -x \"$cmux_relay_cli\" ]; then cmux_relay_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
+                "  cmux_relay_cli=\"$HOME/.gmux/bin/gmux\"",
+                "  if [ ! -x \"$cmux_relay_cli\" ]; then cmux_relay_cli=\"$(command -v gmux 2>/dev/null || true)\"; fi",
                 "  if [ -n \"$cmux_relay_cli\" ]; then",
                 "    cmux_relay_report_tty='{\"workspace_id\":\"__CMUX_WORKSPACE_ID__\",\"tty_name\":\"'$cmux_bootstrap_tty'\"}'",
                 "    cmux_relay_ports_kick='{\"workspace_id\":\"__CMUX_WORKSPACE_ID__\",\"reason\":\"command\"}'",
@@ -4464,8 +4464,8 @@ struct CMUXCLI {
         let relaySocket = remoteRelayPort > 0 ? "127.0.0.1:\(remoteRelayPort)" : nil
         var commonShellExportLines = remoteTerminalLines
         commonShellExportLines.append(contentsOf: remoteEnvExportLines)
-        commonShellExportLines.append("export PATH=\"$HOME/.cmux/bin:$PATH\"")
-        commonShellExportLines.append("export CMUX_BUNDLED_CLI_PATH=\"$HOME/.cmux/bin/cmux\"")
+        commonShellExportLines.append("export PATH=\"$HOME/.gmux/bin:$PATH\"")
+        commonShellExportLines.append("export CMUX_BUNDLED_CLI_PATH=\"$HOME/.gmux/bin/gmux\"")
         commonShellExportLines.append("export CMUX_SHELL_INTEGRATION_DIR=\"\(shellStateDir)\"")
         if let relaySocket {
             commonShellExportLines.append("export CMUX_SOCKET_PATH=\(relaySocket)")
@@ -4498,7 +4498,7 @@ struct CMUXCLI {
         let relayWarmupLines = interactiveRemoteRelayWarmupLines(remoteRelayPort: remoteRelayPort)
 
         var outerLines: [String] = [
-            "mkdir -p \"$HOME/.cmux/relay\"",
+            "mkdir -p \"$HOME/.gmux/relay\"",
             "cmux_shell_dir=\"\(shellStateDir)\"",
             "mkdir -p \"$cmux_shell_dir\"",
         ]
@@ -4575,7 +4575,7 @@ struct CMUXCLI {
     }
 
     private func shellStateDirForRemoteRelayPort(_ remoteRelayPort: Int) -> String {
-        "$HOME/.cmux/relay/\(max(remoteRelayPort, 0)).shell"
+        "$HOME/.gmux/relay/\(max(remoteRelayPort, 0)).shell"
     }
 
     private func bundledShellIntegrationScript(named fileName: String) -> String? {
@@ -4697,14 +4697,14 @@ struct CMUXCLI {
             return []
         }
         return [
-            "cmux_relay_cli=\"${CMUX_BUNDLED_CLI_PATH:-$HOME/.cmux/bin/cmux}\"",
-            "if [ ! -x \"$cmux_relay_cli\" ]; then cmux_relay_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
+            "cmux_relay_cli=\"${CMUX_BUNDLED_CLI_PATH:-$HOME/.gmux/bin/gmux}\"",
+            "if [ ! -x \"$cmux_relay_cli\" ]; then cmux_relay_cli=\"$(command -v gmux 2>/dev/null || true)\"; fi",
             "cmux_relay_tty=\"${CMUX_BOOTSTRAP_TTY:-}\"",
             "if [ -z \"$cmux_relay_tty\" ]; then cmux_relay_tty=\"$(tty 2>/dev/null || true)\"; fi",
             "cmux_relay_tty=\"${cmux_relay_tty##*/}\"",
             "if [ -n \"$cmux_relay_tty\" ] && [ \"$cmux_relay_tty\" != \"not a tty\" ]; then",
-            "  mkdir -p \"$HOME/.cmux/relay\" >/dev/null 2>&1 || true",
-            "  printf '%s' \"$cmux_relay_tty\" > \"$HOME/.cmux/relay/\(remoteRelayPort).tty\" 2>/dev/null || true",
+            "  mkdir -p \"$HOME/.gmux/relay\" >/dev/null 2>&1 || true",
+            "  printf '%s' \"$cmux_relay_tty\" > \"$HOME/.gmux/relay/\(remoteRelayPort).tty\" 2>/dev/null || true",
             "fi",
             "if [ -n \"$cmux_relay_cli\" ] && [ -n \"$CMUX_WORKSPACE_ID\" ] && [ -n \"$cmux_relay_tty\" ] && [ \"$cmux_relay_tty\" != \"not a tty\" ]; then",
             "  cmux_relay_report_tty=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"tty_name\\\":\\\"$cmux_relay_tty\\\"}\"",
@@ -4889,10 +4889,10 @@ struct CMUXCLI {
             "&& [ -n \"${CMUX_WORKSPACE_ID:-}\" ]",
             "&& [ -n \"${CMUX_SURFACE_ID:-}\" ]; then",
             "\"${CMUX_BUNDLED_CLI_PATH}\" --socket \"${CMUX_SOCKET_PATH}\" ssh-session-end --relay-port \(remoteRelayPort) --workspace \"${CMUX_WORKSPACE_ID}\" --surface \"${CMUX_SURFACE_ID}\" >/dev/null 2>&1 || true;",
-            "elif command -v cmux >/dev/null 2>&1",
+            "elif command -v gmux >/dev/null 2>&1",
             "&& [ -n \"${CMUX_WORKSPACE_ID:-}\" ]",
             "&& [ -n \"${CMUX_SURFACE_ID:-}\" ]; then",
-            "cmux ssh-session-end --relay-port \(remoteRelayPort) --workspace \"${CMUX_WORKSPACE_ID}\" --surface \"${CMUX_SURFACE_ID}\" >/dev/null 2>&1 || true;",
+            "gmux ssh-session-end --relay-port \(remoteRelayPort) --workspace \"${CMUX_WORKSPACE_ID}\" --surface \"${CMUX_SURFACE_ID}\" >/dev/null 2>&1 || true;",
             "fi",
         ].joined(separator: " ")
     }
@@ -5114,10 +5114,10 @@ struct CMUXCLI {
             preferredCLIPath.map { "cmux_reconnect_cli=\(shellQuote($0));" } ?? "cmux_reconnect_cli=\"\";",
             "cmux_reconnect_socket=\"${CMUX_SOCKET_PATH:-${CMUX_SOCKET:-}}\";",
             "if [ -z \"$cmux_reconnect_cli\" ] && [ -n \"${CMUX_BUNDLED_CLI_PATH:-}\" ]; then cmux_reconnect_cli=\"$CMUX_BUNDLED_CLI_PATH\"; fi;",
-            "if [ ! -x \"$cmux_reconnect_cli\" ]; then cmux_reconnect_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi;",
+            "if [ ! -x \"$cmux_reconnect_cli\" ]; then cmux_reconnect_cli=\"$(command -v gmux 2>/dev/null || true)\"; fi;",
             "if [ -n \"${CMUX_WORKSPACE_ID:-}\" ]; then",
-            "if [ -z \"$cmux_reconnect_socket\" ]; then printf '%s\\n' 'cmux: deferred SSH reconnect skipped, local cmux socket not found' >&2;",
-            "elif [ -z \"$cmux_reconnect_cli\" ] || [ ! -x \"$cmux_reconnect_cli\" ]; then printf '%s\\n' 'cmux: deferred SSH reconnect skipped, local cmux CLI not found' >&2;",
+            "if [ -z \"$cmux_reconnect_socket\" ]; then printf '%s\\n' 'gmux: deferred SSH reconnect skipped, local gmux socket not found' >&2;",
+            "elif [ -z \"$cmux_reconnect_cli\" ] || [ ! -x \"$cmux_reconnect_cli\" ]; then printf '%s\\n' 'gmux: deferred SSH reconnect skipped, local gmux CLI not found' >&2;",
             "else",
             "cmux_reconnect_payload=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"foreground_auth_token\\\":\\\"\(escapedForegroundAuthToken)\\\"}\";",
             "\"$cmux_reconnect_cli\" --socket \"$cmux_reconnect_socket\" rpc workspace.remote.foreground_auth_ready \"$cmux_reconnect_payload\" >/dev/null 2>&1 || true;",
@@ -5154,9 +5154,9 @@ struct CMUXCLI {
 
     private func defaultSSHControlPathTemplate(remoteRelayPort: Int? = nil) -> String {
         if let remoteRelayPort, remoteRelayPort > 0 {
-            return "/tmp/cmux-ssh-\(getuid())-\(remoteRelayPort)-%C"
+            return "/tmp/gmux-ssh-\(getuid())-\(remoteRelayPort)-%C"
         }
-        return "/tmp/cmux-ssh-\(getuid())-%C"
+        return "/tmp/gmux-ssh-\(getuid())-%C"
     }
 
     private func normalizedSSHIdentityPath(_ rawPath: String?) -> String? {
@@ -5208,7 +5208,7 @@ struct CMUXCLI {
             if let trimmedExplicit, !trimmedExplicit.isEmpty {
                 return trimmedExplicit
             }
-            guard let marker = try? String(contentsOfFile: "/tmp/cmux-last-debug-log-path", encoding: .utf8) else {
+            guard let marker = try? String(contentsOfFile: "/tmp/gmux-last-debug-log-path", encoding: .utf8) else {
                 return nil
             }
             let trimmedMarker = marker.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -6680,46 +6680,46 @@ struct CMUXCLI {
         switch command {
         case "ping":
             return """
-            Usage: cmux ping
+            Usage: gmux ping
 
-            Check connectivity to the cmux socket server.
+            Check connectivity to the gmux socket server.
             """
         case "capabilities":
             return """
-            Usage: cmux capabilities
+            Usage: gmux capabilities
 
             Print server capabilities as JSON.
             """
         case "rpc":
             return """
-            Usage: cmux rpc <method> [json-params]
+            Usage: gmux rpc <method> [json-params]
 
             Call a raw v2 method with an optional JSON object for params.
-            Example: cmux rpc surface.report_tty '{"workspace_id":"...","surface_id":"...","tty_name":"ttys001"}'
+            Example: gmux rpc surface.report_tty '{"workspace_id":"...","surface_id":"...","tty_name":"ttys001"}'
             """
         case "help":
             return """
-            Usage: cmux help
+            Usage: gmux help
 
             Show top-level CLI usage and command list.
             """
         case "welcome":
             return """
-            Usage: cmux welcome
+            Usage: gmux welcome
 
-            Show a welcome screen with the cmux logo and useful shortcuts.
+            Show a welcome screen with the gmux logo and useful shortcuts.
             Auto-runs once on first launch.
             """
         case "shortcuts":
             return """
-            Usage: cmux shortcuts
+            Usage: gmux shortcuts
 
             Open the Settings window to Keyboard Shortcuts.
             """
         case "feedback":
             return """
-            Usage: cmux feedback
-                   cmux feedback --email <email> --body <text> [--image <path> ...]
+            Usage: gmux feedback
+                   gmux feedback --email <email> --body <text> [--image <path> ...]
 
             Without args, open the Send Feedback modal in the running app.
 
@@ -6736,17 +6736,17 @@ struct CMUXCLI {
             """
         case "themes":
             return """
-            Usage: cmux themes
-                   cmux themes list
-                   cmux themes set <theme>
-                   cmux themes set --light <theme> [--dark <theme>]
-                   cmux themes set --dark <theme> [--light <theme>]
-                   cmux themes clear
+            Usage: gmux themes
+                   gmux themes list
+                   gmux themes set <theme>
+                   gmux themes set --light <theme> [--dark <theme>]
+                   gmux themes set --dark <theme> [--light <theme>]
+                   gmux themes clear
 
-            When run in a TTY, `cmux themes` opens an interactive theme picker with
-            live app preview. Use `cmux themes list` for a plain listing.
+            When run in a TTY, `gmux themes` opens an interactive theme picker with
+            live app preview. Use `gmux themes list` for a plain listing.
 
-            The picker previews the selected theme across the running cmux app and
+            The picker previews the selected theme across the running gmux app and
             lets you apply it to the light theme, dark theme, or both defaults.
 
             Commands:
@@ -6754,18 +6754,18 @@ struct CMUXCLI {
               set <theme>               Set the same theme for both light and dark appearance
               set --light <theme>       Set the light appearance theme
               set --dark <theme>        Set the dark appearance theme
-              clear                     Remove the cmux theme override and fall back to other config
+              clear                     Remove the gmux theme override and fall back to other config
 
             Examples:
-              cmux themes
-              cmux themes list
-              cmux themes set "Catppuccin Mocha"
-              cmux themes set --light "Catppuccin Latte" --dark "Catppuccin Mocha"
-              cmux themes clear
+              gmux themes
+              gmux themes list
+              gmux themes set "Catppuccin Mocha"
+              gmux themes set --light "Catppuccin Latte" --dark "Catppuccin Mocha"
+              gmux themes clear
             """
         case "claude-teams":
             return String(localized: "cli.claude-teams.usage", defaultValue: """
-            Usage: cmux claude-teams [claude-args...]
+            Usage: gmux claude-teams [claude-args...]
 
             Launch Claude Code with agent teams enabled.
 
@@ -6777,22 +6777,22 @@ struct CMUXCLI {
               - forwards all remaining arguments to claude
 
             The tmux shim translates supported tmux window/pane commands into cmux
-            workspace and split operations in the current cmux session.
+            workspace and split operations in the current gmux session.
 
             Examples:
-              cmux claude-teams
-              cmux claude-teams --continue
-              cmux claude-teams --model sonnet
+              gmux claude-teams
+              gmux claude-teams --continue
+              gmux claude-teams --model sonnet
             """)
         case "omo":
             return String(localized: "cli.omo.usage", defaultValue: """
-            Usage: cmux omo [opencode-args...]
+            Usage: gmux omo [opencode-args...]
 
             Launch OpenCode with oh-my-openagent in a cmux-aware environment.
 
             oh-my-openagent orchestrates multiple AI models as specialized agents in
             parallel. This command sets up a tmux shim so agent panes become native
-            cmux splits with sidebar metadata and notifications.
+            gmux splits with sidebar metadata and notifications.
 
             This command:
               - sets a tmux-like environment so oh-my-openagent uses cmux splits
@@ -6800,16 +6800,16 @@ struct CMUXCLI {
               - forwards all remaining arguments to opencode
 
             The tmux shim translates tmux window/pane commands into cmux workspace
-            and split operations in the current cmux session.
+            and split operations in the current gmux session.
 
             Examples:
-              cmux omo
-              cmux omo --continue
-              cmux omo --model claude-sonnet-4-6
+              gmux omo
+              gmux omo --continue
+              gmux omo --model claude-sonnet-4-6
             """)
         case "identify":
             return """
-            Usage: cmux identify [--workspace <id|ref|index>] [--surface <id|ref|index>] [--no-caller]
+            Usage: gmux identify [--workspace <id|ref|index>] [--surface <id|ref|index>] [--no-caller]
 
             Print server identity and caller context details.
 
@@ -6820,28 +6820,28 @@ struct CMUXCLI {
             """
         case "list-windows":
             return """
-            Usage: cmux list-windows
+            Usage: gmux list-windows
 
             List open windows.
             """
         case "current-window":
             return """
-            Usage: cmux current-window
+            Usage: gmux current-window
 
             Print the currently selected window ID.
             """
         case "new-window":
             return """
-            Usage: cmux new-window
+            Usage: gmux new-window
 
             Create a new window.
 
             Example:
-              cmux new-window
+              gmux new-window
             """
         case "focus-window":
             return """
-            Usage: cmux focus-window --window <id|ref|index>
+            Usage: gmux focus-window --window <id|ref|index>
 
             Focus (bring to front) the specified window.
 
@@ -6849,12 +6849,12 @@ struct CMUXCLI {
               --window <id|ref|index>   Window to focus (required)
 
             Example:
-              cmux focus-window --window 0
-              cmux focus-window --window window:1
+              gmux focus-window --window 0
+              gmux focus-window --window window:1
             """
         case "close-window":
             return """
-            Usage: cmux close-window --window <id|ref|index>
+            Usage: gmux close-window --window <id|ref|index>
 
             Close the specified window.
 
@@ -6862,12 +6862,12 @@ struct CMUXCLI {
               --window <id|ref|index>   Window to close (required)
 
             Example:
-              cmux close-window --window 0
-              cmux close-window --window window:1
+              gmux close-window --window 0
+              gmux close-window --window window:1
             """
         case "move-workspace-to-window":
             return """
-            Usage: cmux move-workspace-to-window --workspace <id|ref|index> --window <id|ref|index>
+            Usage: gmux move-workspace-to-window --workspace <id|ref|index> --window <id|ref|index>
 
             Move a workspace to a different window.
 
@@ -6876,11 +6876,11 @@ struct CMUXCLI {
               --window <id|ref|index>      Target window (required)
 
             Example:
-              cmux move-workspace-to-window --workspace workspace:2 --window window:1
+              gmux move-workspace-to-window --workspace workspace:2 --window window:1
             """
         case "move-surface":
             return """
-            Usage: cmux move-surface [--surface <id|ref|index> | <id|ref|index>] [flags]
+            Usage: gmux move-surface [--surface <id|ref|index> | <id|ref|index>] [flags]
 
             Move a surface to a different pane, workspace, or window.
 
@@ -6899,12 +6899,12 @@ struct CMUXCLI {
               --focus <true|false>       Focus the surface after moving
 
             Example:
-              cmux move-surface --surface surface:1 --workspace workspace:2
-              cmux move-surface surface:1 --pane pane:2 --index 0
+              gmux move-surface --surface surface:1 --workspace workspace:2
+              gmux move-surface surface:1 --pane pane:2 --index 0
             """
         case "reorder-surface":
             return """
-            Usage: cmux reorder-surface [--surface <id|ref|index> | <id|ref|index>] [flags]
+            Usage: gmux reorder-surface [--surface <id|ref|index> | <id|ref|index>] [flags]
 
             Reorder a surface within its pane.
 
@@ -6920,12 +6920,12 @@ struct CMUXCLI {
               --index <n>                Place at this index
 
             Example:
-              cmux reorder-surface --surface surface:1 --index 0
-              cmux reorder-surface --surface surface:3 --after surface:1
+              gmux reorder-surface --surface surface:1 --index 0
+              gmux reorder-surface --surface surface:3 --after surface:1
             """
         case "reorder-workspace":
             return """
-            Usage: cmux reorder-workspace [--workspace <id|ref|index> | <id|ref|index>] [flags]
+            Usage: gmux reorder-workspace [--workspace <id|ref|index> | <id|ref|index>] [flags]
 
             Reorder a workspace within its window.
 
@@ -6941,12 +6941,12 @@ struct CMUXCLI {
               --window <id|ref|index>      Window context
 
             Example:
-              cmux reorder-workspace --workspace workspace:2 --index 0
-              cmux reorder-workspace --workspace workspace:3 --after workspace:1
+              gmux reorder-workspace --workspace workspace:2 --index 0
+              gmux reorder-workspace --workspace workspace:3 --after workspace:1
             """
         case "workspace-action":
             return """
-            Usage: cmux workspace-action --action <name> [flags]
+            Usage: gmux workspace-action --action <name> [flags]
 
             Perform workspace context-menu actions from CLI/socket.
 
@@ -6971,19 +6971,19 @@ struct CMUXCLI {
               Blue, Navy, Indigo, Purple, Magenta, Rose, Brown, Charcoal
 
             Example:
-              cmux workspace-action --workspace workspace:2 --action pin
-              cmux workspace-action --action rename --title "infra"
-              cmux workspace-action close-others
-              cmux workspace-action --action set-color --color blue
-              cmux workspace-action --action set-color --color "#C0392B"
-              cmux workspace-action set-color Amber
-              cmux workspace-action --action set-description --description "Ship checklist"
-              cmux workspace-action --action set-description $'Ship checklist\n- verify build\n- post notes'
-              cmux workspace-action clear-color
+              gmux workspace-action --workspace workspace:2 --action pin
+              gmux workspace-action --action rename --title "infra"
+              gmux workspace-action close-others
+              gmux workspace-action --action set-color --color blue
+              gmux workspace-action --action set-color --color "#C0392B"
+              gmux workspace-action set-color Amber
+              gmux workspace-action --action set-description --description "Ship checklist"
+              gmux workspace-action --action set-description $'Ship checklist\n- verify build\n- post notes'
+              gmux workspace-action clear-color
             """
         case "tab-action":
             return """
-            Usage: cmux tab-action --action <name> [flags]
+            Usage: gmux tab-action --action <name> [flags]
 
             Perform horizontal tab context-menu actions from CLI/socket.
 
@@ -7004,13 +7004,13 @@ struct CMUXCLI {
               --url <url>                  Optional URL for new-browser-right
 
             Example:
-              cmux tab-action --tab tab:3 --action pin
-              cmux tab-action --action close-right
-              cmux tab-action --tab tab:2 --action rename --title "build logs"
+              gmux tab-action --tab tab:3 --action pin
+              gmux tab-action --action close-right
+              gmux tab-action --tab tab:2 --action rename --title "build logs"
             """
         case "rename-tab":
             return """
-            Usage: cmux rename-tab [--workspace <id|ref>] [--tab <id|ref>] [--surface <id|ref>] [--] <title>
+            Usage: gmux rename-tab [--workspace <id|ref>] [--tab <id|ref>] [--surface <id|ref>] [--] <title>
 
             Compatibility alias for tab-action rename.
 
@@ -7027,13 +7027,13 @@ struct CMUXCLI {
               --title <text>         Explicit title (or use trailing positional title)
 
             Examples:
-              cmux rename-tab "build logs"
-              cmux rename-tab --tab tab:3 "staging server"
-              cmux rename-tab --workspace workspace:2 --surface surface:5 --title "agent run"
+              gmux rename-tab "build logs"
+              gmux rename-tab --tab tab:3 "staging server"
+              gmux rename-tab --workspace workspace:2 --surface surface:5 --title "agent run"
             """
         case "new-workspace":
             return """
-            Usage: cmux new-workspace [--name <title>] [--description <text>] [--cwd <path>] [--command <text>]
+            Usage: gmux new-workspace [--name <title>] [--description <text>] [--cwd <path>] [--command <text>]
 
             Create a new workspace in the current window.
 
@@ -7044,27 +7044,27 @@ struct CMUXCLI {
               --command <text>   Send text+Enter to the new workspace after creation
 
             Example:
-              cmux new-workspace
-              cmux new-workspace --name "Build Server"
-              cmux new-workspace --name "Launch" --description "Ship checklist"
-              cmux new-workspace --cwd ~/projects/myapp
-              cmux new-workspace --cwd . --command "npm test"
+              gmux new-workspace
+              gmux new-workspace --name "Build Server"
+              gmux new-workspace --name "Launch" --description "Ship checklist"
+              gmux new-workspace --cwd ~/projects/myapp
+              gmux new-workspace --cwd . --command "npm test"
             """
         case "list-workspaces":
             return """
-            Usage: cmux list-workspaces
+            Usage: gmux list-workspaces
 
             List workspaces in the current window.
 
             Example:
-              cmux list-workspaces
+              gmux list-workspaces
             """
         case "ssh":
             return """
-            Usage: cmux ssh <destination> [flags] [-- <remote-command-args>]
+            Usage: gmux ssh <destination> [flags] [-- <remote-command-args>]
 
             Create a new workspace, mark it as remote-SSH, and start an SSH session in that workspace.
-            cmux will also establish a local SSH proxy endpoint so browser traffic can egress from the remote host.
+            gmux will also establish a local SSH proxy endpoint so browser traffic can egress from the remote host.
 
             Flags:
               --name <title>          Optional workspace title
@@ -7074,24 +7074,24 @@ struct CMUXCLI {
               --no-focus              Create workspace without switching to it
 
             Example:
-              cmux ssh dev@my-host
-              cmux ssh dev@my-host --name "gpu-box" --port 2222 --identity ~/.ssh/id_ed25519
-              cmux ssh dev@my-host --ssh-option UserKnownHostsFile=/dev/null --ssh-option StrictHostKeyChecking=no
+              gmux ssh dev@my-host
+              gmux ssh dev@my-host --name "gpu-box" --port 2222 --identity ~/.ssh/id_ed25519
+              gmux ssh dev@my-host --ssh-option UserKnownHostsFile=/dev/null --ssh-option StrictHostKeyChecking=no
             """
         case "remote-daemon-status":
             return """
-            Usage: cmux remote-daemon-status [--os <darwin|linux>] [--arch <arm64|amd64>]
+            Usage: gmux remote-daemon-status [--os <darwin|linux>] [--arch <arm64|amd64>]
 
             Show the embedded cmuxd-remote release manifest, local cache status, checksum verification state,
             and the GitHub attestation verification command for a target platform.
 
             Example:
-              cmux remote-daemon-status
-              cmux remote-daemon-status --os linux --arch arm64
+              gmux remote-daemon-status
+              gmux remote-daemon-status --os linux --arch arm64
             """
         case "new-split":
             return """
-            Usage: cmux new-split <left|right|up|down> [flags]
+            Usage: gmux new-split <left|right|up|down> [flags]
 
             Split the current pane in the given direction.
 
@@ -7101,12 +7101,12 @@ struct CMUXCLI {
               --panel <id|ref>       Alias for --surface
 
             Example:
-              cmux new-split right
-              cmux new-split down --workspace workspace:1
+              gmux new-split right
+              gmux new-split down --workspace workspace:1
             """
         case "list-panes":
             return """
-            Usage: cmux list-panes [--workspace <id|ref>]
+            Usage: gmux list-panes [--workspace <id|ref>]
 
             List panes in a workspace.
 
@@ -7114,12 +7114,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Workspace context (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux list-panes
-              cmux list-panes --workspace workspace:2
+              gmux list-panes
+              gmux list-panes --workspace workspace:2
             """
         case "list-pane-surfaces":
             return """
-            Usage: cmux list-pane-surfaces [--workspace <id|ref>] [--pane <id|ref>]
+            Usage: gmux list-pane-surfaces [--workspace <id|ref>] [--pane <id|ref>]
 
             List surfaces in a pane.
 
@@ -7128,12 +7128,12 @@ struct CMUXCLI {
               --pane <id|ref>        Restrict to a specific pane (default: focused pane)
 
             Example:
-              cmux list-pane-surfaces
-              cmux list-pane-surfaces --workspace workspace:2 --pane pane:1
+              gmux list-pane-surfaces
+              gmux list-pane-surfaces --workspace workspace:2 --pane pane:1
             """
         case "tree":
             return """
-            Usage: cmux tree [flags]
+            Usage: gmux tree [flags]
 
             Print the hierarchy of windows, workspaces, panes, and surfaces.
 
@@ -7145,21 +7145,21 @@ struct CMUXCLI {
             Output:
               Text mode prints a box-drawing tree with markers:
               - ◀ active (true focused window/workspace/pane/surface path)
-              - ◀ here (caller surface where `cmux tree` was invoked)
+              - ◀ here (caller surface where `gmux tree` was invoked)
               - workspace [selected]
               - pane [focused]
               - surface [selected]
               Browser surfaces also include their current URL.
 
             Example:
-              cmux tree
-              cmux tree --all
-              cmux tree --workspace workspace:2
-              cmux --json tree --all
+              gmux tree
+              gmux tree --all
+              gmux tree --workspace workspace:2
+              gmux --json tree --all
             """
         case "focus-pane":
             return """
-            Usage: cmux focus-pane [--pane <id|ref> | <id|ref>] [flags]
+            Usage: gmux focus-pane [--pane <id|ref> | <id|ref>] [flags]
 
             Focus the specified pane.
 
@@ -7168,13 +7168,13 @@ struct CMUXCLI {
               --workspace <id|ref>     Workspace context (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux focus-pane --pane pane:2
-              cmux focus-pane pane:1
-              cmux focus-pane --pane pane:1 --workspace workspace:2
+              gmux focus-pane --pane pane:2
+              gmux focus-pane pane:1
+              gmux focus-pane --pane pane:1 --workspace workspace:2
             """
         case "new-pane":
             return """
-            Usage: cmux new-pane [flags]
+            Usage: gmux new-pane [flags]
 
             Create a new pane in the workspace.
 
@@ -7185,12 +7185,12 @@ struct CMUXCLI {
               --url <url>                         URL for browser panes
 
             Example:
-              cmux new-pane
-              cmux new-pane --type browser --direction down --url https://example.com
+              gmux new-pane
+              gmux new-pane --type browser --direction down --url https://example.com
             """
         case "new-surface":
             return """
-            Usage: cmux new-surface [flags]
+            Usage: gmux new-surface [flags]
 
             Create a new surface (tab) in a pane.
 
@@ -7201,12 +7201,12 @@ struct CMUXCLI {
               --url <url>                 URL for browser surfaces
 
             Example:
-              cmux new-surface
-              cmux new-surface --type browser --pane pane:1 --url https://example.com
+              gmux new-surface
+              gmux new-surface --type browser --pane pane:1 --url https://example.com
             """
         case "close-surface":
             return """
-            Usage: cmux close-surface [flags]
+            Usage: gmux close-surface [flags]
 
             Close a surface. Defaults to the focused surface if none specified.
 
@@ -7216,12 +7216,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Workspace context (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux close-surface
-              cmux close-surface --surface surface:3
+              gmux close-surface
+              gmux close-surface --surface surface:3
             """
         case "drag-surface-to-split":
             return """
-            Usage: cmux drag-surface-to-split --surface <id|ref> <left|right|up|down>
+            Usage: gmux drag-surface-to-split --surface <id|ref> <left|right|up|down>
 
             Drag a surface into a new split in the given direction.
 
@@ -7230,28 +7230,28 @@ struct CMUXCLI {
               --panel <id|ref>     Alias for --surface
 
             Example:
-              cmux drag-surface-to-split --surface surface:1 right
-              cmux drag-surface-to-split --panel surface:2 down
+              gmux drag-surface-to-split --surface surface:1 right
+              gmux drag-surface-to-split --panel surface:2 down
             """
         case "refresh-surfaces":
             return """
-            Usage: cmux refresh-surfaces
+            Usage: gmux refresh-surfaces
 
             Refresh surface snapshots for the focused workspace.
             """
         case "reload-config":
             return """
-            Usage: cmux reload-config
+            Usage: gmux reload-config
 
             Run the same configuration reload as the Reload Configuration shortcut.
             This reloads Ghostty config, re-reads ~/.config/cmux/settings.json, and refreshes terminals.
 
             Example:
-              cmux reload-config
+              gmux reload-config
             """
         case "surface-health":
             return """
-            Usage: cmux surface-health [--workspace <id|ref>]
+            Usage: gmux surface-health [--workspace <id|ref>]
 
             List health details for surfaces in a workspace.
 
@@ -7259,19 +7259,19 @@ struct CMUXCLI {
               --workspace <id|ref>   Workspace context (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux surface-health
-              cmux surface-health --workspace workspace:2
+              gmux surface-health
+              gmux surface-health --workspace workspace:2
             """
         case "debug-terminals":
             return """
-            Usage: cmux debug-terminals
+            Usage: gmux debug-terminals
 
             Print live Ghostty terminal runtime metadata across all windows and workspaces.
             Intended for debugging stray or detached terminal views.
             """
         case "trigger-flash":
             return """
-            Usage: cmux trigger-flash [--workspace <id|ref>] [--surface <id|ref>] [--panel <id|ref>]
+            Usage: gmux trigger-flash [--workspace <id|ref>] [--surface <id|ref>] [--panel <id|ref>]
 
             Trigger the unread flash indicator for a surface.
 
@@ -7281,12 +7281,12 @@ struct CMUXCLI {
               --panel <id|ref>       Alias for --surface
 
             Example:
-              cmux trigger-flash
-              cmux trigger-flash --workspace workspace:2 --surface surface:3
+              gmux trigger-flash
+              gmux trigger-flash --workspace workspace:2 --surface surface:3
             """
         case "list-panels":
             return """
-            Usage: cmux list-panels [--workspace <id|ref>]
+            Usage: gmux list-panels [--workspace <id|ref>]
 
             List surfaces (panels) in a workspace.
 
@@ -7294,12 +7294,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Workspace context (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux list-panels
-              cmux list-panels --workspace workspace:2
+              gmux list-panels
+              gmux list-panels --workspace workspace:2
             """
         case "focus-panel":
             return """
-            Usage: cmux focus-panel --panel <id|ref> [--workspace <id|ref>]
+            Usage: gmux focus-panel --panel <id|ref> [--workspace <id|ref>]
 
             Focus a specific panel (surface).
 
@@ -7308,12 +7308,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Workspace context (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux focus-panel --panel surface:2
-              cmux focus-panel --panel surface:5 --workspace workspace:2
+              gmux focus-panel --panel surface:2
+              gmux focus-panel --panel surface:5 --workspace workspace:2
             """
         case "close-workspace":
             return """
-            Usage: cmux close-workspace --workspace <id|ref|index>
+            Usage: gmux close-workspace --workspace <id|ref|index>
 
             Close the specified workspace.
 
@@ -7321,11 +7321,11 @@ struct CMUXCLI {
               --workspace <id|ref|index>   Workspace to close (required)
 
             Example:
-              cmux close-workspace --workspace workspace:2
+              gmux close-workspace --workspace workspace:2
             """
         case "select-workspace":
             return """
-            Usage: cmux select-workspace --workspace <id|ref|index>
+            Usage: gmux select-workspace --workspace <id|ref|index>
 
             Select (switch to) the specified workspace.
 
@@ -7333,12 +7333,12 @@ struct CMUXCLI {
               --workspace <id|ref|index>   Workspace to select (required)
 
             Example:
-              cmux select-workspace --workspace workspace:2
-              cmux select-workspace --workspace 0
+              gmux select-workspace --workspace workspace:2
+              gmux select-workspace --workspace 0
             """
         case "rename-workspace", "rename-window":
             return """
-            Usage: cmux rename-workspace [--workspace <id|ref|index>] [--] <title>
+            Usage: gmux rename-workspace [--workspace <id|ref|index>] [--] <title>
 
             Rename a workspace. Defaults to the current workspace.
             tmux-compatible alias: rename-window
@@ -7347,18 +7347,18 @@ struct CMUXCLI {
               --workspace <id|ref|index>   Workspace to rename (default: current/$CMUX_WORKSPACE_ID)
 
             Example:
-              cmux rename-workspace "backend logs"
-              cmux rename-window --workspace workspace:2 "agent run"
+              gmux rename-workspace "backend logs"
+              gmux rename-window --workspace workspace:2 "agent run"
             """
         case "current-workspace":
             return """
-            Usage: cmux current-workspace
+            Usage: gmux current-workspace
 
             Print the currently selected workspace ID.
             """
         case "capture-pane":
             return """
-            Usage: cmux capture-pane [--workspace <id|ref>] [--surface <id|ref>] [--scrollback] [--lines <n>]
+            Usage: gmux capture-pane [--workspace <id|ref>] [--surface <id|ref>] [--scrollback] [--lines <n>]
 
             tmux-compatible alias for reading terminal text from a pane.
 
@@ -7369,11 +7369,11 @@ struct CMUXCLI {
               --lines <n>            Return only the last N lines (implies --scrollback)
 
             Example:
-              cmux capture-pane --workspace workspace:2 --surface surface:1 --scrollback --lines 200
+              gmux capture-pane --workspace workspace:2 --surface surface:1 --scrollback --lines 200
             """
         case "resize-pane":
             return """
-            Usage: cmux resize-pane [--pane <id|ref>] [--workspace <id|ref>] [-L|-R|-U|-D] [--amount <n>]
+            Usage: gmux resize-pane [--pane <id|ref>] [--workspace <id|ref>] [-L|-R|-U|-D] [--amount <n>]
 
             tmux-compatible pane resize command.
 
@@ -7385,7 +7385,7 @@ struct CMUXCLI {
             """
         case "pipe-pane":
             return """
-            Usage: cmux pipe-pane [--workspace <id|ref>] [--surface <id|ref>] [--command <shell-command> | <shell-command>]
+            Usage: gmux pipe-pane [--workspace <id|ref>] [--surface <id|ref>] [--command <shell-command> | <shell-command>]
 
             Capture pane text and pipe it to a shell command via stdin.
 
@@ -7396,7 +7396,7 @@ struct CMUXCLI {
             """
         case "wait-for":
             return """
-            Usage: cmux wait-for [-S|--signal] <name> [--timeout <seconds>]
+            Usage: gmux wait-for [-S|--signal] <name> [--timeout <seconds>]
 
             Wait for or signal a named synchronization token.
 
@@ -7406,7 +7406,7 @@ struct CMUXCLI {
             """
         case "swap-pane":
             return """
-            Usage: cmux swap-pane --pane <id|ref> --target-pane <id|ref> [--workspace <id|ref>]
+            Usage: gmux swap-pane --pane <id|ref> --target-pane <id|ref> [--workspace <id|ref>]
 
             Swap two panes.
 
@@ -7417,7 +7417,7 @@ struct CMUXCLI {
             """
         case "break-pane":
             return """
-            Usage: cmux break-pane [--workspace <id|ref>] [--pane <id|ref>] [--surface <id|ref>] [--no-focus]
+            Usage: gmux break-pane [--workspace <id|ref>] [--pane <id|ref>] [--surface <id|ref>] [--no-focus]
 
             Move a pane/surface out into its own pane context.
 
@@ -7429,7 +7429,7 @@ struct CMUXCLI {
             """
         case "join-pane":
             return """
-            Usage: cmux join-pane --target-pane <id|ref> [--workspace <id|ref>] [--pane <id|ref>] [--surface <id|ref>] [--no-focus]
+            Usage: gmux join-pane --target-pane <id|ref> [--workspace <id|ref>] [--pane <id|ref>] [--surface <id|ref>] [--no-focus]
 
             Join a pane/surface into another pane.
 
@@ -7442,13 +7442,13 @@ struct CMUXCLI {
             """
         case "next-window", "previous-window", "last-window":
             return """
-            Usage: cmux \(command)
+            Usage: gmux \(command)
 
             Switch workspace selection (next/previous/last) in the current window.
             """
         case "last-pane":
             return """
-            Usage: cmux last-pane [--workspace <id|ref>]
+            Usage: gmux last-pane [--workspace <id|ref>]
 
             Focus the previously focused pane in a workspace.
 
@@ -7457,7 +7457,7 @@ struct CMUXCLI {
             """
         case "find-window":
             return """
-            Usage: cmux find-window [--content] [--select] [query]
+            Usage: gmux find-window [--content] [--select] [query]
 
             Find workspaces by title (and optionally terminal content).
 
@@ -7467,7 +7467,7 @@ struct CMUXCLI {
             """
         case "clear-history":
             return """
-            Usage: cmux clear-history [--workspace <id|ref>] [--surface <id|ref>]
+            Usage: gmux clear-history [--workspace <id|ref>] [--surface <id|ref>]
 
             Clear terminal scrollback history.
 
@@ -7477,7 +7477,7 @@ struct CMUXCLI {
             """
         case "set-hook":
             return """
-            Usage: cmux set-hook [--list] [--unset <event>] | <event> <command>
+            Usage: gmux set-hook [--list] [--unset <event>] | <event> <command>
 
             Manage tmux-compat hook definitions.
 
@@ -7487,19 +7487,19 @@ struct CMUXCLI {
             """
         case "popup":
             return """
-            Usage: cmux popup
+            Usage: gmux popup
 
             tmux compatibility placeholder. This command is currently not supported.
             """
         case "bind-key", "unbind-key", "copy-mode":
             return """
-            Usage: cmux \(command)
+            Usage: gmux \(command)
 
             tmux compatibility placeholder. This command is currently not supported.
             """
         case "set-buffer":
             return """
-            Usage: cmux set-buffer [--name <name>] [--] <text>
+            Usage: gmux set-buffer [--name <name>] [--] <text>
 
             Save text into a named tmux-compat buffer.
 
@@ -7508,7 +7508,7 @@ struct CMUXCLI {
             """
         case "paste-buffer":
             return """
-            Usage: cmux paste-buffer [--name <name>] [--workspace <id|ref>] [--surface <id|ref>]
+            Usage: gmux paste-buffer [--name <name>] [--workspace <id|ref>] [--surface <id|ref>]
 
             Paste a named tmux-compat buffer into a surface.
 
@@ -7519,13 +7519,13 @@ struct CMUXCLI {
             """
         case "list-buffers":
             return """
-            Usage: cmux list-buffers
+            Usage: gmux list-buffers
 
             List tmux-compat buffers.
             """
         case "respawn-pane":
             return """
-            Usage: cmux respawn-pane [--workspace <id|ref>] [--surface <id|ref>] [--command <cmd> | <cmd>]
+            Usage: gmux respawn-pane [--workspace <id|ref>] [--surface <id|ref>] [--command <cmd> | <cmd>]
 
             Send a command (or default shell restart command) to a surface.
 
@@ -7536,7 +7536,7 @@ struct CMUXCLI {
             """
         case "display-message":
             return """
-            Usage: cmux display-message [-p|--print] <text>
+            Usage: gmux display-message [-p|--print] <text>
 
             Print text (or show it via notification bridge in parity mode).
 
@@ -7545,7 +7545,7 @@ struct CMUXCLI {
             """
         case "read-screen":
             return """
-            Usage: cmux read-screen [flags]
+            Usage: gmux read-screen [flags]
 
             Read terminal text from a surface as plain text.
 
@@ -7556,12 +7556,12 @@ struct CMUXCLI {
               --lines <n>            Limit to the last n lines (implies --scrollback)
 
             Example:
-              cmux read-screen
-              cmux read-screen --surface surface:2 --scrollback --lines 200
+              gmux read-screen
+              gmux read-screen --surface surface:2 --scrollback --lines 200
             """
         case "send":
             return """
-            Usage: cmux send [flags] [--] <text>
+            Usage: gmux send [flags] [--] <text>
 
             Send text to a terminal surface. Escape sequences: \\n and \\r send Enter, \\t sends Tab.
 
@@ -7570,12 +7570,12 @@ struct CMUXCLI {
               --surface <id|ref>     Target surface (default: $CMUX_SURFACE_ID)
 
             Example:
-              cmux send "echo hello"
-              cmux send --surface surface:2 "ls -la\\n"
+              gmux send "echo hello"
+              gmux send --surface surface:2 "ls -la\\n"
             """
         case "send-key":
             return """
-            Usage: cmux send-key [flags] [--] <key>
+            Usage: gmux send-key [flags] [--] <key>
 
             Send a key event to a terminal surface.
 
@@ -7584,12 +7584,12 @@ struct CMUXCLI {
               --surface <id|ref>     Target surface (default: $CMUX_SURFACE_ID)
 
             Example:
-              cmux send-key enter
-              cmux send-key --surface surface:2 ctrl+c
+              gmux send-key enter
+              gmux send-key --surface surface:2 ctrl+c
             """
         case "send-panel":
             return """
-            Usage: cmux send-panel --panel <id|ref> [flags] [--] <text>
+            Usage: gmux send-panel --panel <id|ref> [flags] [--] <text>
 
             Send text to a specific panel (surface). Escape sequences: \\n and \\r send Enter, \\t sends Tab.
 
@@ -7598,11 +7598,11 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux send-panel --panel surface:2 "echo hello\\n"
+              gmux send-panel --panel surface:2 "echo hello\\n"
             """
         case "send-key-panel":
             return """
-            Usage: cmux send-key-panel --panel <id|ref> [flags] [--] <key>
+            Usage: gmux send-key-panel --panel <id|ref> [flags] [--] <key>
 
             Send a key event to a specific panel (surface).
 
@@ -7611,12 +7611,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux send-key-panel --panel surface:2 enter
-              cmux send-key-panel --panel surface:2 ctrl+c
+              gmux send-key-panel --panel surface:2 enter
+              gmux send-key-panel --panel surface:2 ctrl+c
             """
         case "notify":
             return """
-            Usage: cmux notify [flags]
+            Usage: gmux notify [flags]
 
             Send a notification to a workspace/surface.
 
@@ -7628,24 +7628,24 @@ struct CMUXCLI {
               --surface <id|ref>     Target surface (default: $CMUX_SURFACE_ID)
 
             Example:
-              cmux notify --title "Build done" --body "All tests passed"
-              cmux notify --title "Error" --subtitle "test.swift" --body "Line 42: syntax error"
+              gmux notify --title "Build done" --body "All tests passed"
+              gmux notify --title "Error" --subtitle "test.swift" --body "Line 42: syntax error"
             """
         case "list-notifications":
             return """
-            Usage: cmux list-notifications
+            Usage: gmux list-notifications
 
             List queued notifications.
             """
         case "clear-notifications":
             return """
-            Usage: cmux clear-notifications
+            Usage: gmux clear-notifications
 
             Clear all queued notifications.
             """
         case "set-status":
             return """
-            Usage: cmux set-status <key> <value> [flags]
+            Usage: gmux set-status <key> <value> [flags]
 
             Set a sidebar status entry for a workspace. Status entries appear as
             pills in the sidebar tab row. Use a unique key so different tools
@@ -7657,12 +7657,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux set-status build "compiling" --icon hammer --color "#ff9500"
-              cmux set-status deploy "v1.2.3" --workspace workspace:2
+              gmux set-status build "compiling" --icon hammer --color "#ff9500"
+              gmux set-status deploy "v1.2.3" --workspace workspace:2
             """
         case "clear-status":
             return """
-            Usage: cmux clear-status <key> [flags]
+            Usage: gmux clear-status <key> [flags]
 
             Remove a sidebar status entry by key.
 
@@ -7670,11 +7670,11 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux clear-status build
+              gmux clear-status build
             """
         case "list-status":
             return """
-            Usage: cmux list-status [flags]
+            Usage: gmux list-status [flags]
 
             List all sidebar status entries for a workspace.
 
@@ -7682,12 +7682,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux list-status
-              cmux list-status --workspace workspace:2
+              gmux list-status
+              gmux list-status --workspace workspace:2
             """
         case "set-progress":
             return """
-            Usage: cmux set-progress <0.0-1.0> [flags]
+            Usage: gmux set-progress <0.0-1.0> [flags]
 
             Set a progress bar in the sidebar for a workspace.
 
@@ -7696,12 +7696,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux set-progress 0.5 --label "Building..."
-              cmux set-progress 1.0 --label "Done"
+              gmux set-progress 0.5 --label "Building..."
+              gmux set-progress 1.0 --label "Done"
             """
         case "clear-progress":
             return """
-            Usage: cmux clear-progress [flags]
+            Usage: gmux clear-progress [flags]
 
             Clear the sidebar progress bar for a workspace.
 
@@ -7709,11 +7709,11 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux clear-progress
+              gmux clear-progress
             """
         case "log":
             return """
-            Usage: cmux log [flags] [--] <message>
+            Usage: gmux log [flags] [--] <message>
 
             Append a log entry to the sidebar for a workspace.
 
@@ -7723,13 +7723,13 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux log "Build started"
-              cmux log --level error --source build "Compilation failed"
-              cmux log --level success -- "All 42 tests passed"
+              gmux log "Build started"
+              gmux log --level error --source build "Compilation failed"
+              gmux log --level success -- "All 42 tests passed"
             """
         case "clear-log":
             return """
-            Usage: cmux clear-log [flags]
+            Usage: gmux clear-log [flags]
 
             Clear all sidebar log entries for a workspace.
 
@@ -7737,11 +7737,11 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux clear-log
+              gmux clear-log
             """
         case "list-log":
             return """
-            Usage: cmux list-log [flags]
+            Usage: gmux list-log [flags]
 
             List sidebar log entries for a workspace.
 
@@ -7750,12 +7750,12 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux list-log
-              cmux list-log --limit 5
+              gmux list-log
+              gmux list-log --limit 5
             """
         case "sidebar-state":
             return """
-            Usage: cmux sidebar-state [flags]
+            Usage: gmux sidebar-state [flags]
 
             Dump all sidebar metadata for a workspace (cwd, git branch, ports,
             status entries, progress, log entries).
@@ -7764,28 +7764,28 @@ struct CMUXCLI {
               --workspace <id|ref>   Target workspace (default: $CMUX_WORKSPACE_ID)
 
             Example:
-              cmux sidebar-state
-              cmux sidebar-state --workspace workspace:2
+              gmux sidebar-state
+              gmux sidebar-state --workspace workspace:2
             """
         case "set-app-focus":
             return """
-            Usage: cmux set-app-focus <active|inactive|clear>
+            Usage: gmux set-app-focus <active|inactive|clear>
 
             Override app focus state for notification routing tests.
 
             Example:
-              cmux set-app-focus inactive
-              cmux set-app-focus clear
+              gmux set-app-focus inactive
+              gmux set-app-focus clear
             """
         case "simulate-app-active":
             return """
-            Usage: cmux simulate-app-active
+            Usage: gmux simulate-app-active
 
             Trigger the app-active handler used by notification focus tests.
             """
         case "claude-hook":
             return """
-            Usage: cmux claude-hook <session-start|active|stop|idle|notification|notify|prompt-submit> [flags]
+            Usage: gmux claude-hook <session-start|active|stop|idle|notification|notify|prompt-submit> [flags]
 
             Hook for Claude Code integration. Reads JSON from stdin.
 
@@ -7808,7 +7808,7 @@ struct CMUXCLI {
             """
         case "codex":
             return """
-            Usage: cmux codex <install-hooks|uninstall-hooks>
+            Usage: gmux codex <install-hooks|uninstall-hooks>
 
             Manage Codex CLI hooks integration.
 
@@ -7818,7 +7818,7 @@ struct CMUXCLI {
             """
         case "codex-hook":
             return """
-            Usage: cmux codex-hook <session-start|prompt-submit|stop> [flags]
+            Usage: gmux codex-hook <session-start|prompt-submit|stop> [flags]
 
             Hook for Codex CLI integration. Reads JSON from stdin.
             Gracefully no-ops when not running inside cmux.
@@ -7834,7 +7834,7 @@ struct CMUXCLI {
             """
         case "browser":
             return """
-            Usage: cmux browser [--surface <id|ref|index> | <surface>] <subcommand> [args]
+            Usage: gmux browser [--surface <id|ref|index> | <surface>] <subcommand> [args]
 
             Browser automation commands. Most subcommands require a surface handle.
             A surface can be passed as `--surface <handle>` or as the first positional token.
@@ -7891,11 +7891,11 @@ struct CMUXCLI {
               identify [--surface <id|ref|index>]
 
             Example:
-              cmux browser open https://example.com
-              cmux browser surface:1 navigate https://google.com
-              cmux browser --surface surface:1 snapshot --interactive
+              gmux browser open https://example.com
+              gmux browser surface:1 navigate https://google.com
+              gmux browser --surface surface:1 snapshot --interactive
             """
-        // Legacy browser aliases — point users to `cmux browser --help`
+        // Legacy browser aliases — point users to `gmux browser --help`
         case "open-browser":
             return "Legacy alias for 'cmux browser open'. Run 'cmux browser --help' for details."
         case "navigate":
@@ -7914,8 +7914,8 @@ struct CMUXCLI {
             return "Legacy alias for 'cmux browser is-webview-focused'. Run 'cmux browser --help' for details."
         case "markdown":
             return """
-            Usage: cmux markdown open <path> [options]
-                   cmux markdown <path>       (shorthand for 'open')
+            Usage: gmux markdown open <path> [options]
+                   gmux markdown <path>       (shorthand for 'open')
 
             Open a markdown file in a formatted viewer panel with live file watching.
             The file is rendered with rich formatting (headings, code blocks, tables,
@@ -7928,10 +7928,10 @@ struct CMUXCLI {
               --direction <left|right|up|down>  Split direction (default: right)
 
             Examples:
-              cmux markdown open plan.md
-              cmux markdown ~/project/CHANGELOG.md
-              cmux markdown open ./docs/design.md --workspace 0
-              cmux markdown open plan.md --direction down
+              gmux markdown open plan.md
+              gmux markdown ~/project/CHANGELOG.md
+              gmux markdown open ./docs/design.md --workspace 0
+              gmux markdown open plan.md --direction down
             """
         default:
             return nil
@@ -7942,16 +7942,16 @@ struct CMUXCLI {
     private func dispatchSubcommandHelp(command: String, commandArgs: [String]) -> Bool {
         guard commandArgs.contains("--help") || commandArgs.contains("-h") else { return false }
         guard let text = subcommandUsage(command) else { return false }
-        print("cmux \(command)")
+        print("gmux \(command)")
         print("")
         print(text)
         return true
     }
 
-    private static let cmuxThemeOverrideBundleIdentifier = "com.cmuxterm.app"
+    private static let cmuxThemeOverrideBundleIdentifier = "com.gmuxterm.app"
     private static let cmuxThemesBlockStart = "# cmux themes start"
     private static let cmuxThemesBlockEnd = "# cmux themes end"
-    private static let cmuxThemesReloadNotificationName = "com.cmuxterm.themes.reload-config"
+    private static let cmuxThemesReloadNotificationName = "com.gmuxterm.themes.reload-config"
 
     private struct ThemeSelection {
         let rawValue: String?
@@ -10298,7 +10298,7 @@ struct CMUXCLI {
     ) throws -> URL {
         let homePath = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
         let root = URL(fileURLWithPath: homePath, isDirectory: true)
-            .appendingPathComponent(".cmuxterm", isDirectory: true)
+            .appendingPathComponent(".gmuxterm", isDirectory: true)
             .appendingPathComponent(directoryName, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: nil)
         let tmuxURL = root.appendingPathComponent("tmux", isDirectory: false)
@@ -10310,7 +10310,7 @@ struct CMUXCLI {
         let script = """
         #!/usr/bin/env bash
         set -euo pipefail
-        exec "${CMUX_CLAUDE_TEAMS_CMUX_BIN:-cmux}" __tmux-compat "$@"
+        exec "${CMUX_CLAUDE_TEAMS_CMUX_BIN:-gmux}" __tmux-compat "$@"
         """
         return try createTmuxCompatShimDirectory(
             directoryName: "claude-teams-bin",
@@ -10507,7 +10507,7 @@ struct CMUXCLI {
     private func omoShadowConfigDir() -> URL {
         let homePath = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
         return URL(fileURLWithPath: homePath, isDirectory: true)
-            .appendingPathComponent(".cmuxterm", isDirectory: true)
+            .appendingPathComponent(".gmuxterm", isDirectory: true)
             .appendingPathComponent("omo-config", isDirectory: true)
     }
 
@@ -11446,7 +11446,7 @@ struct CMUXCLI {
         let homePath = ProcessInfo.processInfo.environment["HOME"]
             ?? NSString(string: "~").expandingTildeInPath
         return URL(fileURLWithPath: homePath)
-            .appendingPathComponent(".cmuxterm")
+            .appendingPathComponent(".gmuxterm")
             .appendingPathComponent("tmux-compat-store.json")
     }
 
@@ -11618,7 +11618,7 @@ struct CMUXCLI {
     private func tmuxWaitForSignalURL(name: String) -> URL {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
         let sanitized = name.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" }
-        return URL(fileURLWithPath: "/tmp/cmux-wait-for-\(String(sanitized)).sig")
+        return URL(fileURLWithPath: "/tmp/gmux-wait-for-\(String(sanitized)).sig")
     }
 
     private func runTmuxCompatCommand(
@@ -12286,7 +12286,7 @@ struct CMUXCLI {
             telemetry.breadcrumb("claude-hook.help")
             print(
                 """
-                cmux claude-hook <session-start|stop|session-end|notification|prompt-submit|pre-tool-use> [--workspace <id|index>] [--surface <id|index>]
+                gmux claude-hook <session-start|stop|session-end|notification|prompt-submit|pre-tool-use> [--workspace <id|index>] [--surface <id|index>]
                 """
             )
 
@@ -13012,12 +13012,12 @@ struct CMUXCLI {
     // MARK: - Codex hooks
 
     /// The hooks.json content that cmux installs into ~/.codex/.
-    /// Each hook calls `cmux codex-hook <event>` which gracefully no-ops
+    /// Each hook calls `gmux codex-hook <event>` which gracefully no-ops
     /// when not running inside cmux. The command checks for cmux on PATH
     /// first so it silently succeeds even when cmux is not installed
     /// (e.g. user opened codex in a non-cmux terminal).
     private static func codexHookCommand(_ event: String) -> String {
-        "[ -n \"$CMUX_SURFACE_ID\" ] && command -v cmux >/dev/null 2>&1 && cmux codex-hook \(event) || echo '{}'"
+        "[ -n \"$CMUX_SURFACE_ID\" ] && command -v gmux >/dev/null 2>&1 && gmux codex-hook \(event) || echo '{}'"
     }
 
     private static let codexHooksJSON: [String: Any] = [
@@ -13047,7 +13047,7 @@ struct CMUXCLI {
     ]
 
     /// Identifier used to detect cmux-owned hooks during uninstall.
-    private static let codexHookCommandMarker = "cmux codex-hook"
+    private static let codexHookCommandMarker = "gmux codex-hook"
 
     private func runCodexInstallHooks() throws {
         let skipConfirm = ProcessInfo.processInfo.arguments.contains("--yes")
@@ -13103,7 +13103,7 @@ struct CMUXCLI {
         let configChanged = existingConfigContent != newConfigContent
 
         if !hooksChanged && !configChanged {
-            print("cmux hooks are already installed. Nothing to change.")
+            print("gmux hooks are already installed. Nothing to change.")
             return
         }
 
@@ -13417,7 +13417,7 @@ struct CMUXCLI {
         let parsedInput = parseClaudeHookInput(rawInput: rawInput)
         let sessionStore = ClaudeHookSessionStore(
             processEnv: env.merging(
-                ["CMUX_CLAUDE_HOOK_STATE_PATH": "~/.cmuxterm/codex-hook-sessions.json"],
+                ["CMUX_CLAUDE_HOOK_STATE_PATH": "~/.gmuxterm/codex-hook-sessions.json"],
                 uniquingKeysWith: { _, new in new }
             )
         )
@@ -13572,7 +13572,7 @@ struct CMUXCLI {
             }
 
         case "help", "--help", "-h":
-            print("cmux codex-hook <session-start|prompt-submit|stop> [--workspace <id>] [--surface <id>]")
+            print("gmux codex-hook <session-start|prompt-submit|stop> [--workspace <id>] [--surface <id>]")
 
         default:
             throw CLIError(message: "Unknown codex-hook subcommand: \(subcommand)")
@@ -13656,13 +13656,13 @@ struct CMUXCLI {
         let commit = info["CMUXCommit"].flatMap { normalizedCommitHash($0) }
         let baseSummary: String
         if let version = info["CFBundleShortVersionString"], let build = info["CFBundleVersion"] {
-            baseSummary = "cmux \(version) (\(build))"
+            baseSummary = "gmux \(version) (\(build))"
         } else if let version = info["CFBundleShortVersionString"] {
-            baseSummary = "cmux \(version)"
+            baseSummary = "gmux \(version)"
         } else if let build = info["CFBundleVersion"] {
-            baseSummary = "cmux build \(build)"
+            baseSummary = "gmux build \(build)"
         } else {
-            baseSummary = "cmux version unknown"
+            baseSummary = "gmux version unknown"
         }
         guard let commit else { return baseSummary }
         return "\(baseSummary) [\(commit)]"
@@ -14013,11 +14013,11 @@ struct CMUXCLI {
 
     private func usage() -> String {
         return """
-        cmux - control cmux via Unix socket
+        gmux - control cmux via Unix socket
 
         Usage:
-          cmux <path>                Open a directory in a new workspace (launches cmux if needed)
-          cmux [global-options] <command> [options]
+          gmux <path>                Open a directory in a new workspace (launches cmux if needed)
+          gmux [global-options] <command> [options]
 
         Handle Inputs:
           Use UUIDs, short refs (window:1/workspace:2/pane:3/surface:4), or indexes where commands accept window, workspace, pane, or surface inputs.
@@ -14152,7 +14152,7 @@ struct CMUXCLI {
           CMUX_TAB_ID         Optional alias used by `tab-action`/`rename-tab` as default --tab.
           CMUX_SURFACE_ID     Auto-set in cmux terminals. Used as default --surface.
           CMUX_SOCKET_PATH    Override the Unix socket path. Without this, the CLI defaults
-                              to ~/Library/Application Support/cmux/cmux.sock and auto-discovers tagged/debug sockets.
+                              to ~/Library/Application Support/gmux/gmux.sock and auto-discovers tagged/debug sockets.
         """
     }
 

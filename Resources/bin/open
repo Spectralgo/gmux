@@ -442,7 +442,7 @@ fi
 
 # Find cmux CLI (same directory as this script).
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
-CMUX_CLI="$SELF_DIR/cmux"
+CMUX_CLI="$SELF_DIR/gmux"
 
 if [[ ! -x "$CMUX_CLI" ]]; then
     system_open "$@"

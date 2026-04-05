@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cmux import cmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/cmux-debug.sock")
-LAST_SOCKET_HINT_PATH = Path("/tmp/cmux-last-socket-path")
+SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/gmux-debug.sock")
+LAST_SOCKET_HINT_PATH = Path("/tmp/gmux-last-socket-path")
 
 
 def _must(cond: bool, msg: str) -> None:
@@ -27,15 +27,15 @@ def _find_cli_binary() -> str:
     if env_cli and os.path.isfile(env_cli) and os.access(env_cli, os.X_OK):
         return env_cli
 
-    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/cmux")
+    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/gmux")
     if os.path.isfile(fixed) and os.access(fixed, os.X_OK):
         return fixed
 
-    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/cmux"), recursive=True)
-    candidates += glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux")
+    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/gmux"), recursive=True)
+    candidates += glob.glob("/tmp/gmux-*/Build/Products/Debug/gmux")
     candidates = [p for p in candidates if os.path.isfile(p) and os.access(p, os.X_OK)]
     if not candidates:
-        raise cmuxError("Could not locate cmux CLI binary; set CMUXTERM_CLI")
+        raise cmuxError("Could not locate gmux CLI binary; set CMUXTERM_CLI")
     candidates.sort(key=lambda p: os.path.getmtime(p), reverse=True)
     return candidates[0]
 
@@ -57,7 +57,7 @@ def main() -> int:
     _must(version_proc.returncode == 0, f"--version should succeed: {version_proc.returncode} {version_out!r}")
     _must("cmux" in version_out, f"--version output should mention cmux: {version_out!r}")
 
-    # Debug builds should auto-resolve the active debug socket via /tmp/cmux-last-socket-path
+    # Debug builds should auto-resolve the active debug socket via /tmp/gmux-last-socket-path
     # when CMUX_SOCKET_PATH is not set.
     hint_backup: str | None = None
     hint_had_file = LAST_SOCKET_HINT_PATH.exists()

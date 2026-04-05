@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cmux import cmux, cmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/cmux-debug.sock")
+SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/gmux-debug.sock")
 
 
 def _must(cond: bool, msg: str) -> None:
@@ -30,15 +30,15 @@ def _find_cli_binary() -> str:
     if env_cli and os.path.isfile(env_cli) and os.access(env_cli, os.X_OK):
         return env_cli
 
-    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/cmux")
+    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/gmux")
     if os.path.isfile(fixed) and os.access(fixed, os.X_OK):
         return fixed
 
-    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/cmux"), recursive=True)
-    candidates += glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux")
+    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/gmux"), recursive=True)
+    candidates += glob.glob("/tmp/gmux-*/Build/Products/Debug/gmux")
     candidates = [p for p in candidates if os.path.isfile(p) and os.access(p, os.X_OK)]
     if not candidates:
-        raise cmuxError("Could not locate cmux CLI binary; set CMUXTERM_CLI")
+        raise cmuxError("Could not locate gmux CLI binary; set CMUXTERM_CLI")
     candidates.sort(key=lambda p: os.path.getmtime(p), reverse=True)
     return candidates[0]
 
@@ -202,8 +202,8 @@ def main() -> int:
             _must(os.path.isfile(ssh_startup_command), f"cmux ssh startup script should exist on disk: {ssh_startup_command!r}")
             ssh_startup_script = Path(ssh_startup_command).read_text()
             _must(
-                f"cmux_bootstrap_path=\"$HOME/.cmux/relay/{int(remote_relay_port)}.bootstrap.sh\"" in ssh_startup_script,
-                f"cmux ssh startup script should stage the remote bootstrap payload under ~/.cmux/relay: {ssh_startup_command!r}",
+                f"cmux_bootstrap_path=\"$HOME/.gmux/relay/{int(remote_relay_port)}.bootstrap.sh\"" in ssh_startup_script,
+                f"cmux ssh startup script should stage the remote bootstrap payload under ~/.gmux/relay: {ssh_startup_command!r}",
             )
             _must(
                 "cat > \"$cmux_bootstrap_path\"" in ssh_startup_script,
@@ -214,7 +214,7 @@ def main() -> int:
                 f"cmux ssh startup script should install the bootstrap through a non-login POSIX shell: {ssh_startup_command!r}",
             )
             _must(
-                f"/bin/sh \"$HOME/.cmux/relay/{int(remote_relay_port)}.bootstrap.sh\"" in ssh_startup_script,
+                f"/bin/sh \"$HOME/.gmux/relay/{int(remote_relay_port)}.bootstrap.sh\"" in ssh_startup_script,
                 f"cmux ssh startup script should execute the staged remote bootstrap file through /bin/sh: {ssh_startup_command!r}",
             )
             _must(
@@ -236,7 +236,7 @@ def main() -> int:
             _must("-o StrictHostKeyChecking=accept-new" in ssh_command, f"ssh command prefix mismatch: {ssh_command!r}")
             _must("-o ControlMaster=auto" in ssh_command, f"ssh command should opt into connection reuse: {ssh_command!r}")
             _must("-o ControlPersist=600" in ssh_command, f"ssh command should keep master alive for reuse: {ssh_command!r}")
-            _must("ControlPath=/tmp/cmux-ssh-" in ssh_command, f"ssh command should use shared control path template: {ssh_command!r}")
+            _must("ControlPath=/tmp/gmux-ssh-" in ssh_command, f"ssh command should use shared control path template: {ssh_command!r}")
             _must(
                 "RemoteCommand=" not in ssh_command,
                 f"cmux ssh should keep the plain ssh_command separate from the terminal bootstrap wrapper: {ssh_command!r}",
@@ -250,11 +250,11 @@ def main() -> int:
                 f"cmux ssh should capture the bootstrap tty before handing off to the temp startup script: {ssh_terminal_command!r}",
             )
             _must(
-                f"\"$HOME/.cmux/relay/{int(remote_relay_port)}.tty\"" in ssh_terminal_command,
+                f"\"$HOME/.gmux/relay/{int(remote_relay_port)}.tty\"" in ssh_terminal_command,
                 f"cmux ssh should persist the bootstrap tty beside the relay metadata: {ssh_terminal_command!r}",
             )
             _must(
-                f"export PATH=\"$HOME/.cmux/bin:$PATH\"" in remote_bootstrap,
+                f"export PATH=\"$HOME/.gmux/bin:$PATH\"" in remote_bootstrap,
                 f"cmux ssh should still prepend the remote cmux wrapper path in the remote bootstrap: {remote_bootstrap!r}",
             )
             _must(
@@ -414,7 +414,7 @@ def main() -> int:
 
             _must(bool(workspace_id_without_name), f"cmux ssh without --name should still create workspace: {payload2}")
             _must(
-                "ControlPath=/tmp/cmux-ssh-" in ssh_command_without_name,
+                "ControlPath=/tmp/gmux-ssh-" in ssh_command_without_name,
                 f"cmux ssh without --name should still include control path defaults: {ssh_command_without_name!r}",
             )
             _must(
@@ -493,7 +493,7 @@ def main() -> int:
                     "--ssh-option",
                     "controlpersist=0",
                     "--ssh-option",
-                    "controlpath=/tmp/cmux-ssh-%C-custom",
+                    "controlpath=/tmp/gmux-ssh-%C-custom",
                 ],
             )
             workspace_id_case_override = _append_workspace_to_cleanup(
@@ -531,7 +531,7 @@ def main() -> int:
                 f"ssh command should not force default ControlPersist when lowercase override is supplied: {ssh_command_case_override!r}",
             )
             _must(
-                "controlpath=/tmp/cmux-ssh-%c-custom" in ssh_command_case_override_lower,
+                "controlpath=/tmp/gmux-ssh-%c-custom" in ssh_command_case_override_lower,
                 f"ssh command should preserve lowercase ControlPath override value: {ssh_command_case_override!r}",
             )
             _must(

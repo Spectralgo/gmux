@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cmux import cmux, cmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/cmux.sock")
+SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/gmux.sock")
 SSH_HOST = os.environ.get("CMUX_SSH_TEST_HOST", "").strip()
 SSH_PORT = os.environ.get("CMUX_SSH_TEST_PORT", "").strip()
 SSH_IDENTITY = os.environ.get("CMUX_SSH_TEST_IDENTITY", "").strip()
@@ -41,15 +41,15 @@ def _find_cli_binary() -> str:
     if env_cli and os.path.isfile(env_cli) and os.access(env_cli, os.X_OK):
         return env_cli
 
-    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/cmux")
+    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/gmux")
     if os.path.isfile(fixed) and os.access(fixed, os.X_OK):
         return fixed
 
-    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/cmux"), recursive=True)
-    candidates += glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux")
+    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/gmux"), recursive=True)
+    candidates += glob.glob("/tmp/gmux-*/Build/Products/Debug/gmux")
     candidates = [p for p in candidates if os.path.isfile(p) and os.access(p, os.X_OK)]
     if not candidates:
-        raise cmuxError("Could not locate cmux CLI binary; set CMUXTERM_CLI")
+        raise cmuxError("Could not locate gmux CLI binary; set CMUXTERM_CLI")
     candidates.sort(key=lambda p: os.path.getmtime(p), reverse=True)
     return candidates[0]
 
@@ -227,7 +227,7 @@ def main() -> int:
 
             server_script = (
                 f"printf '%s\\n' {marker_body} > /tmp/{marker_file}; "
-                f"python3 -m http.server {ssh_web_port} --directory /tmp >/tmp/cmux-remote-browser-proxy-{stamp}.log 2>&1 & "
+                f"python3 -m http.server {ssh_web_port} --directory /tmp >/tmp/gmux-remote-browser-proxy-{stamp}.log 2>&1 & "
                 "for _ in $(seq 1 30); do "
                 f"  if curl -fsS http://localhost:{ssh_web_port}/{marker_file} | grep -q {marker_body}; then "
                 f"    echo {ready_token}; "

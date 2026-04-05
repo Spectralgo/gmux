@@ -113,13 +113,13 @@ def main() -> int:
 
     socket_path = None
     if tag:
-        socket_path = f"/tmp/cmux-debug-{tag}.sock"
+        socket_path = f"/tmp/gmux-debug-{tag}.sock"
     client = cmux(socket_path=socket_path)
     client.connect()
 
     # Use resolved paths to avoid /tmp -> /private/tmp symlink mismatch on macOS
-    test_dir_a = str(Path("/tmp/cmux_split_cwd_test_a").resolve())
-    test_dir_b = str(Path("/tmp/cmux_split_cwd_test_b").resolve())
+    test_dir_a = str(Path("/tmp/gmux_split_cwd_test_a").resolve())
+    test_dir_b = str(Path("/tmp/gmux_split_cwd_test_b").resolve())
     os.makedirs(test_dir_a, exist_ok=True)
     os.makedirs(test_dir_b, exist_ok=True)
 

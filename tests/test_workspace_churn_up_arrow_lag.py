@@ -179,7 +179,7 @@ def resolve_target_socket() -> str:
     socket_path = os.environ.get("CMUX_SOCKET_PATH")
     if not socket_path:
         raise cmuxError(
-            "CMUX_SOCKET_PATH is required. Point it to a tagged dev socket (for example /tmp/cmux-debug-<tag>.sock)."
+            "CMUX_SOCKET_PATH is required. Point it to a tagged dev socket (for example /tmp/gmux-debug-<tag>.sock)."
         )
     base = os.path.basename(socket_path)
     if not ALLOW_MAIN_SOCKET and base in {"cmux.sock", "cmux-debug.sock"}:

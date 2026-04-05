@@ -237,7 +237,7 @@ def test_live_socket_injects_supported_hooks(failures: list[str]) -> None:
     )
     expect(runtime_node_options == "__UNSET__", f"live socket: expected runtime NODE_OPTIONS restored, got {runtime_node_options!r}", failures)
     expect(child_node_options == "__UNSET__", f"live socket: expected child NODE_OPTIONS restored, got {child_node_options!r}", failures)
-    expect(hook_cmux_bin.endswith("/bundled cli/cmux"), f"live socket: expected bundled cmux pin, got {hook_cmux_bin!r}", failures)
+    expect(hook_cmux_bin.endswith("/bundled cli/gmux"), f"live socket: expected bundled cmux pin, got {hook_cmux_bin!r}", failures)
 
     settings = parse_settings_arg(real_argv)
     hooks = settings.get("hooks", {})

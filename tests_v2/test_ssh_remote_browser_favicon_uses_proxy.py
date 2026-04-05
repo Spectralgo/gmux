@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cmux import cmux, cmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/cmux.sock")
+SOCKET_PATH = os.environ.get("CMUX_SOCKET", "/tmp/gmux.sock")
 SSH_HOST = os.environ.get("CMUX_SSH_TEST_HOST", "").strip()
 SSH_PORT = os.environ.get("CMUX_SSH_TEST_PORT", "").strip()
 SSH_IDENTITY = os.environ.get("CMUX_SSH_TEST_IDENTITY", "").strip()
@@ -41,15 +41,15 @@ def _find_cli_binary() -> str:
     if env_cli and os.path.isfile(env_cli) and os.access(env_cli, os.X_OK):
         return env_cli
 
-    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/cmux")
+    fixed = os.path.expanduser("~/Library/Developer/Xcode/DerivedData/cmux-tests-v2/Build/Products/Debug/gmux")
     if os.path.isfile(fixed) and os.access(fixed, os.X_OK):
         return fixed
 
-    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/cmux"), recursive=True)
-    candidates += glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux")
+    candidates = glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug/gmux"), recursive=True)
+    candidates += glob.glob("/tmp/gmux-*/Build/Products/Debug/gmux")
     candidates = [p for p in candidates if os.path.isfile(p) and os.access(p, os.X_OK)]
     if not candidates:
-        raise cmuxError("Could not locate cmux CLI binary; set CMUXTERM_CLI")
+        raise cmuxError("Could not locate gmux CLI binary; set CMUXTERM_CLI")
     candidates.sort(key=lambda p: os.path.getmtime(p), reverse=True)
     return candidates[0]
 
@@ -189,9 +189,9 @@ def main() -> int:
     ssh_web_port = int(os.environ.get("CMUX_SSH_TEST_WEB_PORT", str(default_web_port)))
     url = f"http://localhost:{ssh_web_port}/"
     png_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9WewAAAABJRU5ErkJggg=="
-    server_script_path = f"/tmp/cmux_remote_favicon_server_{stamp}.py"
-    server_log_path = f"/tmp/cmux_remote_favicon_server_{stamp}.log"
-    hit_file_path = f"/tmp/cmux_remote_favicon_hit_{stamp}"
+    server_script_path = f"/tmp/gmux_remote_favicon_server_{stamp}.py"
+    server_log_path = f"/tmp/gmux_remote_favicon_server_{stamp}.log"
+    hit_file_path = f"/tmp/gmux_remote_favicon_hit_{stamp}"
 
     try:
         with cmux(SOCKET_PATH) as setup_client:

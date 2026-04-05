@@ -10,7 +10,7 @@ import Bonsplit
 // freeze the UI.
 extension UNUserNotificationCenter {
     private static let removalQueue = DispatchQueue(
-        label: "com.cmuxterm.notification-removal",
+        label: "com.gmuxterm.notification-removal",
         qos: .utility
     )
 
@@ -35,9 +35,9 @@ enum NotificationSoundSettings {
     static let customFileValue = "custom_file"
     static let customFilePathKey = "notificationSoundCustomFilePath"
     static let defaultCustomFilePath = ""
-    private static let stagedCustomSoundBaseName = "cmux-custom-notification-sound"
+    private static let stagedCustomSoundBaseName = "gmux-custom-notification-sound"
     private static let customSoundPreparationQueue = DispatchQueue(
-        label: "com.cmuxterm.notification-sound-preparation",
+        label: "com.gmuxterm.notification-sound-preparation",
         qos: .utility
     )
     private static let pendingCustomSoundPreparationLock = NSLock()
@@ -521,7 +521,7 @@ enum NotificationSoundSettings {
     }
 
     private static let customCommandQueue = DispatchQueue(
-        label: "com.cmuxterm.notification-custom-command",
+        label: "com.gmuxterm.notification-custom-command",
         qos: .utility
     )
 
@@ -683,8 +683,8 @@ final class TerminalNotificationStore: ObservableObject {
 
     static let shared = TerminalNotificationStore()
 
-    static let categoryIdentifier = "com.cmuxterm.app.userNotification"
-    static let actionShowIdentifier = "com.cmuxterm.app.userNotification.show"
+    static let categoryIdentifier = "com.gmuxterm.app.userNotification"
+    static let actionShowIdentifier = "com.gmuxterm.app.userNotification.show"
     private enum AuthorizationRequestOrigin: String {
         case notificationDelivery = "notification_delivery"
         case settingsButton = "settings_button"

@@ -37,8 +37,8 @@ cmux_socket_available() {
 
     local self_dir cmux_bin
     self_dir="$(cd "$(dirname "$0")" && pwd)"
-    cmux_bin="$self_dir/cmux"
-    [[ -x "$cmux_bin" ]] || cmux_bin="$(command -v cmux || true)"
+    cmux_bin="$self_dir/gmux"
+    [[ -x "$cmux_bin" ]] || cmux_bin="$(command -v gmux || true)"
     [[ -n "$cmux_bin" ]] || return 1
 
     # Keep stale/hung socket checks bounded so claude startup does not block
@@ -56,19 +56,19 @@ resolve_hook_cmux_bin() {
     fi
 
     self_dir="$(cd "$(dirname "$0")" && pwd)"
-    bundled_cli="$self_dir/cmux"
+    bundled_cli="$self_dir/gmux"
     if [[ -x "$bundled_cli" ]]; then
         printf '%s' "$bundled_cli"
         return 0
     fi
 
-    bundled_cli="$(command -v cmux || true)"
+    bundled_cli="$(command -v gmux || true)"
     if [[ -n "$bundled_cli" ]]; then
         printf '%s' "$bundled_cli"
         return 0
     fi
 
-    printf '%s' "cmux"
+    printf '%s' "gmux"
 }
 
 # Pass through if not in a cmux terminal, hooks are disabled, or the cmux
@@ -93,7 +93,7 @@ REAL_CLAUDE="$(find_real_claude)" || { echo "Error: claude not found in PATH" >&
 
 ensure_node_options_restore_module() {
     local guard_dir="${TMPDIR:-/tmp}"
-    guard_dir="${guard_dir%/}/cmux-claude-node-options"
+    guard_dir="${guard_dir%/}/gmux-claude-node-options"
     local guard_path="$guard_dir/restore-node-options.cjs"
     mkdir -p "$guard_dir" || return 1
     local temp_path

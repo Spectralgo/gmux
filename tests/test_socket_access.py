@@ -104,7 +104,7 @@ def _derived_app_candidates_for_current_worktree():
         if os.path.realpath(workspace_path) != project_path:
             continue
         derived_root = os.path.dirname(info_path)
-        app_path = os.path.join(derived_root, "Build/Products/Debug/cmux DEV.app")
+        app_path = os.path.join(derived_root, "Build/Products/Debug/Gmux DEV.app")
         if os.path.exists(app_path):
             matches.append(app_path)
     return matches
@@ -118,8 +118,8 @@ def _find_app():
     preferred_slug = _preferred_worktree_slug()
     if preferred_slug:
         preferred_tmp = []
-        preferred_tmp.extend(glob.glob(f"/tmp/cmux-{preferred_slug}/Build/Products/Debug/cmux DEV*.app"))
-        preferred_tmp.extend(glob.glob(f"/private/tmp/cmux-{preferred_slug}/Build/Products/Debug/cmux DEV*.app"))
+        preferred_tmp.extend(glob.glob(f"/tmp/gmux-{preferred_slug}/Build/Products/Debug/Gmux DEV*.app"))
+        preferred_tmp.extend(glob.glob(f"/private/tmp/gmux-{preferred_slug}/Build/Products/Debug/Gmux DEV*.app"))
         preferred_tmp = [p for p in preferred_tmp if os.path.exists(p)]
         if preferred_tmp:
             preferred_tmp.sort(key=os.path.getmtime, reverse=True)
@@ -132,11 +132,11 @@ def _find_app():
 
     home = os.path.expanduser("~")
     derived_candidates = glob.glob(os.path.join(
-        home, "Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/cmux DEV.app"
+        home, "Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/Gmux DEV.app"
     ))
     tmp_candidates = []
-    tmp_candidates.extend(glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux DEV*.app"))
-    tmp_candidates.extend(glob.glob("/private/tmp/cmux-*/Build/Products/Debug/cmux DEV*.app"))
+    tmp_candidates.extend(glob.glob("/tmp/gmux-*/Build/Products/Debug/Gmux DEV*.app"))
+    tmp_candidates.extend(glob.glob("/private/tmp/gmux-*/Build/Products/Debug/Gmux DEV*.app"))
 
     derived_candidates = [p for p in derived_candidates if os.path.exists(p)]
     tmp_candidates = [p for p in tmp_candidates if os.path.exists(p)]
@@ -174,10 +174,10 @@ def _find_cli(preferred_app_path: str = ""):
     candidates = []
     home = os.path.expanduser("~")
     candidates.extend(glob.glob(os.path.join(
-        home, "Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/cmux"
+        home, "Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/gmux"
     )))
-    candidates.extend(glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux"))
-    candidates.extend(glob.glob("/private/tmp/cmux-*/Build/Products/Debug/cmux"))
+    candidates.extend(glob.glob("/tmp/gmux-*/Build/Products/Debug/gmux"))
+    candidates.extend(glob.glob("/private/tmp/gmux-*/Build/Products/Debug/gmux"))
     candidates = [p for p in candidates if os.path.exists(p) and os.access(p, os.X_OK)]
     if not candidates:
         return ""
@@ -647,7 +647,7 @@ def run_tests():
         return 1
     print(f"App: {app_path}")
 
-    socket_path = f"/tmp/cmux-test-socket-access-{os.getpid()}.sock"
+    socket_path = f"/tmp/gmux-test-socket-access-{os.getpid()}.sock"
     try:
         os.unlink(socket_path)
     except OSError:
