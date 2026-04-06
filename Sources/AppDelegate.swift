@@ -2352,6 +2352,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private var didPrepareStartupSessionSnapshot = false
     private var didAttemptStartupSessionRestore = false
     private var isApplyingStartupSessionRestore = false
+    private var semanticResumeOverlayController: SemanticResumeOverlayController?
     private var sessionAutosaveTimer: DispatchSourceTimer?
     private var sessionAutosaveTickInFlight = false
     private var sessionAutosaveDeferredRetryPending = false
@@ -3188,6 +3189,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         startupSessionSnapshot = nil
         isApplyingStartupSessionRestore = false
         _ = saveSessionSnapshot(includeScrollback: false)
+        presentSemanticResumeOverlayIfNeeded()
+    }
+
+    private func presentSemanticResumeOverlayIfNeeded() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let checkpoints = GastownCheckpointReader.scanForCheckpoints()
+            guard !checkpoints.isEmpty else { return }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                let parentWindow = NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible })
+                self.semanticResumeOverlayController = SemanticResumeOverlayController.show(
+                    checkpoints: checkpoints,
+                    relativeTo: parentWindow,
+                    onOpenWorktree: { [weak self] context in
+                        self?.semanticResumeOverlayController?.dismissOverlay()
+                        self?.semanticResumeOverlayController = nil
+                        self?.openWorkspaceForExternalDirectory(
+                            workingDirectory: context.worktreePath,
+                            debugSource: "semanticResume.openWorktree"
+                        )
+                    },
+                    onDismiss: { [weak self] in
+                        self?.semanticResumeOverlayController = nil
+                    }
+                )
+            }
+        }
     }
 
     private func applySessionWindowSnapshot(
