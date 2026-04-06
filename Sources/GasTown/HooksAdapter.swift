@@ -361,3 +361,307 @@ struct HooksAdapter {
         )
     }
 }
+
+// MARK: - Write Domain Models
+//
+// Models for hooks diff, edit, and sync write actions (TASK-019).
+// These build on the read-only models above and surface clear
+// success, failure, and out-of-sync states.
+
+/// Identifies which configuration surface to edit.
+enum HookEditTarget: Equatable, Sendable {
+    /// The base hooks configuration file.
+    case base
+    /// An override file for a specific target scope.
+    case override(target: String)
+}
+
+/// The result of resolving an edit target to a filesystem path.
+struct HookEditResolution: Equatable, Sendable {
+    /// What was requested for editing.
+    let editTarget: HookEditTarget
+    /// Absolute path to the editable file.
+    let filePath: String
+    /// Whether the file currently exists on disk.
+    let fileExists: Bool
+}
+
+/// A single target's diff between current settings and generated configuration.
+struct HookDiffEntry: Equatable, Sendable, Identifiable {
+    var id: String { target }
+
+    /// The target path (e.g. `"gmux/polecats"`).
+    let target: String
+
+    /// Sync status of this target.
+    let status: HookSyncStatus
+
+    /// Human-readable diff output, or `nil` if the target is in sync.
+    let diff: String?
+}
+
+/// Point-in-time diff report across all hook targets.
+struct HooksDiffReport: Equatable, Sendable {
+    /// Per-target diff entries.
+    let entries: [HookDiffEntry]
+
+    /// When this report was generated.
+    let timestamp: Date
+
+    /// Whether any target has pending changes.
+    var hasChanges: Bool {
+        entries.contains { $0.status != .inSync }
+    }
+
+    /// Only entries that are out of sync or missing.
+    var changedEntries: [HookDiffEntry] {
+        entries.filter { $0.status != .inSync }
+    }
+}
+
+/// Per-target outcome after a sync operation.
+enum HookSyncResultStatus: String, Equatable, Sendable {
+    /// The target's settings file was regenerated.
+    case updated
+    /// The target was already in sync — no changes made.
+    case alreadyInSync = "already_in_sync"
+    /// The sync failed for this target.
+    case failed
+}
+
+/// A single target's sync result.
+struct HookSyncTargetResult: Equatable, Sendable, Identifiable {
+    var id: String { target }
+
+    /// The target path.
+    let target: String
+
+    /// What happened during sync.
+    let resultStatus: HookSyncResultStatus
+
+    /// Optional detail message (e.g. error reason for failures).
+    let detail: String?
+}
+
+/// Full sync report with per-target details.
+struct HooksSyncReport: Equatable, Sendable {
+    /// Per-target results.
+    let results: [HookSyncTargetResult]
+
+    /// When the sync was performed.
+    let timestamp: Date
+
+    /// Whether all targets were successfully synced or already in sync.
+    var allSucceeded: Bool {
+        results.allSatisfy { $0.resultStatus != .failed }
+    }
+
+    /// Number of targets that were updated.
+    var updatedCount: Int {
+        results.filter { $0.resultStatus == .updated }.count
+    }
+
+    /// Number of targets that failed to sync.
+    var failedCount: Int {
+        results.filter { $0.resultStatus == .failed }.count
+    }
+}
+
+// MARK: - Write API
+
+extension HooksAdapter {
+
+    /// Compute the diff between current hook settings and generated configuration.
+    ///
+    /// Invokes `gt hooks diff --json` and normalizes the result into a
+    /// `HooksDiffReport`. Each entry carries the target, its sync status,
+    /// and the textual diff (if any).
+    func diffHooks() -> Result<HooksDiffReport, HooksAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        let result = environment.runCLI(gtPath, ["hooks", "diff", "--json"])
+
+        if result.exitCode != 0 {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt hooks diff --json",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any] else {
+            let raw = String(data: result.stdout, encoding: .utf8) ?? "<binary>"
+            return .failure(.parseFailure(
+                command: "gt hooks diff --json",
+                detail: String(
+                    localized: "hooks.diff.parseFailed",
+                    defaultValue: "Expected JSON object from 'gt hooks diff --json'. Got: \(raw.prefix(200))"
+                )
+            ))
+        }
+
+        return parseDiffJSON(json)
+    }
+
+    /// Resolve the filesystem path for editing a hook configuration surface.
+    ///
+    /// Uses the snapshot's infrastructure paths to derive the correct edit
+    /// target. This avoids invoking the CLI just to find a file path — the
+    /// snapshot already carries `basePath` and `overridesDir`.
+    ///
+    /// - Parameters:
+    ///   - editTarget: Whether to edit the base configuration or a specific override.
+    ///   - snapshot: A recent `HooksSnapshot` providing infrastructure paths.
+    /// - Returns: A `HookEditResolution` with the file path and existence status.
+    func resolveEditPath(
+        _ editTarget: HookEditTarget,
+        snapshot: HooksSnapshot
+    ) -> Result<HookEditResolution, HooksAdapterError> {
+        switch editTarget {
+        case .base:
+            let path = snapshot.basePath
+            guard !path.isEmpty else {
+                return .failure(.parseFailure(
+                    command: "resolveEditPath",
+                    detail: String(
+                        localized: "hooks.edit.noBasePath",
+                        defaultValue: "Snapshot does not contain a base configuration path."
+                    )
+                ))
+            }
+            let exists = FileManager.default.fileExists(atPath: path)
+            return .success(HookEditResolution(
+                editTarget: editTarget,
+                filePath: path,
+                fileExists: exists
+            ))
+
+        case .override(let target):
+            let overridesDir = snapshot.overridesDir
+            guard !overridesDir.isEmpty else {
+                return .failure(.parseFailure(
+                    command: "resolveEditPath",
+                    detail: String(
+                        localized: "hooks.edit.noOverridesDir",
+                        defaultValue: "Snapshot does not contain an overrides directory path."
+                    )
+                ))
+            }
+            // Override files are named after the target with slashes replaced
+            // by dashes (e.g. "gmux/polecats" → "gmux-polecats.json").
+            let sanitized = target.replacingOccurrences(of: "/", with: "-")
+            let path = (overridesDir as NSString).appendingPathComponent("\(sanitized).json")
+            let exists = FileManager.default.fileExists(atPath: path)
+            return .success(HookEditResolution(
+                editTarget: editTarget,
+                filePath: path,
+                fileExists: exists
+            ))
+        }
+    }
+
+    /// Sync hook settings by applying the Gastown merge strategy.
+    ///
+    /// Invokes `gt hooks sync` (optionally scoped to specific targets) and
+    /// parses the result into a `HooksSyncReport`. The merge strategy
+    /// follows the Gastown inheritance model: base → role → rig+role.
+    ///
+    /// - Parameter targets: Optional list of target paths to sync. When `nil`,
+    ///   all targets are synced.
+    /// - Returns: A `HooksSyncReport` with per-target results.
+    func syncHooks(targets: [String]? = nil) -> Result<HooksSyncReport, HooksAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        var arguments = ["hooks", "sync", "--json"]
+        if let targets {
+            for target in targets {
+                arguments.append(contentsOf: ["--target", target])
+            }
+        }
+
+        let result = environment.runCLI(gtPath, arguments)
+
+        if result.exitCode != 0 {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt hooks sync --json",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any] else {
+            let raw = String(data: result.stdout, encoding: .utf8) ?? "<binary>"
+            return .failure(.parseFailure(
+                command: "gt hooks sync --json",
+                detail: String(
+                    localized: "hooks.sync.parseFailed",
+                    defaultValue: "Expected JSON object from 'gt hooks sync --json'. Got: \(raw.prefix(200))"
+                )
+            ))
+        }
+
+        return parseSyncJSON(json)
+    }
+
+    // MARK: - Write JSON Parsing
+
+    /// Parse the `gt hooks diff --json` response.
+    private func parseDiffJSON(
+        _ json: [String: Any]
+    ) -> Result<HooksDiffReport, HooksAdapterError> {
+        guard let targetsArray = json["targets"] as? [[String: Any]] else {
+            return .failure(.parseFailure(
+                command: "gt hooks diff --json",
+                detail: String(
+                    localized: "hooks.diff.noTargets",
+                    defaultValue: "Response missing 'targets' array."
+                )
+            ))
+        }
+
+        let entries = targetsArray.compactMap { entry -> HookDiffEntry? in
+            guard let target = entry["target"] as? String else { return nil }
+            let statusString = entry["status"] as? String ?? "unknown"
+            let status = HookSyncStatus(rawValue: statusString) ?? .unknown
+            let diff = entry["diff"] as? String
+            return HookDiffEntry(target: target, status: status, diff: diff)
+        }
+
+        return .success(HooksDiffReport(entries: entries, timestamp: Date()))
+    }
+
+    /// Parse the `gt hooks sync --json` response.
+    private func parseSyncJSON(
+        _ json: [String: Any]
+    ) -> Result<HooksSyncReport, HooksAdapterError> {
+        guard let resultsArray = json["results"] as? [[String: Any]] else {
+            return .failure(.parseFailure(
+                command: "gt hooks sync --json",
+                detail: String(
+                    localized: "hooks.sync.noResults",
+                    defaultValue: "Response missing 'results' array."
+                )
+            ))
+        }
+
+        let results = resultsArray.compactMap { entry -> HookSyncTargetResult? in
+            guard let target = entry["target"] as? String else { return nil }
+            let statusString = entry["status"] as? String ?? "failed"
+            let resultStatus = HookSyncResultStatus(rawValue: statusString) ?? .failed
+            let detail = entry["detail"] as? String
+            return HookSyncTargetResult(
+                target: target,
+                resultStatus: resultStatus,
+                detail: detail
+            )
+        }
+
+        return .success(HooksSyncReport(results: results, timestamp: Date()))
+    }
+}
