@@ -4057,6 +4057,116 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 #endif
 
+    func buildNamedSessionSnapshot(includeScrollback: Bool) -> AppSessionSnapshot? {
+        buildSessionSnapshot(includeScrollback: includeScrollback)
+    }
+
+    @discardableResult
+    func restoreNamedSessionWindow(_ windowSnapshot: SessionWindowSnapshot) -> UUID {
+        createMainWindow(sessionWindowSnapshot: windowSnapshot)
+    }
+
+    func showSaveSessionDialog() {
+        let alert = NSAlert()
+        alert.messageText = String(
+            localized: "session.save.dialogTitle",
+            defaultValue: "Save Session"
+        )
+        alert.informativeText = String(
+            localized: "session.save.dialogMessage",
+            defaultValue: "Enter a name for this session. The current workspace layout will be saved."
+        )
+        alert.addButton(withTitle: String(
+            localized: "session.save.dialogSave",
+            defaultValue: "Save"
+        ))
+        alert.addButton(withTitle: String(
+            localized: "session.save.dialogCancel",
+            defaultValue: "Cancel"
+        ))
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        textField.placeholderString = String(
+            localized: "session.save.dialogPlaceholder",
+            defaultValue: "Session name"
+        )
+        alert.accessoryView = textField
+        alert.window.initialFirstResponder = textField
+
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else { return }
+
+        let name = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+
+        guard let snapshot = buildSessionSnapshot(includeScrollback: false) else {
+            showSessionErrorAlert(message: String(
+                localized: "session.save.errorCapture",
+                defaultValue: "Failed to capture session state."
+            ))
+            return
+        }
+
+        let result = NamedSessionStore.save(snapshot, name: name)
+        switch result {
+        case .success:
+            break
+        case .failure(let error):
+            showSessionErrorAlert(message: error.description)
+        }
+    }
+
+    func restoreLastSession() {
+        guard let snapshot = SessionPersistenceStore.load() else {
+            showSessionErrorAlert(message: String(
+                localized: "session.restore.errorNoLast",
+                defaultValue: "No last session found to restore."
+            ))
+            return
+        }
+        restoreSessionFromSnapshot(snapshot)
+    }
+
+    func restoreNamedSession(name: String) {
+        let result = NamedSessionStore.load(name: name)
+        switch result {
+        case .success(let snapshot):
+            restoreSessionFromSnapshot(snapshot)
+        case .failure(let error):
+            showSessionErrorAlert(message: error.description)
+        }
+    }
+
+    private func restoreSessionFromSnapshot(_ snapshot: AppSessionSnapshot) {
+        var restoredCount = 0
+        for windowSnapshot in snapshot.windows {
+            guard !windowSnapshot.tabManager.workspaces.isEmpty else { continue }
+            restoreNamedSessionWindow(windowSnapshot)
+            restoredCount += 1
+        }
+        if restoredCount == 0 {
+            showSessionErrorAlert(message: String(
+                localized: "session.restore.errorEmpty",
+                defaultValue: "Session contained no restorable windows."
+            ))
+        }
+    }
+
+    private func showSessionErrorAlert(message: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(
+            localized: "session.error.title",
+            defaultValue: "Session Error"
+        )
+        alert.informativeText = message
+        alert.addButton(withTitle: String(
+            localized: "session.error.ok",
+            defaultValue: "OK"
+        ))
+        alert.runModal()
+    }
+
     private func notifyMainWindowContextsDidChange() {
         NotificationCenter.default.post(name: .mainWindowContextsDidChange, object: self)
     }

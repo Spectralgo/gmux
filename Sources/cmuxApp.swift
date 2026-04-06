@@ -626,6 +626,22 @@ struct cmuxApp: App {
                 splitCommandButton(title: String(localized: "menu.file.reopenClosedBrowserPanel", defaultValue: "Reopen Closed Browser Panel"), shortcut: menuShortcut(for: .reopenClosedBrowserPanel)) {
                     _ = activeTabManager.reopenMostRecentlyClosedBrowserPanel()
                 }
+
+                Divider()
+
+                Menu(String(localized: "menu.file.sessions", defaultValue: "Sessions")) {
+                    Button(String(localized: "menu.file.sessions.saveAs", defaultValue: "Save Session…")) {
+                        AppDelegate.shared?.showSaveSessionDialog()
+                    }
+
+                    Button(String(localized: "menu.file.sessions.restoreLast", defaultValue: "Restore Last Session")) {
+                        AppDelegate.shared?.restoreLastSession()
+                    }
+
+                    Divider()
+
+                    SessionListMenuContent()
+                }
             }
 
             // Find
@@ -6558,5 +6574,21 @@ private struct SettingsRootView: View {
 
     private func applyCurrentSettingsWindowStyle(to window: NSWindow) {
         SettingsAboutTitlebarDebugStore.shared.applyCurrentOptions(to: window, for: .settings)
+    }
+}
+
+struct SessionListMenuContent: View {
+    var body: some View {
+        let entries = NamedSessionStore.list()
+        if entries.isEmpty {
+            Text(String(localized: "menu.file.sessions.noSaved", defaultValue: "No Saved Sessions"))
+                .foregroundStyle(.secondary)
+        } else {
+            ForEach(entries, id: \.name) { entry in
+                Button("\(entry.name) (\(entry.workspaceCount) ws)") {
+                    AppDelegate.shared?.restoreNamedSession(name: entry.name)
+                }
+            }
+        }
     }
 }

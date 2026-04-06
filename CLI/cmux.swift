@@ -2733,6 +2733,79 @@ struct CMUXCLI {
         case "markdown":
             try runMarkdownCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput, idFormat: idFormat)
 
+        // Session commands
+        case "save-session":
+            let (nameArg, remaining) = parseOption(commandArgs, name: "--name")
+            let name = nameArg ?? remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else {
+                throw CLIError(message: "save-session requires --name <name>")
+            }
+            let payload = try client.sendV2(method: "session.save", params: ["name": name])
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                let wsCount = (payload["workspace_count"] as? Int) ?? 0
+                let winCount = (payload["window_count"] as? Int) ?? 0
+                print("Saved session '\(name)' (\(winCount) window\(winCount == 1 ? "" : "s"), \(wsCount) workspace\(wsCount == 1 ? "" : "s"))")
+            }
+
+        case "restore-session":
+            let (nameArg, remaining) = parseOption(commandArgs, name: "--name")
+            let name = nameArg ?? remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            var params: [String: Any] = [:]
+            if !name.isEmpty { params["name"] = name }
+            let payload = try client.sendV2(method: "session.restore", params: params)
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                let restoredWindows = (payload["restored_windows"] as? Int) ?? 0
+                let restoredWorkspaces = (payload["restored_workspaces"] as? Int) ?? 0
+                let sessionName = (payload["name"] as? String) ?? "last session"
+                print("Restored '\(sessionName)' (\(restoredWindows) window\(restoredWindows == 1 ? "" : "s"), \(restoredWorkspaces) workspace\(restoredWorkspaces == 1 ? "" : "s"))")
+                if let warnings = payload["warnings"] as? [String], !warnings.isEmpty {
+                    for warning in warnings {
+                        print("  warning: \(warning)")
+                    }
+                }
+            }
+
+        case "list-sessions":
+            let payload = try client.sendV2(method: "session.list", params: [:])
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                let sessions = payload["sessions"] as? [[String: Any]] ?? []
+                if sessions.isEmpty {
+                    print("No saved sessions")
+                } else {
+                    for session in sessions {
+                        let name = (session["name"] as? String) ?? ""
+                        let winCount = (session["window_count"] as? Int) ?? 0
+                        let wsCount = (session["workspace_count"] as? Int) ?? 0
+                        let createdAt = (session["created_at"] as? TimeInterval) ?? 0
+                        let date = Date(timeIntervalSince1970: createdAt)
+                        let formatter = DateFormatter()
+                        formatter.dateStyle = .short
+                        formatter.timeStyle = .short
+                        let dateStr = formatter.string(from: date)
+                        print("  \(name)  (\(winCount) win, \(wsCount) ws)  \(dateStr)")
+                    }
+                }
+            }
+
+        case "delete-session":
+            let (nameArg, remaining) = parseOption(commandArgs, name: "--name")
+            let name = nameArg ?? remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else {
+                throw CLIError(message: "delete-session requires --name <name>")
+            }
+            let payload = try client.sendV2(method: "session.delete", params: ["name": name])
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                print("Deleted session '\(name)'")
+            }
+
         default:
             print(usage())
             throw CLIError(message: "Unknown command: \(command)")
@@ -7932,6 +8005,54 @@ struct CMUXCLI {
               gmux markdown ~/project/CHANGELOG.md
               gmux markdown open ./docs/design.md --workspace 0
               gmux markdown open plan.md --direction down
+            """
+        case "save-session":
+            return """
+            Usage: gmux save-session --name <name>
+
+            Save the current window/workspace layout as a named session.
+
+            Flags:
+              --name <name>   Session name (required)
+
+            Examples:
+              gmux save-session --name "development"
+              gmux save-session "project setup"
+            """
+        case "restore-session":
+            return """
+            Usage: gmux restore-session [--name <name>]
+
+            Restore a saved session. If no name is given, restores the last auto-saved session.
+            Restored workspaces open in new windows.
+
+            Flags:
+              --name <name>   Named session to restore (omit for last session)
+
+            Examples:
+              gmux restore-session --name "development"
+              gmux restore-session
+            """
+        case "list-sessions":
+            return """
+            Usage: gmux list-sessions
+
+            List all saved named sessions.
+
+            Examples:
+              gmux list-sessions
+            """
+        case "delete-session":
+            return """
+            Usage: gmux delete-session --name <name>
+
+            Delete a saved named session.
+
+            Flags:
+              --name <name>   Session name to delete (required)
+
+            Examples:
+              gmux delete-session --name "old-project"
             """
         default:
             return nil
@@ -14108,6 +14229,11 @@ struct CMUXCLI {
           paste-buffer [--name <name>] [--workspace <id|ref>] [--surface <id|ref>]
           respawn-pane [--workspace <id|ref>] [--surface <id|ref>] [--command <cmd>]
           display-message [-p|--print] <text>
+
+          save-session --name <name>           (save current layout as a named session)
+          restore-session [--name <name>]       (restore a named session, or last session if no name)
+          list-sessions                         (list saved sessions)
+          delete-session --name <name>          (delete a saved session)
 
           markdown [open] <path>             (open markdown file in formatted viewer panel with live reload)
 

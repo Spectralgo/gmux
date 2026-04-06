@@ -426,6 +426,180 @@ enum SessionPersistenceStore {
     }
 }
 
+struct NamedSessionEntry: Codable, Sendable {
+    var name: String
+    var createdAt: TimeInterval
+    var windowCount: Int
+    var workspaceCount: Int
+}
+
+enum NamedSessionStore {
+    private static let sessionsDirectoryName = "sessions"
+
+    static func sessionsDirectory(
+        appSupportDirectory: URL? = nil
+    ) -> URL? {
+        let resolvedAppSupport: URL
+        if let appSupportDirectory {
+            resolvedAppSupport = appSupportDirectory
+        } else if let discovered = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first {
+            resolvedAppSupport = discovered
+        } else {
+            return nil
+        }
+        return resolvedAppSupport
+            .appendingPathComponent("gmux", isDirectory: true)
+            .appendingPathComponent(sessionsDirectoryName, isDirectory: true)
+    }
+
+    static func sanitizedFileName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let safe = trimmed.replacingOccurrences(
+            of: "[^A-Za-z0-9._\\- ]",
+            with: "_",
+            options: .regularExpression
+        )
+        let collapsed = safe.replacingOccurrences(
+            of: "_+",
+            with: "_",
+            options: .regularExpression
+        )
+        let result = collapsed.trimmingCharacters(in: CharacterSet(charactersIn: "_ "))
+        return result.isEmpty ? "unnamed" : String(result.prefix(128))
+    }
+
+    private static func fileURL(for name: String, directory: URL) -> URL {
+        let fileName = sanitizedFileName(name)
+        return directory.appendingPathComponent("\(fileName).json", isDirectory: false)
+    }
+
+    @discardableResult
+    static func save(_ snapshot: AppSessionSnapshot, name: String, directory: URL? = nil) -> Result<URL, NamedSessionError> {
+        guard let dir = directory ?? sessionsDirectory() else {
+            return .failure(.storageUnavailable)
+        }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            return .failure(.invalidName("Session name must not be empty"))
+        }
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys]
+            let data = try encoder.encode(snapshot)
+            let url = fileURL(for: trimmedName, directory: dir)
+            try data.write(to: url, options: .atomic)
+            return .success(url)
+        } catch {
+            return .failure(.writeError(error.localizedDescription))
+        }
+    }
+
+    static func load(name: String, directory: URL? = nil) -> Result<AppSessionSnapshot, NamedSessionError> {
+        guard let dir = directory ?? sessionsDirectory() else {
+            return .failure(.storageUnavailable)
+        }
+        let url = fileURL(for: name, directory: dir)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return .failure(.notFound(name))
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let snapshot = try JSONDecoder().decode(AppSessionSnapshot.self, from: data)
+            guard snapshot.version == SessionSnapshotSchema.currentVersion else {
+                return .failure(.incompatibleVersion(snapshot.version, expected: SessionSnapshotSchema.currentVersion))
+            }
+            guard !snapshot.windows.isEmpty else {
+                return .failure(.emptySession)
+            }
+            return .success(snapshot)
+        } catch let error as NamedSessionError {
+            return .failure(error)
+        } catch {
+            return .failure(.readError(error.localizedDescription))
+        }
+    }
+
+    static func list(directory: URL? = nil) -> [NamedSessionEntry] {
+        guard let dir = directory ?? sessionsDirectory() else { return [] }
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: dir,
+            includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+        return files
+            .filter { $0.pathExtension == "json" }
+            .compactMap { url -> NamedSessionEntry? in
+                guard let data = try? Data(contentsOf: url),
+                      let snapshot = try? JSONDecoder().decode(AppSessionSnapshot.self, from: data),
+                      snapshot.version == SessionSnapshotSchema.currentVersion,
+                      !snapshot.windows.isEmpty else {
+                    return nil
+                }
+                let name = url.deletingPathExtension().lastPathComponent
+                let workspaceCount = snapshot.windows.reduce(0) { $0 + $1.tabManager.workspaces.count }
+                return NamedSessionEntry(
+                    name: name,
+                    createdAt: snapshot.createdAt,
+                    windowCount: snapshot.windows.count,
+                    workspaceCount: workspaceCount
+                )
+            }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
+    @discardableResult
+    static func delete(name: String, directory: URL? = nil) -> Result<Void, NamedSessionError> {
+        guard let dir = directory ?? sessionsDirectory() else {
+            return .failure(.storageUnavailable)
+        }
+        let url = fileURL(for: name, directory: dir)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return .failure(.notFound(name))
+        }
+        do {
+            try FileManager.default.removeItem(at: url)
+            return .success(())
+        } catch {
+            return .failure(.writeError(error.localizedDescription))
+        }
+    }
+}
+
+enum NamedSessionError: Error, CustomStringConvertible {
+    case storageUnavailable
+    case invalidName(String)
+    case notFound(String)
+    case incompatibleVersion(Int, expected: Int)
+    case emptySession
+    case writeError(String)
+    case readError(String)
+
+    var description: String {
+        switch self {
+        case .storageUnavailable:
+            return "Session storage directory is unavailable"
+        case .invalidName(let reason):
+            return "Invalid session name: \(reason)"
+        case .notFound(let name):
+            return "Session '\(name)' not found"
+        case .incompatibleVersion(let version, let expected):
+            return "Session version \(version) is incompatible (expected \(expected))"
+        case .emptySession:
+            return "Session contains no windows"
+        case .writeError(let msg):
+            return "Failed to write session: \(msg)"
+        case .readError(let msg):
+            return "Failed to read session: \(msg)"
+        }
+    }
+}
+
 enum SessionScrollbackReplayStore {
     static let environmentKey = "CMUX_RESTORE_SCROLLBACK_FILE"
     private static let directoryName = "cmux-session-scrollback"
