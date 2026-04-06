@@ -15,6 +15,7 @@
 		GT080006 /* RigsManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080016 /* RigsManifest.swift */; };
 		GT080007 /* RoleDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080017 /* RoleDirectory.swift */; };
 		GT080008 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080018 /* RigInventoryAdapter.swift */; };
+		GT013001 /* ConvoyAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT013011 /* ConvoyAdapter.swift */; };
 			A5001001 /* cmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* cmuxApp.swift */; };
 			A5001002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001012 /* ContentView.swift */; };
 			E62155868BB29FEB5DAAAF25 /* SidebarSelectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */; };
@@ -34,6 +35,8 @@
 		A5001226 /* SocketControlSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001225 /* SocketControlSettings.swift */; };
 		A5001601 /* SentryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001600 /* SentryHelper.swift */; };
 		A5001621 /* AppleScriptSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001620 /* AppleScriptSupport.swift */; };
+		A5001660 /* GasTownDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001661 /* GasTownDiscovery.swift */; };
+		A5001670 /* BeadsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001671 /* BeadsAdapter.swift */; };
 		D1320AA0D1320AA0D1320AA1 /* AppIconDockTilePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */; };
 		D1320AA0D1320AA0D1320AA2 /* CmuxDockTilePlugin.plugin in Copy Dock Tile Plugin */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA5 /* CmuxDockTilePlugin.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A5001400 /* Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001410 /* Panel.swift */; };
@@ -45,6 +48,8 @@
 		A5007420 /* BrowserPopupWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5007421 /* BrowserPopupWindowController.swift */; };
 		A5001420 /* MarkdownPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001418 /* MarkdownPanel.swift */; };
 		A5001421 /* MarkdownPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001419 /* MarkdownPanelView.swift */; };
+		GT014001 /* ConvoyDetailPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT014011 /* ConvoyDetailPanel.swift */; };
+		GT014002 /* ConvoyDetailPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT014012 /* ConvoyDetailPanelView.swift */; };
 		A5001290 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A5001291 /* MarkdownUI */; };
 		A5001405 /* PanelContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001415 /* PanelContentView.swift */; };
 		A5001406 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001416 /* Workspace.swift */; };
@@ -220,6 +225,7 @@
 		GT080016 /* RigsManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigsManifest.swift; sourceTree = "<group>"; };
 		GT080017 /* RoleDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDirectory.swift; sourceTree = "<group>"; };
 		GT080018 /* RigInventoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventoryAdapter.swift; sourceTree = "<group>"; };
+		GT013011 /* ConvoyAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvoyAdapter.swift; sourceTree = "<group>"; };
 			A5001000 /* Gmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 			F1000002A1B2C3D4E5F60718 /* cmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 			7E7E6EF344A568AC7FEE3715 /* cmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -241,6 +247,8 @@
 		A5001019 /* TerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalController.swift; sourceTree = "<group>"; };
 		A5001600 /* SentryHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentryHelper.swift; sourceTree = "<group>"; };
 		A5001620 /* AppleScriptSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptSupport.swift; sourceTree = "<group>"; };
+		A5001661 /* GasTownDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasTownDiscovery.swift; sourceTree = "<group>"; };
+		A5001671 /* BeadsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeadsAdapter.swift; sourceTree = "<group>"; };
 		D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconDockTilePlugin.swift; sourceTree = "<group>"; };
 		A5001510 /* CmuxWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CmuxWebView.swift; sourceTree = "<group>"; };
 			A5001511 /* UITestRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestRecorder.swift; sourceTree = "<group>"; };
@@ -256,6 +264,8 @@
 		A5001415 /* PanelContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/PanelContentView.swift; sourceTree = "<group>"; };
 		A5001418 /* MarkdownPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanel.swift; sourceTree = "<group>"; };
 		A5001419 /* MarkdownPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelView.swift; sourceTree = "<group>"; };
+		GT014011 /* ConvoyDetailPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ConvoyDetailPanel.swift; sourceTree = "<group>"; };
+		GT014012 /* ConvoyDetailPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ConvoyDetailPanelView.swift; sourceTree = "<group>"; };
 		A5001416 /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		A5001417 /* WorkspaceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceContentView.swift; sourceTree = "<group>"; };
 		A5001090 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -495,6 +505,8 @@
 				A5001225 /* SocketControlSettings.swift */,
 				A5001600 /* SentryHelper.swift */,
 				A5001620 /* AppleScriptSupport.swift */,
+				A5001661 /* GasTownDiscovery.swift */,
+				A5001671 /* BeadsAdapter.swift */,
 				D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */,
 				A5001090 /* AppDelegate.swift */,
 				A5001091 /* NotificationsPage.swift */,
@@ -511,6 +523,8 @@
 				A5007421 /* BrowserPopupWindowController.swift */,
 				A5001418 /* MarkdownPanel.swift */,
 				A5001419 /* MarkdownPanelView.swift */,
+				GT014011 /* ConvoyDetailPanel.swift */,
+				GT014012 /* ConvoyDetailPanelView.swift */,
 				A5001510 /* CmuxWebView.swift */,
 				A5001415 /* PanelContentView.swift */,
 				A5001211 /* UpdateController.swift */,
@@ -633,6 +647,7 @@
 		GT080020 /* GasTown */ = {
 			isa = PBXGroup;
 			children = (
+				GT013011 /* ConvoyAdapter.swift */,
 				GT080011 /* GasTownRoot.swift */,
 				GT080012 /* Rig.swift */,
 				GT080013 /* RigConfig.swift */,
@@ -835,6 +850,8 @@
 				A5001226 /* SocketControlSettings.swift in Sources */,
 				A5001601 /* SentryHelper.swift in Sources */,
 				A5001621 /* AppleScriptSupport.swift in Sources */,
+				A5001660 /* GasTownDiscovery.swift in Sources */,
+				A5001670 /* BeadsAdapter.swift in Sources */,
 				A5001093 /* AppDelegate.swift in Sources */,
 				A5001094 /* NotificationsPage.swift in Sources */,
 				A5001095 /* TerminalNotificationStore.swift in Sources */,
@@ -850,6 +867,8 @@
 				A5007420 /* BrowserPopupWindowController.swift in Sources */,
 				A5001420 /* MarkdownPanel.swift in Sources */,
 				A5001421 /* MarkdownPanelView.swift in Sources */,
+				GT014001 /* ConvoyDetailPanel.swift in Sources */,
+				GT014002 /* ConvoyDetailPanelView.swift in Sources */,
 				A5001500 /* CmuxWebView.swift in Sources */,
 				A5001405 /* PanelContentView.swift in Sources */,
 				A5001201 /* UpdateController.swift in Sources */,
@@ -880,6 +899,7 @@
 			GT080006 /* RigsManifest.swift in Sources */,
 			GT080007 /* RoleDirectory.swift in Sources */,
 			GT080008 /* RigInventoryAdapter.swift in Sources */,
+			GT013001 /* ConvoyAdapter.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
