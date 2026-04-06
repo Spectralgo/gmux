@@ -15,6 +15,11 @@
 		GT080006 /* RigsManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080016 /* RigsManifest.swift */; };
 		GT080007 /* RoleDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080017 /* RoleDirectory.swift */; };
 		GT080008 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080018 /* RigInventoryAdapter.swift */; };
+		GT090001 /* AgentIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090011 /* AgentIdentity.swift */; };
+		GT090002 /* AgentIdentityResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090012 /* AgentIdentityResolver.swift */; };
+		GT090003 /* ResolvedWorktree.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090013 /* ResolvedWorktree.swift */; };
+		GT090004 /* WorktreeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090014 /* WorktreeClassifier.swift */; };
+		GT090005 /* WorktreeKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090015 /* WorktreeKind.swift */; };
 			A5001001 /* cmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* cmuxApp.swift */; };
 			A5001002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001012 /* ContentView.swift */; };
 			E62155868BB29FEB5DAAAF25 /* SidebarSelectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */; };
@@ -221,6 +226,11 @@
 		GT080016 /* RigsManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigsManifest.swift; sourceTree = "<group>"; };
 		GT080017 /* RoleDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDirectory.swift; sourceTree = "<group>"; };
 		GT080018 /* RigInventoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventoryAdapter.swift; sourceTree = "<group>"; };
+		GT090011 /* AgentIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentIdentity.swift; sourceTree = "<group>"; };
+		GT090012 /* AgentIdentityResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentIdentityResolver.swift; sourceTree = "<group>"; };
+		GT090013 /* ResolvedWorktree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedWorktree.swift; sourceTree = "<group>"; };
+		GT090014 /* WorktreeClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorktreeClassifier.swift; sourceTree = "<group>"; };
+		GT090015 /* WorktreeKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorktreeKind.swift; sourceTree = "<group>"; };
 			A5001000 /* Gmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 			F1000002A1B2C3D4E5F60718 /* cmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 			7E7E6EF344A568AC7FEE3715 /* cmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -644,6 +654,11 @@
 				GT080016 /* RigsManifest.swift */,
 				GT080017 /* RoleDirectory.swift */,
 				GT080018 /* RigInventoryAdapter.swift */,
+				GT090011 /* AgentIdentity.swift */,
+				GT090012 /* AgentIdentityResolver.swift */,
+				GT090013 /* ResolvedWorktree.swift */,
+				GT090014 /* WorktreeClassifier.swift */,
+				GT090015 /* WorktreeKind.swift */,
 			);
 			path = GasTown;
 			sourceTree = "<group>";
@@ -884,6 +899,11 @@
 			GT080006 /* RigsManifest.swift in Sources */,
 			GT080007 /* RoleDirectory.swift in Sources */,
 			GT080008 /* RigInventoryAdapter.swift in Sources */,
+			GT090001 /* AgentIdentity.swift in Sources */,
+			GT090002 /* AgentIdentityResolver.swift in Sources */,
+			GT090003 /* ResolvedWorktree.swift in Sources */,
+			GT090004 /* WorktreeClassifier.swift in Sources */,
+			GT090005 /* WorktreeKind.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
