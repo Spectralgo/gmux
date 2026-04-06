@@ -179,7 +179,7 @@ struct cmuxApp: App {
                 defaults.set(migrated.rawValue, forKey: SocketControlSettings.appStorageKey)
             }
         } else if let legacy = defaults.object(forKey: SocketControlSettings.legacyEnabledKey) as? Bool {
-            defaults.set(legacy ? SocketControlMode.cmuxOnly.rawValue : SocketControlMode.off.rawValue,
+            defaults.set(legacy ? SocketControlMode.gmuxOnly.rawValue : SocketControlMode.off.rawValue,
                          forKey: SocketControlSettings.appStorageKey)
         }
         // Skip keychain migration for DEV/staging builds. Each tagged build gets a

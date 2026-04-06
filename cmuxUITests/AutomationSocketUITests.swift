@@ -17,7 +17,7 @@ final class AutomationSocketUITests: XCTestCase {
     }
 
     func testSocketToggleDisablesAndEnables() {
-        let app = configuredApp(mode: "cmuxOnly")
+        let app = configuredApp(mode: "gmuxOnly")
         app.launch()
         XCTAssertTrue(
             ensureForegroundAfterLaunch(app, timeout: 12.0),

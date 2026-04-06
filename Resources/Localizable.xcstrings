@@ -71964,13 +71964,13 @@
         }
       }
     },
-    "socketControl.cmuxOnly.description": {
+    "socketControl.gmuxOnly.description": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only processes started inside cmux terminals can send commands."
+            "value": "Only processes started inside gmux terminals can send commands."
           }
         },
         "ja": {
@@ -72083,13 +72083,13 @@
         }
       }
     },
-    "socketControl.cmuxOnly.name": {
+    "socketControl.gmuxOnly.name": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux processes only"
+            "value": "gmux processes only"
           }
         },
         "ja": {
