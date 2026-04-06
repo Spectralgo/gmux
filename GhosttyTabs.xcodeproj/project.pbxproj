@@ -26,6 +26,8 @@
 		A5001226 /* SocketControlSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001225 /* SocketControlSettings.swift */; };
 		A5001601 /* SentryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001600 /* SentryHelper.swift */; };
 		A5001621 /* AppleScriptSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001620 /* AppleScriptSupport.swift */; };
+		A5001660 /* GasTownDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001661 /* GasTownDiscovery.swift */; };
+		A5001670 /* BeadsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001671 /* BeadsAdapter.swift */; };
 		D1320AA0D1320AA0D1320AA1 /* AppIconDockTilePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */; };
 		D1320AA0D1320AA0D1320AA2 /* CmuxDockTilePlugin.plugin in Copy Dock Tile Plugin */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA5 /* CmuxDockTilePlugin.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A5001400 /* Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001410 /* Panel.swift */; };
@@ -225,6 +227,8 @@
 		A5001019 /* TerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalController.swift; sourceTree = "<group>"; };
 		A5001600 /* SentryHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentryHelper.swift; sourceTree = "<group>"; };
 		A5001620 /* AppleScriptSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptSupport.swift; sourceTree = "<group>"; };
+		A5001661 /* GasTownDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasTownDiscovery.swift; sourceTree = "<group>"; };
+		A5001671 /* BeadsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeadsAdapter.swift; sourceTree = "<group>"; };
 		D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconDockTilePlugin.swift; sourceTree = "<group>"; };
 		A5001510 /* CmuxWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CmuxWebView.swift; sourceTree = "<group>"; };
 			A5001511 /* UITestRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestRecorder.swift; sourceTree = "<group>"; };
@@ -478,6 +482,8 @@
 				A5001225 /* SocketControlSettings.swift */,
 				A5001600 /* SentryHelper.swift */,
 				A5001620 /* AppleScriptSupport.swift */,
+				A5001661 /* GasTownDiscovery.swift */,
+				A5001671 /* BeadsAdapter.swift */,
 				D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */,
 				A5001090 /* AppDelegate.swift */,
 				A5001091 /* NotificationsPage.swift */,
@@ -803,6 +809,8 @@
 				A5001226 /* SocketControlSettings.swift in Sources */,
 				A5001601 /* SentryHelper.swift in Sources */,
 				A5001621 /* AppleScriptSupport.swift in Sources */,
+				A5001660 /* GasTownDiscovery.swift in Sources */,
+				A5001670 /* BeadsAdapter.swift in Sources */,
 				A5001093 /* AppDelegate.swift in Sources */,
 				A5001094 /* NotificationsPage.swift in Sources */,
 				A5001095 /* TerminalNotificationStore.swift in Sources */,
