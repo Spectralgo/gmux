@@ -1131,16 +1131,16 @@ struct cmuxApp: App {
 }
 
 private let cmuxAuxiliaryWindowIdentifiers: Set<String> = [
-    "cmux.settings",
-    "cmux.about",
-    "cmux.licenses",
-    "cmux.browser-popup",
-    "cmux.settingsAboutTitlebarDebug",
-    "cmux.debugWindowControls",
-    "cmux.browserImportHintDebug",
-    "cmux.sidebarDebug",
-    "cmux.menubarDebug",
-    "cmux.backgroundDebug",
+    "gmux.settings",
+    "gmux.about",
+    "gmux.licenses",
+    "gmux.browser-popup",
+    "gmux.settingsAboutTitlebarDebug",
+    "gmux.debugWindowControls",
+    "gmux.browserImportHintDebug",
+    "gmux.sidebarDebug",
+    "gmux.menubarDebug",
+    "gmux.backgroundDebug",
 ]
 
 /// Returns whether the given window should handle the standard close shortcut
@@ -1169,9 +1169,9 @@ private enum SettingsAboutWindowKind: String, CaseIterable, Identifiable {
     var windowIdentifier: String {
         switch self {
         case .settings:
-            return "cmux.settings"
+            return "gmux.settings"
         case .about:
-            return "cmux.about"
+            return "gmux.about"
         }
     }
 
@@ -1428,7 +1428,7 @@ private final class SettingsAboutTitlebarDebugStore: ObservableObject {
 
     private func ensureToolbar(on window: NSWindow, kind: SettingsAboutWindowKind) {
         guard window.toolbar == nil else { return }
-        let identifier = NSToolbar.Identifier("cmux.debug.titlebar.\(kind.rawValue)")
+        let identifier = NSToolbar.Identifier("gmux.debug.titlebar.\(kind.rawValue)")
         let toolbar = NSToolbar(identifier: identifier)
         toolbar.allowsUserCustomization = false
         toolbar.autosavesConfiguration = false
@@ -1465,7 +1465,7 @@ private final class SettingsAboutTitlebarDebugWindowController: NSWindowControll
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.settingsAboutTitlebarDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.settingsAboutTitlebarDebug")
         window.center()
         window.contentView = NSHostingView(rootView: SettingsAboutTitlebarDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -1693,7 +1693,7 @@ private final class DebugWindowControlsWindowController: NSWindowController, NSW
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.debugWindowControls")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.debugWindowControls")
         window.center()
         window.contentView = NSHostingView(rootView: DebugWindowControlsView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -1997,7 +1997,7 @@ private final class BrowserImportHintDebugWindowController: NSWindowController, 
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.browserImportHintDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.browserImportHintDebug")
         window.center()
         window.contentView = NSHostingView(rootView: BrowserImportHintDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -2034,7 +2034,7 @@ private final class BrowserProfilePopoverDebugWindowController: NSWindowControll
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.browserProfilePopoverDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.browserProfilePopoverDebug")
         window.center()
         window.contentView = NSHostingView(rootView: BrowserProfilePopoverDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -2398,7 +2398,7 @@ private final class AboutWindowController: NSWindowController, NSWindowDelegate 
             defer: false
         )
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.about")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.about")
         window.center()
         window.contentView = NSHostingView(rootView: AboutPanelView())
         SettingsAboutTitlebarDebugStore.shared.applyCurrentOptions(to: window, for: .about)
@@ -2432,7 +2432,7 @@ private final class AcknowledgmentsWindowController: NSWindowController, NSWindo
         )
         window.isReleasedWhenClosed = false
         window.title = String(localized: "about.licenses.windowTitle", defaultValue: "Third-Party Licenses")
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.licenses")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.licenses")
         window.center()
         window.contentView = NSHostingView(rootView: AcknowledgmentsView())
         super.init(window: window)
@@ -2483,7 +2483,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             defer: false
         )
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.settings")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.settings")
         window.center()
         window.contentView = NSHostingView(rootView: SettingsRootView())
         SettingsAboutTitlebarDebugStore.shared.applyCurrentOptions(to: window, for: .settings)
@@ -2612,7 +2612,7 @@ enum SettingsNavigationTarget: String {
 }
 
 enum SettingsNavigationRequest {
-    static let notificationName = Notification.Name("cmux.settings.navigate")
+    static let notificationName = Notification.Name("gmux.settings.navigate")
     private static let targetKey = "target"
 
     static func post(_ target: SettingsNavigationTarget) {
@@ -2644,7 +2644,7 @@ private final class SidebarDebugWindowController: NSWindowController, NSWindowDe
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.sidebarDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.sidebarDebug")
         window.center()
         window.contentView = NSHostingView(rootView: SidebarDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -3074,7 +3074,7 @@ private final class MenuBarExtraDebugWindowController: NSWindowController, NSWin
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.menubarDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.menubarDebug")
         window.center()
         window.contentView = NSHostingView(rootView: MenuBarExtraDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -3244,7 +3244,7 @@ private final class SplitButtonLayoutDebugWindowController: NSWindowController, 
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.splitButtonLayoutDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.splitButtonLayoutDebug")
         window.center()
         window.contentView = NSHostingView(rootView: SplitButtonLayoutDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -3314,7 +3314,7 @@ private final class BackgroundDebugWindowController: NSWindowController, NSWindo
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.backgroundDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.backgroundDebug")
         window.center()
         window.contentView = NSHostingView(rootView: BackgroundDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -3409,12 +3409,12 @@ private struct BackgroundDebugView: View {
         let window: NSWindow? = {
             if let key = NSApp.keyWindow,
                let raw = key.identifier?.rawValue,
-               raw == "cmux.main" || raw.hasPrefix("cmux.main.") {
+               raw == "gmux.main" || raw.hasPrefix("gmux.main.") {
                 return key
             }
             return NSApp.windows.first(where: {
                 guard let raw = $0.identifier?.rawValue else { return false }
-                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
             })
         }()
         guard let window else { return }
@@ -6544,13 +6544,13 @@ private struct SettingsRootView: View {
     }
 
     private func configureSettingsWindow(_ window: NSWindow) {
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.settings")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.settings")
         applyCurrentSettingsWindowStyle(to: window)
 
         let accessories = window.titlebarAccessoryViewControllers
         for index in accessories.indices.reversed() {
             guard let identifier = accessories[index].view.identifier?.rawValue else { continue }
-            guard identifier.hasPrefix("cmux.") else { continue }
+            guard identifier.hasPrefix("gmux.") else { continue }
             window.removeTitlebarAccessoryViewController(at: index)
         }
         AppDelegate.shared?.applyWindowDecorations(to: window)

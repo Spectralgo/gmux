@@ -2,7 +2,7 @@
 import Foundation
 
 final class UpdateTestURLProtocol: URLProtocol {
-    static let host = "cmux.test"
+    static let host = "gmux.test"
     static let appcastPath = "/appcast.xml"
     static let updatePath = "/cmux-test.zip"
 

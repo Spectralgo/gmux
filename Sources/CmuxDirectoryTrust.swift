@@ -6,7 +6,7 @@ import Foundation
 /// Global config (~/.config/gmux/cmux.json) is always trusted.
 final class CmuxDirectoryTrust {
     static let shared = CmuxDirectoryTrust()
-    static let didChangeNotification = Notification.Name("cmux.directoryTrustDidChange")
+    static let didChangeNotification = Notification.Name("gmux.directoryTrustDidChange")
 
     private let storePath: String
     private var trustedPaths: Set<String>

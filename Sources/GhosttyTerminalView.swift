@@ -1048,7 +1048,7 @@ class GhosttyApp {
                         guard let workspace = MainActor.assumeIsolated({
                             callbackContext.terminalSurface?.owningWorkspace()
                         }) else {
-                            finish(.failure(NSError(domain: "cmux.remote.paste", code: 3)))
+                            finish(.failure(NSError(domain: "gmux.remote.paste", code: 3)))
                             GhosttyPasteboardHelper.cleanupTransferredTemporaryImageFiles(fileURLs)
                             return
                         }
@@ -2939,12 +2939,12 @@ class GhosttyApp {
     private func activeMainWindow() -> NSWindow? {
         let keyWindow = NSApp.keyWindow
         if let raw = keyWindow?.identifier?.rawValue,
-           raw == "cmux.main" || raw.hasPrefix("cmux.main.") {
+           raw == "gmux.main" || raw.hasPrefix("gmux.main.") {
             return keyWindow
         }
         return NSApp.windows.first(where: { window in
             guard let raw = window.identifier?.rawValue else { return false }
-            return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+            return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
         })
     }
 
@@ -7234,7 +7234,7 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
                 }
             },
             uploadDetectedSSH: { _, _, _, finish in
-                finish(.failure(NSError(domain: "cmux.remote.drop", code: 4)))
+                finish(.failure(NSError(domain: "gmux.remote.drop", code: 4)))
             },
             insertText: sendText,
             onFailure: { _ in onFailure() }
@@ -7270,7 +7270,7 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
                 guard let workspace = MainActor.assumeIsolated({
                     self?.terminalSurface?.owningWorkspace()
                 }) else {
-                    finish(.failure(NSError(domain: "cmux.remote.drop", code: 3)))
+                    finish(.failure(NSError(domain: "gmux.remote.drop", code: 3)))
                     GhosttyPasteboardHelper.cleanupTransferredTemporaryImageFiles(fileURLs)
                     return
                 }
@@ -7373,7 +7373,7 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     fileprivate func debugSimulateFileDrop(paths: [String]) -> Bool {
         guard !paths.isEmpty else { return false }
         let urls = paths.map { URL(fileURLWithPath: $0) as NSURL }
-        let pbName = NSPasteboard.Name("cmux.debug.drop.\(UUID().uuidString)")
+        let pbName = NSPasteboard.Name("gmux.debug.drop.\(UUID().uuidString)")
         let pasteboard = NSPasteboard(name: pbName)
         pasteboard.clearContents()
         pasteboard.writeObjects(urls)
@@ -8953,7 +8953,7 @@ final class GhosttySurfaceScrollView: NSView {
                     return CAMediaTimingFunction(name: .easeOut)
                 }
             }
-            self.flashLayer.add(animation, forKey: "cmux.flash")
+            self.flashLayer.add(animation, forKey: "gmux.flash")
         }
     }
 

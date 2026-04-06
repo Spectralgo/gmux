@@ -5,11 +5,11 @@ import Bonsplit
 import WebKit
 
 extension Notification.Name {
-    static let socketListenerDidStart = Notification.Name("cmux.socketListenerDidStart")
-    static let terminalSurfaceDidBecomeReady = Notification.Name("cmux.terminalSurfaceDidBecomeReady")
-    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("cmux.terminalSurfaceHostedViewDidMoveToWindow")
-    static let mainWindowContextsDidChange = Notification.Name("cmux.mainWindowContextsDidChange")
-    static let browserDownloadEventDidArrive = Notification.Name("cmux.browserDownloadEventDidArrive")
+    static let socketListenerDidStart = Notification.Name("gmux.socketListenerDidStart")
+    static let terminalSurfaceDidBecomeReady = Notification.Name("gmux.terminalSurfaceDidBecomeReady")
+    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("gmux.terminalSurfaceHostedViewDidMoveToWindow")
+    static let mainWindowContextsDidChange = Notification.Name("gmux.mainWindowContextsDidChange")
+    static let browserDownloadEventDidArrive = Notification.Name("gmux.browserDownloadEventDidArrive")
 }
 
 /// Unix socket-based controller for programmatic terminal control
@@ -5485,7 +5485,7 @@ class TerminalController {
                 }
 
                 guard let raw = window.identifier?.rawValue else { return (nil, nil) }
-                let prefix = "cmux.main."
+                let prefix = "gmux.main."
                 guard raw.hasPrefix(prefix),
                       let parsedWindowId = UUID(uuidString: String(raw.dropFirst(prefix.count))) else {
                     return (nil, nil)
@@ -11641,7 +11641,7 @@ class TerminalController {
             NSApp.unhide(nil)
             let hasMainTerminalWindow = NSApp.windows.contains { window in
                 guard let raw = window.identifier?.rawValue else { return false }
-                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
             }
 
             if !hasMainTerminalWindow {
@@ -11652,7 +11652,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
                 })
                 ?? NSApp.windows.first {
                 window.makeKeyAndOrderFront(nil)
@@ -11994,7 +11994,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -12035,7 +12035,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }

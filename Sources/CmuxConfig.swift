@@ -16,7 +16,7 @@ struct CmuxCommandDefinition: Codable, Sendable, Identifiable {
     var confirm: Bool?
 
     var id: String {
-        "cmux.config.command." + (name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? name)
+        "gmux.config.command." + (name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? name)
     }
 
     init(
@@ -320,7 +320,7 @@ final class CmuxConfigStore: ObservableObject {
         let newPath: String?
         if let directory, !directory.isEmpty {
             newPath = findCmuxConfig(startingFrom: directory)
-                ?? (directory as NSString).appendingPathComponent("cmux.json")
+                ?? (directory as NSString).appendingPathComponent("gmux.json")
         } else {
             newPath = nil
         }
@@ -338,7 +338,7 @@ final class CmuxConfigStore: ObservableObject {
         var current = directory
         let fs = FileManager.default
         while true {
-            let candidate = (current as NSString).appendingPathComponent("cmux.json")
+            let candidate = (current as NSString).appendingPathComponent("gmux.json")
             if fs.fileExists(atPath: candidate) {
                 return candidate
             }
