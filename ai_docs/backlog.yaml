@@ -1,0 +1,2450 @@
+{
+  "meta": {
+    "repo": "Spectralgo/gmux",
+    "default_branch": "main",
+    "source_documents": [
+      "ai_docs/roadmap.md",
+      "deep-research-report.md"
+    ]
+  },
+  "labels": [
+    {
+      "name": "type:epic",
+      "color": "1d76db",
+      "description": "Roadmap epic issue managed from ai_docs."
+    },
+    {
+      "name": "type:task",
+      "color": "0e8a16",
+      "description": "Roadmap implementation task managed from ai_docs."
+    },
+    {
+      "name": "state:agent-ready",
+      "color": "5319e7",
+      "description": "Task is decision complete and ready for an AI coding agent."
+    },
+    {
+      "name": "state:blocked",
+      "color": "d93f0b",
+      "description": "Task is blocked on another task or external dependency."
+    },
+    {
+      "name": "state:needs-decision",
+      "color": "fbca04",
+      "description": "Task needs a product or technical decision before execution."
+    },
+    {
+      "name": "priority:p0",
+      "color": "b60205",
+      "description": "Highest-priority roadmap work."
+    },
+    {
+      "name": "priority:p1",
+      "color": "d93f0b",
+      "description": "Important roadmap work after current p0 items."
+    },
+    {
+      "name": "priority:p2",
+      "color": "fbca04",
+      "description": "Later-stage roadmap work."
+    },
+    {
+      "name": "area:fork",
+      "color": "0052cc",
+      "description": "Fork identity, coexistence, and transition work."
+    },
+    {
+      "name": "area:release",
+      "color": "006b75",
+      "description": "Release packaging, shipping, and distribution work."
+    },
+    {
+      "name": "area:gastown",
+      "color": "0b7285",
+      "description": "Gastown domain discovery and identity work."
+    },
+    {
+      "name": "area:beads",
+      "color": "1f883d",
+      "description": "Beads ingestion and workflow features."
+    },
+    {
+      "name": "area:convoy",
+      "color": "8250df",
+      "description": "Convoy dashboard and convoy routing work."
+    },
+    {
+      "name": "area:hooks",
+      "color": "9a6700",
+      "description": "Gastown hooks integration work."
+    },
+    {
+      "name": "area:ui",
+      "color": "bf3989",
+      "description": "User-facing cockpit and workflow surfaces."
+    },
+    {
+      "name": "area:cli",
+      "color": "5319e7",
+      "description": "CLI, helper, and command-surface work."
+    },
+    {
+      "name": "area:socket",
+      "color": "c2e0c6",
+      "description": "Socket, IPC, and automation transport work."
+    },
+    {
+      "name": "area:persistence",
+      "color": "bfd4f2",
+      "description": "Session persistence and recovery work."
+    },
+    {
+      "name": "area:review",
+      "color": "f9d0c4",
+      "description": "Review, diff, and operator decision-support work."
+    },
+    {
+      "name": "area:mcp",
+      "color": "ededed",
+      "description": "Agent-facing MCP and platform integration work."
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "M0 - Fork Completion & Spec Infrastructure",
+      "description": "Finish the Gmux fork and install the repo-canonical planning system.",
+      "exit_criteria": [
+        "Gmux can run beside cmux without runtime collisions.",
+        "Release packaging and CLI install flows present Gmux as a separate product.",
+        "ai_docs is the canonical roadmap and GitHub artifacts sync from it."
+      ],
+      "doc": "ai_docs/milestones/M0-fork-completion-and-spec-infrastructure.md"
+    },
+    {
+      "id": "M1",
+      "title": "M1 - Gastown Discovery & Domain Foundation",
+      "description": "Build the Town, rig, identity, Beads, and hooks read model.",
+      "exit_criteria": [
+        "Town roots and rigs are discoverable with actionable prerequisite validation.",
+        "Agent identities resolve into stable worktree targets.",
+        "Beads and hooks data are available through normalized app adapters."
+      ],
+      "doc": "ai_docs/milestones/M1-gastown-discovery-and-domain-foundation.md"
+    },
+    {
+      "id": "M2",
+      "title": "M2 - Operator Cockpit MVP",
+      "description": "Ship the first convoy-first Gastown operator cockpit.",
+      "exit_criteria": [
+        "Convoys are visible as the primary attention dashboard.",
+        "Ready-work and bead detail surfaces are available in-product.",
+        "Alerts and open flows can jump into the correct context."
+      ],
+      "doc": "ai_docs/milestones/M2-operator-cockpit-mvp.md"
+    },
+    {
+      "id": "M3",
+      "title": "M3 - Automation, Hooks & Write Actions",
+      "description": "Add safe mutations and automation surfaces to the cockpit.",
+      "exit_criteria": [
+        "Supported hook and Bead write actions are available.",
+        "CLI and socket surfaces cover the main operator flows.",
+        "Mail and inbox routing can reopen the relevant work context."
+      ],
+      "doc": "ai_docs/milestones/M3-automation-hooks-and-write-actions.md"
+    },
+    {
+      "id": "M4",
+      "title": "M4 - Persistence, Review & Advanced Integrations",
+      "description": "Add durable recovery, review UX, and advanced integration foundations.",
+      "exit_criteria": [
+        "Named-session and restart recovery flows are trustworthy.",
+        "Persistent terminal and review surfaces are available with clear tradeoffs.",
+        "MCP and multi-profile platform boundaries are defined and isolated."
+      ],
+      "doc": "ai_docs/milestones/M4-persistence-review-and-advanced-integrations.md"
+    }
+  ],
+  "epics": [
+    {
+      "id": "EPIC-001",
+      "title": "Gmux runtime identity completion",
+      "milestone": "M0",
+      "summary": "Complete runtime isolation so Gmux can operate beside cmux without sharing names, sockets, caches, notifications, or remote state.",
+      "story_refs": [
+        "US-001"
+      ],
+      "task_refs": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:fork",
+        "area:cli",
+        "area:socket"
+      ],
+      "acceptance_criteria": [
+        "Gmux and cmux can run side by side without clobbering runtime state.",
+        "Developer helper shims consistently resolve to gmux products.",
+        "Remaining coexistence gaps are tracked as explicit M0 work, not hidden drift."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-001-gmux-runtime-identity-completion.md"
+    },
+    {
+      "id": "EPIC-002",
+      "title": "Gmux distribution and release identity",
+      "milestone": "M0",
+      "summary": "Rebrand the release and installation surfaces so Gmux ships as a separate product instead of a cosmetically renamed cmux build.",
+      "story_refs": [
+        "US-002"
+      ],
+      "task_refs": [
+        "TASK-003",
+        "TASK-004"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:fork",
+        "area:release",
+        "area:cli"
+      ],
+      "acceptance_criteria": [
+        "Release assets and metadata use Gmux naming.",
+        "The shipped CLI installs as gmux and coexists with cmux.",
+        "Automation stops mutating cmux-only casks or cleanup domains."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-002-gmux-distribution-and-release-identity.md"
+    },
+    {
+      "id": "EPIC-003",
+      "title": "Spec-driven delivery infrastructure",
+      "milestone": "M0",
+      "summary": "Install the canonical roadmap, traceability, and GitHub sync system that later execution work relies on.",
+      "story_refs": [
+        "US-003"
+      ],
+      "task_refs": [
+        "TASK-005",
+        "TASK-006"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:fork",
+        "area:review"
+      ],
+      "acceptance_criteria": [
+        "Milestones, epics, stories, and tasks are traceable through stable IDs.",
+        "GitHub labels, milestones, epic issues, and task issues sync from ai_docs.",
+        "Agents can execute tasks without extra context beyond the linked docs."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-003-spec-driven-delivery-infrastructure.md"
+    },
+    {
+      "id": "EPIC-004",
+      "title": "Town discovery and rig inventory",
+      "milestone": "M1",
+      "summary": "Detect the active Town and normalize rig inventory so the rest of Gmux can navigate Gastown in domain terms.",
+      "story_refs": [
+        "US-004"
+      ],
+      "task_refs": [
+        "TASK-007",
+        "TASK-008"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Town roots and prerequisites can be discovered and validated.",
+        "Rigs are enumerated with enough structure to drive UI navigation.",
+        "Inventory failures are actionable and do not silently break later flows."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-004-town-discovery-and-rig-inventory.md"
+    },
+    {
+      "id": "EPIC-005",
+      "title": "Agent and worktree resolution",
+      "milestone": "M1",
+      "summary": "Resolve Gastown identities such as crew, polecat, refinery, and cross-rig worktrees into deterministic open targets.",
+      "story_refs": [
+        "US-005"
+      ],
+      "task_refs": [
+        "TASK-009",
+        "TASK-010"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Identity-to-path mapping works across the documented workspace layouts.",
+        "Open flows can target identities instead of arbitrary filesystem paths.",
+        "The resolution layer is reusable by UI, CLI, socket, and notification flows."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md"
+    },
+    {
+      "id": "EPIC-006",
+      "title": "Read-only Beads and hooks ingestion",
+      "milestone": "M1",
+      "summary": "Ingest Beads and hooks as read-only system-of-record data so Gmux can render trustworthy status before adding write actions.",
+      "story_refs": [
+        "US-006"
+      ],
+      "task_refs": [
+        "TASK-011",
+        "TASK-012"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:beads",
+        "area:hooks"
+      ],
+      "acceptance_criteria": [
+        "Beads routes, ready work, and detail data are available through normalized adapters.",
+        "Hooks list and status information are available for future edit and sync flows.",
+        "Read-model failures surface clearly instead of producing stale UI."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md"
+    },
+    {
+      "id": "EPIC-007",
+      "title": "Convoy cockpit MVP",
+      "milestone": "M2",
+      "summary": "Make convoys the first-class operator dashboard so Gmux reflects Gastown's primary attention model.",
+      "story_refs": [
+        "US-007"
+      ],
+      "task_refs": [
+        "TASK-013",
+        "TASK-014"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:convoy",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "The default operator surface shows active convoys and attention signals.",
+        "Convoy detail exposes tracked issues and progress for the selected convoy.",
+        "The dashboard is grounded in Gastown CLI semantics rather than hand-maintained app state."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md"
+    },
+    {
+      "id": "EPIC-008",
+      "title": "Bead inspector and ready-work surfaces",
+      "milestone": "M2",
+      "summary": "Surface ready work and detailed bead context inside Gmux so operators can decide what moves next without leaving the app.",
+      "story_refs": [
+        "US-008"
+      ],
+      "task_refs": [
+        "TASK-015",
+        "TASK-016"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:beads",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Ready-work surfaces show dependency-aware work that can start now.",
+        "Bead detail shows status, dependencies, and current-context information.",
+        "The surfaces can be opened from convoy, workspace, and alert flows."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md"
+    },
+    {
+      "id": "EPIC-009",
+      "title": "Attention routing and contextual open flows",
+      "milestone": "M2",
+      "summary": "Turn alerts and domain selections into the correct workspace jumps, pane presets, and focus targets.",
+      "story_refs": [
+        "US-009"
+      ],
+      "task_refs": [
+        "TASK-017",
+        "TASK-018"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:convoy",
+        "area:ui",
+        "area:socket"
+      ],
+      "acceptance_criteria": [
+        "Alerts can route to convoy, bead, and identity-aware workspace targets.",
+        "Open flows reuse the identity resolution layer instead of duplicating path logic.",
+        "Focus behavior respects the app's focus policy."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md"
+    },
+    {
+      "id": "EPIC-010",
+      "title": "Hooks and Bead write actions",
+      "milestone": "M3",
+      "summary": "Add safe write operations for hooks and Beads once the read model and cockpit flows are trustworthy.",
+      "story_refs": [
+        "US-010"
+      ],
+      "task_refs": [
+        "TASK-019",
+        "TASK-020"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:hooks",
+        "area:beads",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Hook edit and sync flows preserve Gastown's inheritance model.",
+        "Supported Bead and convoy mutations are explicit and traceable.",
+        "Write flows reuse the same read-model and identity primitives."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
+    },
+    {
+      "id": "EPIC-011",
+      "title": "Automation surface and mail workflow",
+      "milestone": "M3",
+      "summary": "Expose Gmux's Gastown-aware flows over CLI, socket, and inbox-style workflows so humans and agents can drive the product deterministically.",
+      "story_refs": [
+        "US-011"
+      ],
+      "task_refs": [
+        "TASK-021",
+        "TASK-022"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:cli",
+        "area:socket",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Core cockpit and write flows are scriptable with stable contracts.",
+        "Machine-readable outputs are available where automation depends on them.",
+        "Mail or inbox items can reopen the correct work context."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md"
+    },
+    {
+      "id": "EPIC-012",
+      "title": "Session persistence and semantic resume",
+      "milestone": "M4",
+      "summary": "Restore layout and work context predictably after restarts, while making the limits of true live-process preservation explicit.",
+      "story_refs": [
+        "US-012"
+      ],
+      "task_refs": [
+        "TASK-023",
+        "TASK-024"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:persistence",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Users can save and restore named sessions or last-session metadata reliably.",
+        "Restart recovery can surface Gastown checkpoint data as semantic resume aid.",
+        "Persistence UX documents its guarantees and limits clearly."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md"
+    },
+    {
+      "id": "EPIC-013",
+      "title": "Persistent terminal modes and review UX",
+      "milestone": "M4",
+      "summary": "Support persistent terminal backends and integrated review flows to reduce restart pain and speed up merge decisions.",
+      "story_refs": [
+        "US-013"
+      ],
+      "task_refs": [
+        "TASK-025",
+        "TASK-026"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:persistence",
+        "area:review",
+        "area:ui"
+      ],
+      "acceptance_criteria": [
+        "Supported persistent terminal backends are available with explicit tradeoffs.",
+        "Review surfaces show enough diff context to guide decisions.",
+        "Review flows stay tied to the active Gastown identity and workspace context."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md"
+    },
+    {
+      "id": "EPIC-014",
+      "title": "MCP and multi-profile foundation",
+      "milestone": "M4",
+      "summary": "Lay the platform groundwork for agent-facing MCP tooling and for multiple isolated Town profiles on the same machine.",
+      "story_refs": [
+        "US-014"
+      ],
+      "task_refs": [
+        "TASK-027",
+        "TASK-028"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:mcp",
+        "area:gastown",
+        "area:socket"
+      ],
+      "acceptance_criteria": [
+        "The repo defines the core MCP surface area and boundaries.",
+        "Profiles isolate sockets, caches, actors, and Town roots.",
+        "Later agent integrations can build on stable primitives rather than UI scraping."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md"
+    }
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Side-by-side fork operation",
+      "persona": "Gmux operator who still has upstream cmux installed and active.",
+      "narrative": "As a Gmux user, I want Gmux to run beside cmux without collisions so I can evaluate and adopt the fork incrementally.",
+      "why": "The fork is not credible if app launches, helper shims, remote state, or notifications still bind to cmux internals.",
+      "acceptance_criteria": [
+        "Gmux runtime identifiers are gmux-scoped.",
+        "Running Gmux beside cmux does not clobber cmux state.",
+        "Remaining coexistence gaps are explicit M0 backlog items."
+      ],
+      "epic_refs": [
+        "EPIC-001"
+      ],
+      "task_refs": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M0-fork-completion-and-spec-infrastructure.md"
+      ],
+      "doc": "ai_docs/stories/US-001-side-by-side-fork-operation.md"
+    },
+    {
+      "id": "US-002",
+      "title": "Separate Gmux distribution",
+      "persona": "User installing or upgrading Gmux as a standalone product.",
+      "narrative": "As a user, I want Gmux to install and update as its own product so I can keep it alongside cmux without replacing cmux tooling or release metadata.",
+      "why": "A fork that still publishes cmux-branded DMGs, casks, or cleanup paths is operationally ambiguous.",
+      "acceptance_criteria": [
+        "Release packaging and download names reference Gmux.",
+        "The CLI install flow produces gmux instead of overwriting cmux.",
+        "Cleanup and zap logic target Gmux-owned state only."
+      ],
+      "epic_refs": [
+        "EPIC-002"
+      ],
+      "task_refs": [
+        "TASK-003",
+        "TASK-004"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M0-fork-completion-and-spec-infrastructure.md"
+      ],
+      "doc": "ai_docs/stories/US-002-separate-gmux-distribution.md"
+    },
+    {
+      "id": "US-003",
+      "title": "Repo-canonical AI-executable roadmap",
+      "persona": "Maintainer or AI coding agent picking up roadmap work from GitHub.",
+      "narrative": "As a maintainer, I want the roadmap to live canonically in the repo and sync to GitHub so agents can execute tasks without hidden context.",
+      "why": "Planning drift between docs and GitHub issues makes autonomous execution brittle.",
+      "acceptance_criteria": [
+        "ai_docs contains milestone, epic, story, and task traceability.",
+        "GitHub issues and milestones are generated from repo docs.",
+        "Task issues are decision complete and point back to canonical docs."
+      ],
+      "epic_refs": [
+        "EPIC-003"
+      ],
+      "task_refs": [
+        "TASK-005",
+        "TASK-006"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ],
+      "doc": "ai_docs/stories/US-003-repo-canonical-ai-executable-roadmap.md"
+    },
+    {
+      "id": "US-004",
+      "title": "Detect Town and rig inventory",
+      "persona": "Gastown user opening Gmux in a machine with one or more Town roots.",
+      "narrative": "As a Gastown user, I want Gmux to detect my Town and rig inventory automatically so the app opens in domain terms instead of raw filesystem paths.",
+      "why": "Every later cockpit feature depends on knowing the Town root, rig boundaries, and role directory layout correctly.",
+      "acceptance_criteria": [
+        "Gmux can locate the current Town root and validate prerequisites.",
+        "Rig inventory exposes enough structure to navigate rigs and roles.",
+        "Missing prerequisites surface as actionable guidance."
+      ],
+      "epic_refs": [
+        "EPIC-004"
+      ],
+      "task_refs": [
+        "TASK-007",
+        "TASK-008"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M1-gastown-discovery-and-domain-foundation.md"
+      ],
+      "doc": "ai_docs/stories/US-004-detect-town-and-rig-inventory.md"
+    },
+    {
+      "id": "US-005",
+      "title": "Open workspaces by agent identity",
+      "persona": "Crew developer or operator jumping to a specific Gastown worker.",
+      "narrative": "As a user, I want to open workspaces by agent identity so I can jump to the right crew, polecat, or cross-rig worktree without hunting through directories.",
+      "why": "Gastown's directory model is role-specific, and Gmux should preserve it while giving users fast navigation.",
+      "acceptance_criteria": [
+        "Gmux resolves crew, polecat, refinery, and cross-rig identities into correct open targets.",
+        "Identity-based routing works from UI and future automation surfaces.",
+        "Resolution failures explain which mapping is missing or invalid."
+      ],
+      "epic_refs": [
+        "EPIC-005"
+      ],
+      "task_refs": [
+        "TASK-009",
+        "TASK-010"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M1-gastown-discovery-and-domain-foundation.md"
+      ],
+      "doc": "ai_docs/stories/US-005-open-workspaces-by-agent-identity.md"
+    },
+    {
+      "id": "US-006",
+      "title": "Consume Beads and hooks read model",
+      "persona": "Operator or toolsmith relying on Beads and hooks as the durable source of work state.",
+      "narrative": "As a user, I want Gmux to consume Beads and hooks as source-of-truth data so the cockpit reflects actual Gastown state instead of an app-local shadow model.",
+      "why": "The operator will not trust the product if work, readiness, or hook status diverges from the canonical tools.",
+      "acceptance_criteria": [
+        "Gmux ingests read-only Beads routes, ready work, and detail data.",
+        "Gmux ingests hook targets and sync status from Gastown tooling.",
+        "Normalized adapters are available for future write flows."
+      ],
+      "epic_refs": [
+        "EPIC-006"
+      ],
+      "task_refs": [
+        "TASK-011",
+        "TASK-012"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M1-gastown-discovery-and-domain-foundation.md"
+      ],
+      "doc": "ai_docs/stories/US-006-consume-beads-and-hooks-read-model.md"
+    },
+    {
+      "id": "US-007",
+      "title": "Convoy-first operator attention view",
+      "persona": "Town operator monitoring active work across rigs.",
+      "narrative": "As an operator, I want Gmux to open into a convoy-first attention view so I can see stranded or progressing work immediately.",
+      "why": "The research anchors convoys as the primary attention unit for multi-rig work.",
+      "acceptance_criteria": [
+        "Active convoys are visible as a first-class dashboard surface.",
+        "Selected convoy detail includes tracked issues, status, and progress.",
+        "Stranded or attention-worthy convoys are surfaced explicitly."
+      ],
+      "epic_refs": [
+        "EPIC-007"
+      ],
+      "task_refs": [
+        "TASK-013",
+        "TASK-014"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M2-operator-cockpit-mvp.md"
+      ],
+      "doc": "ai_docs/stories/US-007-convoy-first-operator-attention-view.md"
+    },
+    {
+      "id": "US-008",
+      "title": "Ready work and bead context",
+      "persona": "Operator or contributor deciding what to pick up next.",
+      "narrative": "As a user, I want ready work and bead detail in Gmux so I can understand dependencies and next actions without leaving the app.",
+      "why": "Beads readiness and bead detail are core domain signals; hiding them behind an external CLI reduces the value of the cockpit.",
+      "acceptance_criteria": [
+        "A ready-work surface shows what can move now using Beads semantics.",
+        "Bead detail shows dependencies, current status, and audit context.",
+        "The surfaces can be opened from convoy, workspace, and notification flows."
+      ],
+      "epic_refs": [
+        "EPIC-008"
+      ],
+      "task_refs": [
+        "TASK-015",
+        "TASK-016"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M2-operator-cockpit-mvp.md"
+      ],
+      "doc": "ai_docs/stories/US-008-ready-work-and-bead-context.md"
+    },
+    {
+      "id": "US-009",
+      "title": "Contextual jump from alert to workspace",
+      "persona": "Operator responding to notifications, inbox items, or other attention signals.",
+      "narrative": "As a user, I want alerts to jump me into the correct workspace context so I do not have to reconstruct which rig, bead, or worker needs attention.",
+      "why": "Attention routing is one of the main workflow costs the product is supposed to remove.",
+      "acceptance_criteria": [
+        "Alerts map to convoy, bead, and identity-aware workspace targets.",
+        "Jump flows can restore the expected pane or view preset.",
+        "Non-focus commands preserve focus unless the action is explicitly focusful."
+      ],
+      "epic_refs": [
+        "EPIC-009"
+      ],
+      "task_refs": [
+        "TASK-017",
+        "TASK-018"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M2-operator-cockpit-mvp.md"
+      ],
+      "doc": "ai_docs/stories/US-009-contextual-jump-from-alert-to-workspace.md"
+    },
+    {
+      "id": "US-010",
+      "title": "Manage hooks and work state from Gmux",
+      "persona": "Operator or toolsmith applying supported write actions from the cockpit.",
+      "narrative": "As a user, I want to manage hooks and supported Bead or convoy state changes from Gmux so I can act on work without dropping back to a separate shell flow.",
+      "why": "Once the cockpit is trusted as a read model, the next step is to let users take the highest-value actions directly.",
+      "acceptance_criteria": [
+        "Hooks edit and sync flows preserve Gastown's inheritance model.",
+        "Supported Bead and convoy mutations are available with clear boundaries.",
+        "UI writes reflect back into the read model quickly and traceably."
+      ],
+      "epic_refs": [
+        "EPIC-010"
+      ],
+      "task_refs": [
+        "TASK-019",
+        "TASK-020"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M3-automation-hooks-and-write-actions.md"
+      ],
+      "doc": "ai_docs/stories/US-010-manage-hooks-and-work-state-from-gmux.md"
+    },
+    {
+      "id": "US-011",
+      "title": "Drive Gmux from CLI, socket, and inbox",
+      "persona": "Automation engineer or operator scripting Gmux behavior.",
+      "narrative": "As a user, I want CLI, socket, and inbox surfaces for Gmux so both humans and agents can drive the cockpit deterministically.",
+      "why": "cmux's automation surfaces are part of the fork's value proposition; Gmux needs equivalent control over its Gastown-native features.",
+      "acceptance_criteria": [
+        "Core read and write flows can be reached through stable CLI or socket commands.",
+        "Machine-readable outputs exist where automation depends on them.",
+        "Mail or inbox items preserve enough context to reopen the relevant work state."
+      ],
+      "epic_refs": [
+        "EPIC-011"
+      ],
+      "task_refs": [
+        "TASK-021",
+        "TASK-022"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M3-automation-hooks-and-write-actions.md"
+      ],
+      "doc": "ai_docs/stories/US-011-drive-gmux-from-cli-socket-and-inbox.md"
+    },
+    {
+      "id": "US-012",
+      "title": "Recover layout and semantic work context",
+      "persona": "User restarting or recovering Gmux after quit, crash, or machine interruption.",
+      "narrative": "As a user, I want Gmux to restore my layout and semantic work context so recovery is fast even when live processes cannot be resumed perfectly.",
+      "why": "Restart pain is one of the main gaps called out in cmux's current model.",
+      "acceptance_criteria": [
+        "Last-session or named-session restore is explicit and reliable.",
+        "Restart recovery can surface semantic clues such as Gastown checkpoints.",
+        "Persistence UX documents which guarantees are metadata-only versus live-session backed."
+      ],
+      "epic_refs": [
+        "EPIC-012"
+      ],
+      "task_refs": [
+        "TASK-023",
+        "TASK-024"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M4-persistence-review-and-advanced-integrations.md"
+      ],
+      "doc": "ai_docs/stories/US-012-recover-layout-and-semantic-work-context.md"
+    },
+    {
+      "id": "US-013",
+      "title": "Keep sessions alive and review changes in product",
+      "persona": "Operator or reviewer juggling long-running sessions and merge decisions.",
+      "narrative": "As a user, I want persistent session options and in-product review surfaces so I can keep work alive across restarts and inspect changes without context switching.",
+      "why": "Persistent terminals and integrated review remove two of the highest-friction workflows for multi-agent operations.",
+      "acceptance_criteria": [
+        "Supported persistent terminal backends are available with explicit tradeoffs.",
+        "Review surfaces show enough diff or changed-file context to guide decisions.",
+        "Review flows stay tied to the active Gastown identity and workspace context."
+      ],
+      "epic_refs": [
+        "EPIC-013"
+      ],
+      "task_refs": [
+        "TASK-025",
+        "TASK-026"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M4-persistence-review-and-advanced-integrations.md"
+      ],
+      "doc": "ai_docs/stories/US-013-keep-sessions-alive-and-review-changes-in-product.md"
+    },
+    {
+      "id": "US-014",
+      "title": "Expose Gmux to agents and multiple Town profiles",
+      "persona": "Advanced operator or platform engineer managing multiple Town contexts and agent integrations.",
+      "narrative": "As a user, I want MCP-facing tools and multiple isolated Town profiles so I can integrate agents safely without mixing contexts.",
+      "why": "Once Gmux is a serious operator shell, it needs clean boundaries for agents and for multiple Town roots on the same machine.",
+      "acceptance_criteria": [
+        "Gmux defines a stable MCP-facing tool surface over existing primitives.",
+        "Multiple profiles isolate sockets, caches, actors, and Town roots.",
+        "Agent integrations do not depend on brittle UI scraping."
+      ],
+      "epic_refs": [
+        "EPIC-014"
+      ],
+      "task_refs": [
+        "TASK-027",
+        "TASK-028"
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/milestones/M4-persistence-review-and-advanced-integrations.md"
+      ],
+      "doc": "ai_docs/stories/US-014-expose-gmux-to-agents-and-multiple-town-profiles.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Eliminate runtime identity collisions between cmux and Gmux",
+      "milestone": "M0",
+      "epic": "EPIC-001",
+      "story_refs": [
+        "US-001"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:fork",
+        "area:cli",
+        "area:socket"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [],
+      "problem": "Several runtime paths and cross-process behaviors still resolve to cmux-owned names or locations. That breaks the core fork promise because password mode, app activation, remote bootstrap, theme reload, or daemon cache flows can still bind to the original app.",
+      "outcome": "Gmux owns its runtime identity end to end, including local auth state, app activation targets, remote relay/bootstrap state, notification channels, and cache roots.",
+      "scope": [
+        "Audit and replace remaining cmux-scoped runtime identifiers in app and CLI code.",
+        "Unify app-side and CLI-side password, cache, and remote bootstrap paths under gmux-owned locations.",
+        "Ensure on-demand app launch or activation targets Gmux rather than cmux."
+      ],
+      "non_goals": [
+        "Release packaging and cask rebranding work.",
+        "Broad UI copy cleanup that does not affect runtime behavior.",
+        "Adding new operator-facing Gastown features."
+      ],
+      "implementation_notes": [
+        "Start from the review findings in Sources/SocketControlSettings.swift, CLI/cmux.swift, Sources/Workspace.swift, and Sources/AppDelegate.swift.",
+        "If a compatibility fallback to cmux is retained, make it explicit, read-only, and non-clobbering.",
+        "Preserve socket focus and threading policies while touching CLI or socket-adjacent code."
+      ],
+      "acceptance_criteria": [
+        "Password mode works between the app and gmux CLI without manual overrides.",
+        "gmux open, feedback, shortcuts, and related flows launch or activate Gmux rather than cmux.",
+        "Remote daemon and relay state no longer share cmux-owned directories or wrapper names."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-001-runtime-identity.",
+        "Inspect runtime constants or logs in the built app to confirm gmux-owned paths and identifiers.",
+        "Use targeted command-level smoke checks only; do not run local tests."
+      ],
+      "repo_constraints": [
+        "Build with a tagged reload after code changes.",
+        "Do not run local tests; report any unrun validation explicitly.",
+        "Preserve the Gmux identity invariants documented in ai_docs/agent-contract.md."
+      ],
+      "references": [
+        "Sources/SocketControlSettings.swift",
+        "Sources/Workspace.swift",
+        "Sources/AppDelegate.swift",
+        "CLI/cmux.swift"
+      ]
+    },
+    {
+      "id": "TASK-002",
+      "title": "Finish developer CLI helper isolation in reload.sh",
+      "milestone": "M0",
+      "epic": "EPIC-001",
+      "story_refs": [
+        "US-001"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:fork",
+        "area:cli"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-001"
+      ],
+      "problem": "scripts/reload.sh still looks for a sibling build product named cmux before wiring /tmp/gmux-cli and ~/.local/bin/gmux-dev. On a clean Gmux build the helper block can be skipped or point at the wrong binary.",
+      "outcome": "Tagged dev builds always advertise the correct gmux helper paths, and they never bind to a stale cmux product from another build tree.",
+      "scope": [
+        "Update reload.sh to resolve the gmux sibling product and helper shim paths correctly.",
+        "Ensure the helper files written to /tmp and ~/.local/bin are gmux-scoped and deterministic.",
+        "Document any required assumptions about tagged builds in script comments or usage output."
+      ],
+      "non_goals": [
+        "Changing release install paths for the shipped CLI.",
+        "Altering non-development reload flows unless required for correctness.",
+        "Implementing broader runtime identity changes outside helper selection."
+      ],
+      "implementation_notes": [
+        "Use the existing tagged reload flow rather than inventing a parallel build script.",
+        "Prefer the current build product in the tagged derived data path over any sibling artifacts from older cmux builds.",
+        "Keep the helper names /tmp/gmux-cli and ~/.local/bin/gmux-dev stable if possible."
+      ],
+      "acceptance_criteria": [
+        "/tmp/gmux-cli points at the gmux build product after a tagged reload.",
+        "~/.local/bin/gmux-dev is created or refreshed from the gmux product, not cmux.",
+        "A clean Gmux build does not skip helper setup because the script is still searching for cmux."
+      ],
+      "verification": [
+        "Run ./scripts/reload.sh --tag task-002-helper-shims and inspect the helper paths it writes.",
+        "Confirm the selected CLI path resolves to a gmux binary.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Use reload.sh with a tag for verification.",
+        "Keep tagged-build isolation intact; do not regress socket or bundle-id isolation.",
+        "Do not touch unrelated release build flows unless the helper fix requires it."
+      ],
+      "references": [
+        "scripts/reload.sh",
+        "deep-research-report.md"
+      ]
+    },
+    {
+      "id": "TASK-003",
+      "title": "Rebrand release packaging assets and Homebrew metadata",
+      "milestone": "M0",
+      "epic": "EPIC-002",
+      "story_refs": [
+        "US-002"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:release",
+        "area:fork"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [],
+      "problem": "Release automation still presents the fork as cmux in artifact names, cask expectations, and cleanup logic. That makes distribution and upgrades look like the original product.",
+      "outcome": "Release artifacts, cask metadata, docs links, and cleanup logic all present Gmux as a separate downloadable product.",
+      "scope": [
+        "Rename release artifact names and URLs to Gmux-owned names.",
+        "Update Homebrew tap expectations, cask naming, and related automation paths.",
+        "Audit cleanup or zap logic so it targets Gmux-owned domains and caches."
+      ],
+      "non_goals": [
+        "Solving runtime identity collisions inside the running app.",
+        "Designing a brand-new distribution channel beyond the existing release flow.",
+        "Changing versioning strategy."
+      ],
+      "implementation_notes": [
+        "Start from scripts/build-sign-upload.sh and the homebrew-cmux tap contents.",
+        "The current repo still has a cmux cask file; decide whether to rename it or create a gmux cask and update automation consistently.",
+        "Keep the release flow idempotent and avoid breaking existing secrets or signing assumptions."
+      ],
+      "acceptance_criteria": [
+        "Release automation emits Gmux-named artifacts instead of cmux-macos.dmg.",
+        "The Homebrew update path points at an actual gmux cask file and updates it successfully.",
+        "Cleanup or zap logic no longer removes cmux-owned preferences or caches."
+      ],
+      "verification": [
+        "Inspect the release script and generated dry-run outputs for Gmux-owned artifact names.",
+        "Verify the referenced cask file exists in the tap submodule or repo.",
+        "Use build-only verification where feasible; do not run local tests."
+      ],
+      "repo_constraints": [
+        "Preserve the current signing and release pipeline structure unless a targeted change is required.",
+        "Do not rewrite unrelated release history.",
+        "Report any external release prerequisites that cannot be verified locally."
+      ],
+      "references": [
+        "scripts/build-sign-upload.sh",
+        "homebrew-cmux/Casks/cmux.rb",
+        "README.md"
+      ]
+    },
+    {
+      "id": "TASK-004",
+      "title": "Ship an isolated gmux CLI install flow",
+      "milestone": "M0",
+      "epic": "EPIC-002",
+      "story_refs": [
+        "US-002"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:release",
+        "area:cli",
+        "area:fork"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-001"
+      ],
+      "problem": "Even after the bundled CLI binary was renamed, install and update flows can still overwrite cmux or rely on cmux-targeted paths. That undermines coexistence at the command line.",
+      "outcome": "Installing the Gmux CLI produces a gmux command and leaves any existing cmux command intact.",
+      "scope": [
+        "Audit CLI install destinations, symlink names, and app-side installer prompts.",
+        "Ensure release and debug install flows consistently surface gmux as the command name.",
+        "Confirm any user-facing install docs and prompts use gmux terminology."
+      ],
+      "non_goals": [
+        "Adding shell completions or new CLI features.",
+        "Reworking dev-only helper shims managed by reload.sh.",
+        "Packaging work unrelated to CLI installation."
+      ],
+      "implementation_notes": [
+        "Start from Sources/AppDelegate.swift and any install helper scripts or bundled resource paths.",
+        "Keep /usr/local/bin versus /opt/homebrew/bin caveats explicit, but the installed command name should still be gmux.",
+        "If compatibility aliases are retained, they must not overwrite cmux by default."
+      ],
+      "acceptance_criteria": [
+        "The default install destination creates gmux rather than cmux.",
+        "Bundled CLI naming, install prompts, and related docs stay consistent with the gmux command.",
+        "Users can keep both gmux and cmux installed simultaneously."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-004-cli-install and inspect the bundled Resources/bin contents.",
+        "Verify any installer prompt or script targets gmux.",
+        "Use targeted binary and path inspection only; do not run local tests."
+      ],
+      "repo_constraints": [
+        "Preserve Gmux app identity and bundle structure.",
+        "Avoid destructive changes to user-local install paths during verification.",
+        "Call out any environment-specific write-path limitations explicitly."
+      ],
+      "references": [
+        "Sources/AppDelegate.swift",
+        "GhosttyTabs.xcodeproj/project.pbxproj",
+        "CLI/cmux.swift"
+      ]
+    },
+    {
+      "id": "TASK-005",
+      "title": "Create the canonical ai_docs roadmap corpus",
+      "milestone": "M0",
+      "epic": "EPIC-003",
+      "story_refs": [
+        "US-003"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:review",
+        "area:fork"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [],
+      "problem": "The repo needs a canonical roadmap that a human or AI can treat as the source of truth. Without it, GitHub issues drift and tasks require repeated context dumps.",
+      "outcome": "ai_docs contains the roadmap, agent contract, milestone docs, epic docs, story docs, and a machine-readable backlog with stable IDs and traceability.",
+      "scope": [
+        "Create the ai_docs folder structure and core planning docs.",
+        "Encode milestones, epics, stories, tasks, labels, dependencies, and GitHub metadata fields in backlog.yaml.",
+        "Make the docs explicit enough that task issues can stay decision complete."
+      ],
+      "non_goals": [
+        "Implementing the GitHub sync tool itself.",
+        "Adding a GitHub Projects board.",
+        "Replacing public bug or feature issue templates."
+      ],
+      "implementation_notes": [
+        "Use deep-research-report.md as the product source document and distill it into roadmap-safe milestone and story language.",
+        "Keep backlog.yaml JSON-compatible so the sync tool can use JSON.parse without dependencies.",
+        "Make each story product-facing and each task implementation-facing."
+      ],
+      "acceptance_criteria": [
+        "All milestones, epics, stories, and tasks have stable IDs and traceable relationships.",
+        "Every milestone has a doc, every epic belongs to one milestone, and every story is covered by at least one task.",
+        "The repo contains an explicit agent contract for roadmap-managed work."
+      ],
+      "verification": [
+        "Run the sync tool in dry-run mode once backlog.yaml exists to validate cross references.",
+        "Spot-check that docs and backlog IDs align.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Keep ai_docs as the canonical planning source, not GitHub issue bodies.",
+        "Prefer concise, stable identifiers over prose-only traceability.",
+        "Avoid adding new dependencies just to parse or format the backlog."
+      ],
+      "references": [
+        "ai_docs/README.md",
+        "ai_docs/roadmap.md",
+        "deep-research-report.md"
+      ]
+    },
+    {
+      "id": "TASK-006",
+      "title": "Implement GitHub sync for labels, milestones, epics, and tasks",
+      "milestone": "M0",
+      "epic": "EPIC-003",
+      "story_refs": [
+        "US-003"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:review",
+        "area:fork"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-005"
+      ],
+      "problem": "Without an idempotent sync layer, the roadmap still depends on manual GitHub issue editing and cannot guarantee that issue bodies match ai_docs.",
+      "outcome": "A single script can create and update roadmap labels, milestones, epic issues, and task issues from backlog.yaml, while preserving only an explicit freeform section.",
+      "scope": [
+        "Read backlog.yaml and validate its cross references and linked docs.",
+        "Create or update roadmap labels, milestones, epic issues, and task issues through gh api.",
+        "Write back GitHub issue numbers and URLs so future syncs are idempotent."
+      ],
+      "non_goals": [
+        "Managing arbitrary user-created issues outside the roadmap namespace.",
+        "Creating a GitHub Projects board.",
+        "Supporting two-way sync from GitHub back into docs."
+      ],
+      "implementation_notes": [
+        "Use a machine marker in managed issues and preserve only the Freeform notes section.",
+        "Epic issues should summarize stories and tasks; task issues are the agent pickup unit.",
+        "Make dry-run output explicit enough to audit planned mutations before applying them."
+      ],
+      "acceptance_criteria": [
+        "A dry run shows all intended label, milestone, and issue mutations without changing GitHub state.",
+        "A live sync creates the planned milestones and managed issues in Spectralgo/gmux without duplicates.",
+        "A second sync updates existing managed issues rather than recreating them."
+      ],
+      "verification": [
+        "Run node scripts/sync-ai-docs.mjs --dry-run and inspect the output.",
+        "Run node scripts/sync-ai-docs.mjs --sync once the docs are pushed and verify the created GitHub objects.",
+        "Build with ./scripts/reload.sh --tag task-006-ai-docs-sync because repo scripts changed."
+      ],
+      "repo_constraints": [
+        "Use gh api rather than manual browser edits for roadmap-managed objects.",
+        "Keep the sync semantics one-way from ai_docs to GitHub.",
+        "Do not add new parser dependencies if JSON-compatible YAML remains sufficient."
+      ],
+      "references": [
+        "scripts/sync-ai-docs.mjs",
+        "package.json",
+        "ai_docs/backlog.yaml"
+      ]
+    },
+    {
+      "id": "TASK-007",
+      "title": "Implement Town root detection and prerequisite validation",
+      "milestone": "M1",
+      "epic": "EPIC-004",
+      "story_refs": [
+        "US-004"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [],
+      "problem": "Gmux cannot become Gastown-native until it can locate a Town root and explain when the expected Gastown prerequisites or directory invariants are missing.",
+      "outcome": "The app can discover Town roots, validate prerequisites, and expose actionable failure states before downstream navigation logic runs.",
+      "scope": [
+        "Define the Town root detection strategy and fallback search order.",
+        "Validate the minimum prerequisites needed for rig and identity discovery.",
+        "Expose structured error states for missing gt tooling or invalid Town layout."
+      ],
+      "non_goals": [
+        "Building full rig inventory models.",
+        "Implementing identity-based workspace open flows.",
+        "Adding write actions."
+      ],
+      "implementation_notes": [
+        "Base the detection rules on the research report's documented Town and rig layout expectations.",
+        "Prefer a small domain service or adapter instead of scattering filesystem assumptions through views.",
+        "Design the failure output so the UI and CLI can both reuse it later."
+      ],
+      "acceptance_criteria": [
+        "Gmux can locate a Town root or explain why it cannot.",
+        "Missing prerequisites produce actionable guidance instead of silent empty-state behavior.",
+        "The detection layer is reusable by later inventory and identity tasks."
+      ],
+      "verification": [
+        "Use targeted local inspection or harnesses that do not require running local tests.",
+        "Build with ./scripts/reload.sh --tag task-007-town-root after code changes.",
+        "Document any assumptions about Town-root selection in code comments or docs."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Keep detection logic decoupled from UI rendering where practical.",
+        "Respect existing localization rules for any new user-facing errors."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/roadmap.md"
+      ]
+    },
+    {
+      "id": "TASK-008",
+      "title": "Build rig inventory adapter and normalized domain model",
+      "milestone": "M1",
+      "epic": "EPIC-004",
+      "story_refs": [
+        "US-004"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-007"
+      ],
+      "problem": "Even with a Town root, later flows need structured rig metadata rather than ad hoc path lookups or repeated filesystem traversal.",
+      "outcome": "Gmux has a normalized rig inventory model that downstream UI and automation surfaces can consume consistently.",
+      "scope": [
+        "Enumerate rigs and their relevant role directories from the detected Town.",
+        "Define a reusable domain model for rig identity, paths, and health indicators.",
+        "Expose inventory refresh behavior suitable for UI consumption."
+      ],
+      "non_goals": [
+        "Mapping individual agents or worktrees to open targets.",
+        "Rendering the full operator cockpit.",
+        "Writing back to Gastown state."
+      ],
+      "implementation_notes": [
+        "Treat the inventory adapter as shared infrastructure for M1 and M2 rather than a one-off view helper.",
+        "Model enough metadata to support future crew, polecat, and refinery navigation.",
+        "Keep the model resilient to partial discovery failures within a Town."
+      ],
+      "acceptance_criteria": [
+        "Rigs are enumerated with stable identifiers and role-path metadata.",
+        "Inventory results can drive UI navigation without repeated filesystem guessing.",
+        "Inventory failures are surfaced as structured health information."
+      ],
+      "verification": [
+        "Use targeted domain-level verification rather than local tests.",
+        "Build with ./scripts/reload.sh --tag task-008-rig-inventory if app code changed.",
+        "Inspect the resulting models or logs to confirm correct rig enumeration."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Avoid burying inventory logic inside SwiftUI views.",
+        "Keep new user-facing strings localized."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-004-town-discovery-and-rig-inventory.md"
+      ]
+    },
+    {
+      "id": "TASK-009",
+      "title": "Implement worktree classifier and agent identity resolver",
+      "milestone": "M1",
+      "epic": "EPIC-005",
+      "story_refs": [
+        "US-005"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-007",
+        "TASK-008"
+      ],
+      "problem": "Gmux cannot open by identity until it can tell crew, polecat, refinery, and cross-rig worktrees apart and map them to stable agent identities.",
+      "outcome": "A reusable resolver can classify Gastown workspace types and map identities into concrete worktree metadata.",
+      "scope": [
+        "Define classification rules for crew, polecat, refinery, and cross-rig worktrees.",
+        "Map agent or role identifiers to concrete path and metadata results.",
+        "Expose structured failures for ambiguous or missing identity matches."
+      ],
+      "non_goals": [
+        "Building UI routing or pane presets.",
+        "Mutating worktree state.",
+        "Adding notification behavior."
+      ],
+      "implementation_notes": [
+        "Use the rig inventory model rather than re-traversing the filesystem from scratch.",
+        "Capture enough metadata for future bead, convoy, and notification routing.",
+        "Prefer deterministic matching over fuzzy heuristics."
+      ],
+      "acceptance_criteria": [
+        "Known identity types resolve to the correct worktree class and path.",
+        "Ambiguous or missing identities surface explicit errors.",
+        "The resolver is usable from UI, CLI, socket, and notification flows."
+      ],
+      "verification": [
+        "Use targeted domain inspection or harnesses, not local tests.",
+        "Build with ./scripts/reload.sh --tag task-009-identity-resolver after code changes.",
+        "Document identity-resolution assumptions in code comments if they are non-obvious."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Keep identity resolution separate from presentation code.",
+        "Avoid path heuristics that would break multi-rig or cross-rig scenarios."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md"
+      ]
+    },
+    {
+      "id": "TASK-010",
+      "title": "Add open-by-agent, open-by-bead, and open-by-convoy routing primitives",
+      "milestone": "M1",
+      "epic": "EPIC-005",
+      "story_refs": [
+        "US-005"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:gastown",
+        "area:ui",
+        "area:socket"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-009"
+      ],
+      "problem": "Even with identity resolution, Gmux still needs a stable set of routing primitives that other features can call to open or focus the right workspace context.",
+      "outcome": "UI and automation layers can request identity-aware open flows without duplicating worktree resolution logic.",
+      "scope": [
+        "Define routing primitives for agent, bead, and convoy-driven open actions.",
+        "Map routing outputs into existing workspace, pane, and surface concepts.",
+        "Expose enough shared structure that later alerts and inbox items can reuse the same routing."
+      ],
+      "non_goals": [
+        "Implementing full notification routing.",
+        "Designing final operator cockpit UI.",
+        "Adding write actions."
+      ],
+      "implementation_notes": [
+        "Treat this as an internal domain/API layer first, with minimal UI coupling.",
+        "Respect existing focus policies when designing route execution.",
+        "Leave room for CLI and socket surfaces to call the same primitive later."
+      ],
+      "acceptance_criteria": [
+        "Gmux has stable primitives for agent, bead, and convoy open intents.",
+        "Open flows land in the correct workspace context for known identities.",
+        "The routing layer is reusable by later operator, automation, and notification features."
+      ],
+      "verification": [
+        "Use targeted app or model inspection after a tagged build.",
+        "Build with ./scripts/reload.sh --tag task-010-open-routing.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Preserve socket focus policy.",
+        "Keep routing logic reusable outside individual SwiftUI views.",
+        "Localize any new user-facing routing errors."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md"
+      ]
+    },
+    {
+      "id": "TASK-011",
+      "title": "Implement read-only Beads adapter for routes, ready work, and detail",
+      "milestone": "M1",
+      "epic": "EPIC-006",
+      "story_refs": [
+        "US-006"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:beads",
+        "area:gastown"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-007"
+      ],
+      "problem": "The cockpit needs Beads readiness, routing, and detail data, but Gmux does not yet expose a structured adapter over the Beads CLI or data model.",
+      "outcome": "Gmux has a read-only Beads adapter that powers ready-work, bead detail, and convoy-linked issue context without inventing its own ledger semantics.",
+      "scope": [
+        "Define a Beads adapter for routes, ready work, and bead detail reads.",
+        "Normalize Beads output into app models that downstream views can consume.",
+        "Handle adapter failures in a way that preserves operator trust."
+      ],
+      "non_goals": [
+        "Implementing Bead write actions.",
+        "Building final UI surfaces beyond what is needed for adapter confidence.",
+        "Replacing Beads as the system of record."
+      ],
+      "implementation_notes": [
+        "Follow the research report's Beads semantics and treat Beads as the authoritative source.",
+        "Prefer a narrow adapter layer over embedding shell invocations in views.",
+        "Design the model so ready-work and bead-detail surfaces can share data."
+      ],
+      "acceptance_criteria": [
+        "Gmux can load route, ready-work, and bead-detail data through one consistent adapter.",
+        "Adapter outputs are reusable by convoy, ready-work, and bead-detail surfaces.",
+        "Adapter failures surface explicit status rather than stale or silently empty data."
+      ],
+      "verification": [
+        "Use targeted adapter-level validation and a tagged build if UI code changes.",
+        "Build with ./scripts/reload.sh --tag task-011-beads-adapter as needed.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Keep Beads read logic centralized rather than scattered through UI code.",
+        "Do not create an app-local shadow ledger."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md"
+      ]
+    },
+    {
+      "id": "TASK-012",
+      "title": "Implement hooks list and sync-status ingestion",
+      "milestone": "M1",
+      "epic": "EPIC-006",
+      "story_refs": [
+        "US-006"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:hooks",
+        "area:gastown"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-007",
+        "TASK-008"
+      ],
+      "problem": "The roadmap depends on hook awareness, but Gmux does not yet ingest hook targets or sync health in a structured way.",
+      "outcome": "Gmux can read Gastown hook targets and sync status into a normalized model that later edit and sync flows can build on.",
+      "scope": [
+        "Define a read-only hooks ingestion layer around the relevant Gastown commands.",
+        "Normalize hook targets, scope, and sync-health results into app models.",
+        "Expose status information suitable for later UI surfaces and write flows."
+      ],
+      "non_goals": [
+        "Editing hooks or performing sync mutations.",
+        "Designing final hook-management UI.",
+        "Replacing Gastown's hooks tooling."
+      ],
+      "implementation_notes": [
+        "Treat hook inheritance and target structure as first-class data, not loose strings.",
+        "Keep the model expressive enough for later diff and sync actions.",
+        "Ensure failures clearly distinguish missing tooling from out-of-sync hooks."
+      ],
+      "acceptance_criteria": [
+        "Gmux can read hook target and sync information into normalized app models.",
+        "Status outputs are expressive enough to drive later hooks UI.",
+        "Error states are actionable and do not masquerade as healthy empty data."
+      ],
+      "verification": [
+        "Use targeted ingestion-level validation and a tagged build if app code changes.",
+        "Build with ./scripts/reload.sh --tag task-012-hooks-ingestion as needed.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Keep hooks ingestion separate from future write actions.",
+        "Localize any new hook-related user-facing strings."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md"
+      ]
+    },
+    {
+      "id": "TASK-013",
+      "title": "Build convoy list and status data pipeline",
+      "milestone": "M2",
+      "epic": "EPIC-007",
+      "story_refs": [
+        "US-007"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:convoy",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-008",
+        "TASK-011"
+      ],
+      "problem": "Gmux needs a trustworthy convoy-first dashboard, but it does not yet have a pipeline that reads convoy list and status data into stable UI models.",
+      "outcome": "The app can load active convoys, basic status, and attention signals as the foundation for the operator cockpit.",
+      "scope": [
+        "Define the convoy list and status adapter model.",
+        "Map convoy data into dashboard-ready summaries, including attention-worthy states.",
+        "Provide a refresh strategy suitable for operator use."
+      ],
+      "non_goals": [
+        "Rendering the full convoy detail UI.",
+        "Adding convoy write actions.",
+        "Implementing notification routing."
+      ],
+      "implementation_notes": [
+        "Use the research report's convoy semantics, especially convoy versus swarm and stranded-work concepts.",
+        "Prefer a reusable data pipeline over view-local shell calls.",
+        "Make the model compatible with later inbox and alert routing."
+      ],
+      "acceptance_criteria": [
+        "Gmux can load active convoy summaries with enough data for an attention dashboard.",
+        "Attention-worthy convoy states are represented explicitly in the model.",
+        "The pipeline is reusable by both the dashboard and later detail or notification features."
+      ],
+      "verification": [
+        "Use targeted pipeline validation and a tagged build if UI code changes.",
+        "Build with ./scripts/reload.sh --tag task-013-convoy-pipeline as needed.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Keep convoy data loading out of hot UI paths where possible.",
+        "Localize new user-visible labels or status copy."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md"
+      ]
+    },
+    {
+      "id": "TASK-014",
+      "title": "Build convoy detail view with tracked issues and operator actions",
+      "milestone": "M2",
+      "epic": "EPIC-007",
+      "story_refs": [
+        "US-007"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:convoy",
+        "area:ui",
+        "area:beads"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-013",
+        "TASK-011"
+      ],
+      "problem": "An operator needs more than a convoy list; without a detail surface they still have to drop out of Gmux to understand tracked work and next actions.",
+      "outcome": "Selecting a convoy reveals tracked issues, progress context, and the main operator actions that later milestones will deepen.",
+      "scope": [
+        "Render convoy detail using the convoy and Beads read models.",
+        "Show tracked issues, progress, and contextual operator actions or links.",
+        "Preserve a clear distinction between the read-only MVP surface and later write actions."
+      ],
+      "non_goals": [
+        "Implementing all convoy mutations.",
+        "Designing the full inbox workflow.",
+        "Adding persistent review surfaces."
+      ],
+      "implementation_notes": [
+        "Use TASK-013 as the data source rather than duplicating convoy loads.",
+        "Plan the view so it can later host tracked-work write actions without a full rewrite.",
+        "Keep layout and interaction costs reasonable for larger convoy lists."
+      ],
+      "acceptance_criteria": [
+        "A selected convoy shows tracked issues and progress context inside Gmux.",
+        "The detail surface provides clear routes into later bead or open-context actions.",
+        "The view remains grounded in the convoy read model rather than ad hoc app state."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-014-convoy-detail after UI changes.",
+        "Use targeted manual inspection only; do not run local tests.",
+        "Confirm new strings are localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Follow existing UI and localization rules.",
+        "Avoid blocking hot terminal paths with new data work."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md"
+      ]
+    },
+    {
+      "id": "TASK-015",
+      "title": "Build ready-work panel backed by Beads readiness",
+      "milestone": "M2",
+      "epic": "EPIC-008",
+      "story_refs": [
+        "US-008"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:beads",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-011"
+      ],
+      "problem": "Operators need a fast way to see what can move now, but Gmux does not yet surface Beads readiness in-product.",
+      "outcome": "A ready-work panel exposes dependency-aware work that is actionable now, without requiring an external CLI roundtrip.",
+      "scope": [
+        "Render a ready-work panel using the Beads read adapter.",
+        "Define enough presentation detail to make the panel useful in daily triage.",
+        "Support later links into bead detail and open-context flows."
+      ],
+      "non_goals": [
+        "Claiming or closing work from the panel.",
+        "Designing every future cockpit view.",
+        "Replacing the Beads CLI."
+      ],
+      "implementation_notes": [
+        "Treat readiness as Beads-owned logic; Gmux should display it, not recompute it.",
+        "Plan for reuse in sidebar, dashboard, or contextual overlays if those become useful later.",
+        "Keep refresh behavior explicit and observable."
+      ],
+      "acceptance_criteria": [
+        "Ready work is visible in-product and reflects Beads semantics.",
+        "Each ready-work item links into deeper work context such as bead detail or open routing.",
+        "The panel degrades clearly if Beads data is unavailable."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-015-ready-work after UI changes.",
+        "Use targeted inspection rather than local tests.",
+        "Confirm new user-facing copy is localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Use the centralized Beads adapter rather than view-local shell calls.",
+        "Preserve UI responsiveness."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md"
+      ]
+    },
+    {
+      "id": "TASK-016",
+      "title": "Build bead inspector bound to current workspace or selection context",
+      "milestone": "M2",
+      "epic": "EPIC-008",
+      "story_refs": [
+        "US-008"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:beads",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-011",
+        "TASK-010"
+      ],
+      "problem": "The operator needs detailed bead context tied to what they are currently looking at, but Gmux does not yet bind bead detail to workspace or selection context.",
+      "outcome": "A bead inspector can open from the current selection or workspace context and show dependencies, status, and audit-relevant details.",
+      "scope": [
+        "Render a bead-detail inspector using the Beads adapter.",
+        "Connect the inspector to current selection or workspace context where appropriate.",
+        "Leave room for later write actions without conflating them into the read-only MVP."
+      ],
+      "non_goals": [
+        "Implementing bead mutations.",
+        "Building the full review workflow.",
+        "Adding notification routing by itself."
+      ],
+      "implementation_notes": [
+        "Use a single bead-detail model across convoy, ready-work, and workspace-driven entry points.",
+        "Keep context binding explicit so later alert and inbox flows can reuse it.",
+        "Avoid embedding new hot-path logic in terminal rendering."
+      ],
+      "acceptance_criteria": [
+        "The inspector shows bead status, dependencies, and context details in-product.",
+        "The inspector can open from current selection or workspace-driven context.",
+        "The same detail model can be reused from multiple cockpit entry points."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-016-bead-inspector.",
+        "Use targeted UI inspection only; do not run local tests.",
+        "Confirm any new strings are localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Follow existing focus and rendering policies in terminal-adjacent code.",
+        "Use centralized models rather than repeated adapter calls from views."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md"
+      ]
+    },
+    {
+      "id": "TASK-017",
+      "title": "Implement notification and event routing with context jump targets",
+      "milestone": "M2",
+      "epic": "EPIC-009",
+      "story_refs": [
+        "US-009"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:ui",
+        "area:socket",
+        "area:convoy"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-010",
+        "TASK-013"
+      ],
+      "problem": "The product promise includes faster attention routing, but Gmux does not yet translate alerts or events into convoy-, bead-, and identity-aware jump targets.",
+      "outcome": "Notifications and related events carry enough structured context to reopen the relevant workspace or cockpit view.",
+      "scope": [
+        "Define notification or event payloads that include convoy, bead, or identity context.",
+        "Map those payloads into reusable jump targets.",
+        "Ensure routing is compatible with existing focus policies."
+      ],
+      "non_goals": [
+        "Building the final inbox surface.",
+        "Implementing all socket or CLI endpoints.",
+        "Changing unrelated notification styling."
+      ],
+      "implementation_notes": [
+        "Reuse the identity and open-routing primitives from M1 rather than duplicating path logic.",
+        "Be explicit about which commands are allowed to move focus and which are not.",
+        "Preserve the distinction between event storage and route execution."
+      ],
+      "acceptance_criteria": [
+        "Alerts can carry enough context to reopen the relevant convoy, bead, or workspace target.",
+        "Route execution respects the app's focus policy.",
+        "The routing layer is reusable by later mail and inbox features."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-017-alert-routing after code changes.",
+        "Use targeted manual inspection or logs; do not run local tests.",
+        "Confirm any new user-facing strings are localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Preserve socket focus policy.",
+        "Avoid coupling alert routing directly to one UI surface."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md"
+      ]
+    },
+    {
+      "id": "TASK-018",
+      "title": "Implement contextual open flows and workspace or pane presets",
+      "milestone": "M2",
+      "epic": "EPIC-009",
+      "story_refs": [
+        "US-009"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:ui",
+        "area:convoy"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-010",
+        "TASK-017"
+      ],
+      "problem": "Users still lose time after a context jump if Gmux opens the right worktree but not the right pane layout or supporting surfaces.",
+      "outcome": "Contextual open flows can restore an appropriate workspace or pane preset for the selected convoy, bead, or agent context.",
+      "scope": [
+        "Define the preset model for context-specific workspace openings.",
+        "Map known context types to reasonable workspace or pane compositions.",
+        "Keep the routing primitive reusable by UI and future automation surfaces."
+      ],
+      "non_goals": [
+        "Named-session persistence.",
+        "Full diff or review surfaces.",
+        "Broad workspace layout redesign."
+      ],
+      "implementation_notes": [
+        "Build on TASK-010 and TASK-017 rather than embedding context logic in view controllers.",
+        "Preserve app focus behavior unless an action is explicitly focusful.",
+        "Keep presets simple enough that later persistence work can serialize them."
+      ],
+      "acceptance_criteria": [
+        "Known context jumps can restore a reasonable workspace or pane preset.",
+        "Preset application reuses the routing primitives instead of duplicating logic.",
+        "The open flows remain compatible with later persistence and review tasks."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-018-context-open.",
+        "Use targeted manual inspection only; do not run local tests.",
+        "Confirm any new user-facing text is localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Preserve focus policy and terminal responsiveness.",
+        "Avoid a one-off preset system that later persistence work cannot reuse."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md"
+      ]
+    },
+    {
+      "id": "TASK-019",
+      "title": "Implement hooks diff, edit, and sync actions",
+      "milestone": "M3",
+      "epic": "EPIC-010",
+      "story_refs": [
+        "US-010"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:hooks",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-012"
+      ],
+      "problem": "The roadmap calls for hook management from Gmux, but there is no safe in-product path to inspect, edit, or sync hooks while preserving Gastown's inheritance rules.",
+      "outcome": "Operators can inspect hook diffs, open the correct editable surface, and run supported sync flows from Gmux.",
+      "scope": [
+        "Define hooks diff and edit entry points on top of the read-only hooks model.",
+        "Support the relevant sync action while preserving Gastown merge semantics.",
+        "Surface clear success, failure, and out-of-sync states."
+      ],
+      "non_goals": [
+        "Reinventing Gastown's hooks merge logic.",
+        "Building every possible hook-management UI variant.",
+        "Implementing unrelated Bead writes."
+      ],
+      "implementation_notes": [
+        "Use the normalized hook model from TASK-012.",
+        "Be explicit about which hook targets can be edited from the UI and which simply open the underlying file or command.",
+        "Preserve auditability and avoid silent auto-sync behavior."
+      ],
+      "acceptance_criteria": [
+        "Users can inspect hook sync state and reach the correct edit path from Gmux.",
+        "Supported sync actions preserve Gastown's inheritance model.",
+        "Write results reflect back into the read model quickly and clearly."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-019-hooks-write if UI or script code changes.",
+        "Use targeted inspection and dry-run style checks where possible; do not run local tests.",
+        "Document any non-obvious hook-edit boundaries."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Do not reimplement Gastown hook logic that should stay in Gastown.",
+        "Localize new user-facing strings."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
+      ]
+    },
+    {
+      "id": "TASK-020",
+      "title": "Implement Bead update, close, and convoy tracked-work write flows",
+      "milestone": "M3",
+      "epic": "EPIC-010",
+      "story_refs": [
+        "US-010"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:beads",
+        "area:convoy",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-011",
+        "TASK-014"
+      ],
+      "problem": "Operators can see work state, but without supported write flows they still have to drop back to CLI tooling for common status changes and convoy tracked-work updates.",
+      "outcome": "Gmux supports the core Bead and convoy write operations defined by the roadmap, with clear boundaries and immediate read-model refresh.",
+      "scope": [
+        "Implement supported Bead state changes such as update or close.",
+        "Implement the convoy tracked-work update path defined in the research notes.",
+        "Refresh the relevant read models after a successful mutation."
+      ],
+      "non_goals": [
+        "Implementing every possible Beads command.",
+        "Changing Beads semantics or data ownership.",
+        "Building the full mail or review workflow."
+      ],
+      "implementation_notes": [
+        "Follow the research report's documented convoy tracked-work workaround rather than inventing a different model.",
+        "Keep mutations explicit and auditable.",
+        "Reuse existing bead and convoy read models for post-write refresh."
+      ],
+      "acceptance_criteria": [
+        "Supported Bead or convoy write actions can be triggered from Gmux.",
+        "Read models reflect successful mutations within the defined refresh behavior.",
+        "Unsupported mutations are clearly out of scope rather than silently failing."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-020-bead-writes after code changes.",
+        "Use targeted command or model inspection only; do not run local tests.",
+        "Document any required operator permissions or assumptions."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Treat Beads and Gastown tooling as the source of truth.",
+        "Preserve localization and focus rules for any new UI flows."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
+      ]
+    },
+    {
+      "id": "TASK-021",
+      "title": "Extend CLI and socket namespaces for Gastown, Beads, and cockpit flows",
+      "milestone": "M3",
+      "epic": "EPIC-011",
+      "story_refs": [
+        "US-011"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:cli",
+        "area:socket",
+        "area:gastown"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-010",
+        "TASK-011",
+        "TASK-019",
+        "TASK-020"
+      ],
+      "problem": "The cockpit's Gastown-native features are not useful to automation until they are exposed through stable CLI and socket contracts.",
+      "outcome": "Agents and scripts can drive the key cockpit read and write flows through explicit gmux commands and socket methods.",
+      "scope": [
+        "Define the CLI and socket namespaces needed for the roadmap-supported Gastown features.",
+        "Provide machine-readable outputs where automation depends on them.",
+        "Reuse the same routing and domain primitives as the UI."
+      ],
+      "non_goals": [
+        "Publishing an MCP server yet.",
+        "Supporting every possible internal UI action immediately.",
+        "Breaking existing cmux-derived automation surfaces without a migration plan."
+      ],
+      "implementation_notes": [
+        "Follow existing cmux command and socket conventions where they still fit Gmux.",
+        "Keep high-frequency telemetry paths off the main thread per repo policy.",
+        "Be explicit about which commands may change focus."
+      ],
+      "acceptance_criteria": [
+        "Key Gastown-native reads and writes are reachable through gmux CLI or socket methods.",
+        "Machine-readable outputs are available where external automation needs them.",
+        "Command and socket semantics reuse the same domain primitives as the UI."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-021-gastown-cli-socket.",
+        "Use targeted command-level smoke checks only; do not run local tests.",
+        "Inspect any new socket methods for focus and threading compliance."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Preserve socket threading and focus policies.",
+        "Keep the command surface gmux-scoped."
+      ],
+      "references": [
+        "CLI/cmux.swift",
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md"
+      ]
+    },
+    {
+      "id": "TASK-022",
+      "title": "Build the mail and inbox workflow surface",
+      "milestone": "M3",
+      "epic": "EPIC-011",
+      "story_refs": [
+        "US-011"
+      ],
+      "priority": "priority:p1",
+      "area_labels": [
+        "area:ui",
+        "area:convoy",
+        "area:review"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-014",
+        "TASK-017",
+        "TASK-021"
+      ],
+      "problem": "The research notes describe mail and provenance-driven workflows, but Gmux does not yet surface those messages or route operators back to the relevant work context.",
+      "outcome": "An inbox-style surface displays supported message types and links directly into the relevant convoy, bead, review, or workspace context.",
+      "scope": [
+        "Define the supported mail or inbox message model for the roadmap.",
+        "Render an inbox surface that groups and routes actionable messages.",
+        "Reuse the existing context-jump primitives for message actions."
+      ],
+      "non_goals": [
+        "Implementing an entire messaging platform.",
+        "Adding every future notification style.",
+        "Completing the full review UX from M4."
+      ],
+      "implementation_notes": [
+        "Use the message types called out in the research report rather than inventing a generic inbox taxonomy.",
+        "Treat routing as a thin layer over existing context-jump logic.",
+        "Keep the surface explicit about provenance and current actionability."
+      ],
+      "acceptance_criteria": [
+        "Supported mail or inbox items are visible in Gmux with provenance data.",
+        "Users can jump from an inbox item to the correct work context.",
+        "The inbox surface is compatible with later review and persistence work."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-022-inbox-surface after UI changes.",
+        "Use targeted UI inspection only; do not run local tests.",
+        "Confirm any new strings are localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Reuse existing routing primitives rather than inventing parallel navigation code.",
+        "Preserve the app's focus policy for non-focus actions."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md"
+      ]
+    },
+    {
+      "id": "TASK-023",
+      "title": "Implement named sessions and robust layout restore",
+      "milestone": "M4",
+      "epic": "EPIC-012",
+      "story_refs": [
+        "US-012"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:persistence",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-018"
+      ],
+      "problem": "Users need predictable restart recovery, but Gmux does not yet provide a durable named-session or robust last-session restore story grounded in its current workspace model.",
+      "outcome": "Gmux can save and restore last-session or named-session layout metadata in a predictable, user-facing way.",
+      "scope": [
+        "Define named-session and last-session persistence semantics.",
+        "Serialize enough workspace or pane metadata to restore useful layout context.",
+        "Provide user-facing restore entry points and clear failure handling."
+      ],
+      "non_goals": [
+        "True live-process preservation.",
+        "Checkpoint-assisted semantic resume overlays.",
+        "Persistent terminal backend integration."
+      ],
+      "implementation_notes": [
+        "Build on the contextual open and preset model from M2 rather than inventing a separate layout language.",
+        "Be explicit about what is metadata-only restore.",
+        "Keep the serialization format stable enough for later evolution."
+      ],
+      "acceptance_criteria": [
+        "Users can restore the last session or a named saved session.",
+        "Restore behavior reconstructs useful workspace or pane context rather than only reopening an empty app.",
+        "Failures in restore are visible and recoverable."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-023-sessions after code changes.",
+        "Use targeted local inspection or manual smoke checks only; do not run local tests.",
+        "Document the restore semantics in user-facing or developer-facing docs as needed."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Preserve tagged-build isolation and current workspace behavior.",
+        "Localize any new session-management strings."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md"
+      ]
+    },
+    {
+      "id": "TASK-024",
+      "title": "Implement checkpoint-assisted semantic resume overlays",
+      "milestone": "M4",
+      "epic": "EPIC-012",
+      "story_refs": [
+        "US-012"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:persistence",
+        "area:gastown",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-011",
+        "TASK-023"
+      ],
+      "problem": "Even with layout restore, users still need semantic clues about what a crashed or restarted polecat was doing in order to resume work quickly.",
+      "outcome": "Gmux can surface Gastown checkpoint or related recovery metadata as a resume aid after restart or crash.",
+      "scope": [
+        "Read the checkpoint data defined by the research report and map it into a recovery model.",
+        "Render a recovery overlay or equivalent surface that links back into work context.",
+        "Make the distinction between semantic resume and live-session restore explicit."
+      ],
+      "non_goals": [
+        "OS-level process checkpoint or restore.",
+        "Persistent terminal backend integration.",
+        "Rewriting Gastown's checkpoint semantics."
+      ],
+      "implementation_notes": [
+        "Treat checkpoints as advisory context, not proof that a session can be resumed exactly.",
+        "Reuse the open-routing layer for resume actions.",
+        "Present dirty files, current bead, or current step information clearly and conservatively."
+      ],
+      "acceptance_criteria": [
+        "Gmux can surface checkpoint-derived semantic recovery information after restart or crash.",
+        "Users can jump from the recovery surface back into the relevant work context.",
+        "The UI makes the limits of semantic resume explicit."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-024-semantic-resume after code changes.",
+        "Use targeted inspection rather than local tests.",
+        "Confirm new user-facing copy is localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Do not overpromise true live-session restoration.",
+        "Reuse existing routing primitives where possible."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md"
+      ]
+    },
+    {
+      "id": "TASK-025",
+      "title": "Add persistent terminal mode adapters",
+      "milestone": "M4",
+      "epic": "EPIC-013",
+      "story_refs": [
+        "US-013"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:persistence",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-023"
+      ],
+      "problem": "Metadata restore alone does not address the live-session preservation gap users care about, but Gmux also should not imply impossible guarantees.",
+      "outcome": "Gmux can cooperate with supported persistent terminal backends through explicit, documented modes that preserve user expectations.",
+      "scope": [
+        "Define the supported persistent-terminal integration modes and their UX boundary.",
+        "Add the minimum adapter layer or settings required for the chosen backends.",
+        "Expose the tradeoffs and limitations to users clearly."
+      ],
+      "non_goals": [
+        "Universal process checkpoint and restore.",
+        "Supporting every terminal multiplexer under the sun in one task.",
+        "Rewriting the entire terminal host architecture."
+      ],
+      "implementation_notes": [
+        "Follow the research report's layered persistence approach rather than treating one backend as universal truth.",
+        "Keep the adapter or settings surface small and explicit.",
+        "Design the integration so it can coexist with session metadata restore."
+      ],
+      "acceptance_criteria": [
+        "At least one supported persistent-session mode is exposed through a clear product boundary.",
+        "Users can understand which guarantees come from the backend versus Gmux.",
+        "The integration does not misrepresent unsupported restore scenarios."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-025-persistent-terminals after code changes.",
+        "Use targeted configuration and code-path inspection only; do not run local tests.",
+        "Document the supported backend assumptions clearly."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Do not claim guarantees the backend cannot provide.",
+        "Localize any user-facing settings or explanatory text."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md"
+      ]
+    },
+    {
+      "id": "TASK-026",
+      "title": "Add diff and review workspace surface",
+      "milestone": "M4",
+      "epic": "EPIC-013",
+      "story_refs": [
+        "US-013"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:review",
+        "area:ui"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-018"
+      ],
+      "problem": "Operators and reviewers still have to leave Gmux to inspect changes quickly, which breaks the promise of a unified cockpit.",
+      "outcome": "Gmux can show a review-oriented changed-files or diff surface tied to the active work context.",
+      "scope": [
+        "Define the minimum viable review surface for changed files and diffs.",
+        "Bind the review surface to the current worktree or context route.",
+        "Leave room for later deeper review workflows without overbuilding the first version."
+      ],
+      "non_goals": [
+        "Recreating a full code-hosting review system.",
+        "Building every future merge action.",
+        "Replacing external diff tools entirely."
+      ],
+      "implementation_notes": [
+        "Prefer a pragmatic initial surface that is obviously useful over a large custom diff engine.",
+        "Keep the view anchored to the current worktree or convoy context.",
+        "Plan for inbox and convoy flows to open the same review surface later."
+      ],
+      "acceptance_criteria": [
+        "Users can inspect changed files and at least a basic diff summary from within Gmux.",
+        "The review surface opens in the correct work context.",
+        "The initial surface is compatible with later richer review flows."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-026-review-surface after UI changes.",
+        "Use targeted manual inspection only; do not run local tests.",
+        "Confirm new copy is localized."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Preserve terminal and browser responsiveness when adding review UI.",
+        "Avoid coupling review state too tightly to one specific pane implementation."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md"
+      ]
+    },
+    {
+      "id": "TASK-027",
+      "title": "Add MCP server scaffolding over Gmux primitives",
+      "milestone": "M4",
+      "epic": "EPIC-014",
+      "story_refs": [
+        "US-014"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:mcp",
+        "area:socket",
+        "area:cli"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-010",
+        "TASK-021"
+      ],
+      "problem": "Agent integrations will stay brittle until Gmux exposes a stable agent-facing surface built on its own primitives rather than UI scraping.",
+      "outcome": "The repo has an initial MCP server or equivalent scaffolding that maps agent tools onto Gmux's established routing and automation primitives.",
+      "scope": [
+        "Define the initial MCP-facing tool boundary over existing Gmux operations.",
+        "Reuse CLI or socket primitives where possible instead of duplicating business logic.",
+        "Document what is intentionally out of scope for the first MCP foundation."
+      ],
+      "non_goals": [
+        "Shipping every possible agent tool immediately.",
+        "Building a second automation stack unrelated to the existing CLI or socket surfaces.",
+        "Committing to one final MCP schema for all future work."
+      ],
+      "implementation_notes": [
+        "Keep the first pass focused on scaffolding and clear tool boundaries.",
+        "Use the existing domain primitives from identity routing and automation work.",
+        "Avoid making UI-only assumptions in the agent layer."
+      ],
+      "acceptance_criteria": [
+        "The repo defines an MCP-facing foundation over existing Gmux primitives.",
+        "The first-pass tool surface is explicit about supported operations and limitations.",
+        "Future agent work can build on this foundation without UI scraping."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-027-mcp-foundation if app code or scripts change.",
+        "Use targeted protocol or adapter inspection only; do not run local tests.",
+        "Document the initial tool boundary clearly."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Reuse existing CLI or socket primitives where practical.",
+        "Keep the MCP boundary gmux-scoped and profile-safe."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md"
+      ]
+    },
+    {
+      "id": "TASK-028",
+      "title": "Add multi-profile isolation for Town roots, sockets, and caches",
+      "milestone": "M4",
+      "epic": "EPIC-014",
+      "story_refs": [
+        "US-014"
+      ],
+      "priority": "priority:p2",
+      "area_labels": [
+        "area:mcp",
+        "area:gastown",
+        "area:socket",
+        "area:persistence"
+      ],
+      "state": "state:agent-ready",
+      "depends_on": [
+        "TASK-007",
+        "TASK-021"
+      ],
+      "problem": "Once Gmux targets multiple Towns or agent integrations, shared sockets, caches, and actor context become a source of silent cross-contamination.",
+      "outcome": "Gmux can isolate multiple profiles so Town roots, sockets, caches, and actor context do not bleed together.",
+      "scope": [
+        "Define the profile model and its isolation boundaries.",
+        "Route Town discovery, sockets, caches, and actor-related state through the selected profile.",
+        "Ensure the profile system is compatible with future MCP integrations."
+      ],
+      "non_goals": [
+        "Completely redesigning every persistence or settings surface.",
+        "Supporting remote multi-user collaboration in this task.",
+        "Rewriting the whole fork identity layer from M0."
+      ],
+      "implementation_notes": [
+        "Reuse the gmux-scoped runtime identity work from M0 rather than creating parallel naming rules.",
+        "Make profile selection explicit and auditable.",
+        "Keep profile-specific state boundaries narrow and deterministic."
+      ],
+      "acceptance_criteria": [
+        "Multiple profiles can isolate Town roots, sockets, caches, and actor context.",
+        "Profile selection or switching does not silently reuse another profile's runtime state.",
+        "The profile model is compatible with later MCP and persistence work."
+      ],
+      "verification": [
+        "Build with ./scripts/reload.sh --tag task-028-profiles after code changes.",
+        "Use targeted manual or domain-level inspection only; do not run local tests.",
+        "Document the chosen profile boundary clearly."
+      ],
+      "repo_constraints": [
+        "Do not run local tests.",
+        "Preserve existing gmux identity invariants while layering profile isolation.",
+        "Localize any new profile-management strings."
+      ],
+      "references": [
+        "deep-research-report.md",
+        "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "ai-docs:dry-run": "node ./scripts/sync-ai-docs.mjs --dry-run",
+    "ai-docs:sync": "node ./scripts/sync-ai-docs.mjs --sync"
+  },
   "dependencies": {
     "vercel": "^50.9.5"
   },
