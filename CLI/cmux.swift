@@ -42,7 +42,8 @@ private final class CLISocketSentryTelemetry {
     }
 
     private static func currentSentryBundleIdentifier() -> String? {
-        if let bundleIdentifier = ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"]?
+        if let bundleIdentifier = (ProcessInfo.processInfo.environment["GMUX_BUNDLE_ID"]
+            ?? ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"])?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !bundleIdentifier.isEmpty {
             return bundleIdentifier
@@ -132,11 +133,13 @@ private final class CLISocketSentryTelemetry {
         self.command = command.lowercased()
         self.subcommand = commandArgs.first?.lowercased() ?? "help"
         self.socketPath = socketPath
-        self.envSocketPath = processEnv["CMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET"]
-        self.workspaceId = processEnv["CMUX_WORKSPACE_ID"]
-        self.surfaceId = processEnv["CMUX_SURFACE_ID"]
+        self.envSocketPath = processEnv["GMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET"]
+        self.workspaceId = processEnv["GMUX_WORKSPACE_ID"] ?? processEnv["CMUX_WORKSPACE_ID"]
+        self.surfaceId = processEnv["GMUX_SURFACE_ID"] ?? processEnv["CMUX_SURFACE_ID"]
         self.disabledByEnv =
+            processEnv["GMUX_CLI_SENTRY_DISABLED"] == "1" ||
             processEnv["CMUX_CLI_SENTRY_DISABLED"] == "1" ||
+            processEnv["GMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1" ||
             processEnv["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1"
     }
 
@@ -148,7 +151,7 @@ private final class CLISocketSentryTelemetry {
         for (key, value) in data {
             payload[key] = value
         }
-        let crumb = Breadcrumb(level: .info, category: "cmux.cli")
+        let crumb = Breadcrumb(level: .info, category: "gmux.cli")
         crumb.message = message
         crumb.data = payload
         SentrySDK.addBreadcrumb(crumb)
@@ -169,7 +172,7 @@ private final class CLISocketSentryTelemetry {
         let command = self.command
         _ = SentrySDK.capture(error: error) { scope in
             scope.setLevel(.error)
-            scope.setTag(value: "cmux-cli", key: "component")
+            scope.setTag(value: "gmux-cli", key: "component")
             scope.setTag(value: command, key: "cli_command")
             scope.setTag(value: subcommand, key: "cli_subcommand")
             scope.setContext(value: context, key: "cli_socket")
@@ -227,7 +230,7 @@ private final class CLISocketSentryTelemetry {
         if CLISocketPathResolver.isImplicitDefaultPath(socketPath),
            (envSocketPath?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
            !taggedSockets.isEmpty {
-            context["possible_root_cause"] = "CMUX_SOCKET_PATH/CMUX_SOCKET missing while tagged sockets exist"
+            context["possible_root_cause"] = "GMUX_SOCKET_PATH missing while tagged sockets exist"
         }
 
         return context
@@ -254,7 +257,7 @@ private final class CLISocketSentryTelemetry {
         }
         var sockets: [String] = []
         for name in entries.sorted() {
-            guard name.hasPrefix("cmux"), name.hasSuffix(".sock") else { continue }
+            guard (name.hasPrefix("gmux") || name.hasPrefix("cmux")), name.hasSuffix(".sock") else { continue }
             let fullPath = URL(fileURLWithPath: directory)
                 .appendingPathComponent(name, isDirectory: false)
                 .path
@@ -348,7 +351,7 @@ private final class ClaudeHookSessionStore {
         processEnv: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default
     ) {
-        if let overridePath = processEnv["CMUX_CLAUDE_HOOK_STATE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let overridePath = (processEnv["GMUX_CLAUDE_HOOK_STATE_PATH"] ?? processEnv["CMUX_CLAUDE_HOOK_STATE_PATH"])?.trimmingCharacters(in: .whitespacesAndNewlines),
            !overridePath.isEmpty {
             self.statePath = NSString(string: overridePath).expandingTildeInPath
         } else {
@@ -545,7 +548,8 @@ enum SocketPasswordResolver {
         if let explicit = normalized(explicit) {
             return explicit
         }
-        if let env = normalized(ProcessInfo.processInfo.environment["CMUX_SOCKET_PASSWORD"]) {
+        if let env = normalized(ProcessInfo.processInfo.environment["GMUX_SOCKET_PASSWORD"])
+            ?? normalized(ProcessInfo.processInfo.environment["CMUX_SOCKET_PASSWORD"]) {
             return env
         }
         if let filePassword = loadFromFile() {
@@ -590,7 +594,7 @@ enum SocketPasswordResolver {
         socketPath: String,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> String? {
-        if let tag = normalized(environment["CMUX_TAG"]) {
+        if let tag = normalized(environment["GMUX_TAG"]) ?? normalized(environment["CMUX_TAG"]) {
             let scoped = sanitizeScope(tag)
             if !scoped.isEmpty {
                 return scoped
@@ -864,7 +868,7 @@ final class SocketClient {
     private static let maxSocketTimeoutSeconds: TimeInterval = 9_007_199_254_740_991
     private static let responseTimeoutSeconds: TimeInterval = {
         let env = ProcessInfo.processInfo.environment
-        if let raw = env["CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"],
+        if let raw = env["GMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"] ?? env["CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"],
            let seconds = Double(raw),
            seconds.isFinite,
            seconds > 0 {
@@ -1055,8 +1059,8 @@ final class SocketClient {
 
     private static func relayCredentials(for endpoint: RelayEndpoint) throws -> RelayCredentials {
         let environment = ProcessInfo.processInfo.environment
-        if let relayID = trimmedEnvValue(environment["CMUX_RELAY_ID"]),
-           let relayTokenHex = trimmedEnvValue(environment["CMUX_RELAY_TOKEN"]),
+        if let relayID = trimmedEnvValue(environment["GMUX_RELAY_ID"]) ?? trimmedEnvValue(environment["CMUX_RELAY_ID"]),
+           let relayTokenHex = trimmedEnvValue(environment["GMUX_RELAY_TOKEN"]) ?? trimmedEnvValue(environment["CMUX_RELAY_TOKEN"]),
            let relayToken = hexData(from: relayTokenHex) {
             return RelayCredentials(relayID: relayID, relayToken: relayToken)
         }
@@ -1152,7 +1156,7 @@ final class SocketClient {
         let challengeLine = try readLine()
         guard let challengeData = challengeLine.data(using: .utf8),
               let challenge = try JSONSerialization.jsonObject(with: challengeData) as? [String: Any],
-              (challenge["protocol"] as? String) == "cmux-relay-auth",
+              ((challenge["protocol"] as? String) == "gmux-relay-auth" || (challenge["protocol"] as? String) == "cmux-relay-auth"),
               let version = challenge["version"] as? Int,
               let relayID = challenge["relay_id"] as? String,
               relayID == credentials.relayID,
@@ -1310,14 +1314,14 @@ final class SocketClient {
         }
 
         guard let watchDirectory = existingWatchDirectory(forPath: path) else {
-            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
         }
         let watchFD = open(watchDirectory, O_EVTONLY)
         guard watchFD >= 0 else {
-            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
         }
 
-        let queue = DispatchQueue(label: "com.cmux.cli.socket-watch.\(UUID().uuidString)")
+        let queue = DispatchQueue(label: "com.gmux.cli.socket-watch.\(UUID().uuidString)")
         let semaphore = DispatchSemaphore(value: 0)
         var connected = false
         let source = DispatchSource.makeFileSystemObjectSource(
@@ -1348,7 +1352,7 @@ final class SocketClient {
         guard semaphore.wait(timeout: .now() + timeout) == .success else {
             source.cancel()
             client.close()
-            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
         }
 
         source.cancel()
@@ -1368,7 +1372,7 @@ final class SocketClient {
             throw CLIError(message: "Timed out waiting for \(path)")
         }
 
-        let queue = DispatchQueue(label: "com.cmux.cli.path-watch.\(UUID().uuidString)")
+        let queue = DispatchQueue(label: "com.gmux.cli.path-watch.\(UUID().uuidString)")
         let semaphore = DispatchSemaphore(value: 0)
         var found = false
         let source = DispatchSource.makeFileSystemObjectSource(
@@ -1563,7 +1567,7 @@ enum CLIProcessRunner {
     }
 }
 
-struct CMUXCLI {
+struct GmuxCLI {
     let args: [String]
 
     private static let debugLastSocketHintPath = "/tmp/gmux-last-socket-path"
@@ -1600,7 +1604,8 @@ struct CMUXCLI {
     }
 
     private static func defaultSocketPath(environment: [String: String]) -> String {
-        if let explicit = normalizedEnvValue(environment["CMUX_SOCKET_PATH"]) {
+        if let explicit = normalizedEnvValue(environment["GMUX_SOCKET_PATH"])
+            ?? normalizedEnvValue(environment["CMUX_SOCKET_PATH"]) {
             return explicit
         }
 #if DEBUG
@@ -1616,7 +1621,7 @@ struct CMUXCLI {
     func run() throws {
         let processEnv = ProcessInfo.processInfo.environment
         let envSocketPath: String? = {
-            for key in ["CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
+            for key in ["GMUX_SOCKET_PATH", "CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
                 guard let raw = processEnv[key] else { continue }
                 let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
@@ -2956,7 +2961,7 @@ struct CMUXCLI {
         if emailOpt == nil && bodyOpt == nil && imagePaths.isEmpty {
             var params: [String: Any] = [:]
             let env = ProcessInfo.processInfo.environment
-            if let workspaceId = env["CMUX_WORKSPACE_ID"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+            if let workspaceId = (env["GMUX_WORKSPACE_ID"] ?? env["CMUX_WORKSPACE_ID"])?.trimmingCharacters(in: .whitespacesAndNewlines),
                !workspaceId.isEmpty {
                 params["workspace_id"] = workspaceId
                 params["activate"] = false
@@ -3069,7 +3074,7 @@ struct CMUXCLI {
     private func launchApp() throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = ["-a", "cmux"]
+        process.arguments = ["-a", "Gmux"]
         try process.run()
         process.waitUntilExit()
     }
@@ -3077,7 +3082,7 @@ struct CMUXCLI {
     private func activateApp() throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = ["-a", "cmux"]
+        process.arguments = ["-a", "Gmux"]
         try process.run()
         process.waitUntilExit()
     }
@@ -7949,8 +7954,8 @@ struct CMUXCLI {
     }
 
     private static let cmuxThemeOverrideBundleIdentifier = "com.gmuxterm.app"
-    private static let cmuxThemesBlockStart = "# cmux themes start"
-    private static let cmuxThemesBlockEnd = "# cmux themes end"
+    private static let cmuxThemesBlockStart = "# gmux themes start"
+    private static let cmuxThemesBlockEnd = "# gmux themes end"
     private static let cmuxThemesReloadNotificationName = "com.gmuxterm.themes.reload-config"
 
     private struct ThemeSelection {
@@ -7983,15 +7988,15 @@ struct CMUXCLI {
 
         let selection = currentThemeSelection()
         var environment = ProcessInfo.processInfo.environment
-        environment["CMUX_THEME_PICKER_CONFIG"] = try cmuxThemeOverrideConfigURL().path
-        environment["CMUX_THEME_PICKER_BUNDLE_ID"] = currentCmuxAppBundleIdentifier() ?? Self.cmuxThemeOverrideBundleIdentifier
-        environment["CMUX_THEME_PICKER_TARGET"] = defaultThemePickerTargetMode(current: selection).rawValue
-        environment["CMUX_THEME_PICKER_COLOR_SCHEME"] = defaultAppearancePrefersDarkThemes() ? "dark" : "light"
+        environment["GMUX_THEME_PICKER_CONFIG"] = try cmuxThemeOverrideConfigURL().path
+        environment["GMUX_THEME_PICKER_BUNDLE_ID"] = currentCmuxAppBundleIdentifier() ?? Self.cmuxThemeOverrideBundleIdentifier
+        environment["GMUX_THEME_PICKER_TARGET"] = defaultThemePickerTargetMode(current: selection).rawValue
+        environment["GMUX_THEME_PICKER_COLOR_SCHEME"] = defaultAppearancePrefersDarkThemes() ? "dark" : "light"
         if let light = selection.light {
-            environment["CMUX_THEME_PICKER_INITIAL_LIGHT"] = light
+            environment["GMUX_THEME_PICKER_INITIAL_LIGHT"] = light
         }
         if let dark = selection.dark {
-            environment["CMUX_THEME_PICKER_INITIAL_DARK"] = dark
+            environment["GMUX_THEME_PICKER_INITIAL_DARK"] = dark
         }
         if let resourcesURL = bundledGhosttyResourcesURL() {
             environment["GHOSTTY_RESOURCES_DIR"] = resourcesURL.path
@@ -8624,7 +8629,8 @@ struct CMUXCLI {
     }
 
     private func currentCmuxAppBundleIdentifier() -> String? {
-        if let bundleIdentifier = ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let bundleIdentifier = (ProcessInfo.processInfo.environment["GMUX_BUNDLE_ID"]
+            ?? ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"])?.trimmingCharacters(in: .whitespacesAndNewlines),
            !bundleIdentifier.isEmpty {
             return bundleIdentifier
         }
@@ -10064,7 +10070,7 @@ struct CMUXCLI {
 
     private func tmuxCompatResolvedSocketPath(processEnvironment: [String: String]) -> String {
         let envSocketPath: String? = {
-            for key in ["CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
+            for key in ["GMUX_SOCKET_PATH", "CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
                 guard let raw = processEnvironment[key] else { continue }
                 let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
@@ -14175,7 +14181,7 @@ struct CMUXTermMain {
     static func main() {
         // CLI tools should ignore SIGPIPE so closed stdout pipes do not terminate the process.
         _ = signal(SIGPIPE, SIG_IGN)
-        let cli = CMUXCLI(args: CommandLine.arguments)
+        let cli = GmuxCLI(args: CommandLine.arguments)
         do {
             try cli.run()
         } catch {
