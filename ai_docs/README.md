@@ -19,6 +19,8 @@ The source order is:
 
 GitHub milestones and roadmap issues are execution artifacts synced from these files. They are not the planning master.
 
+For volatile external CLI behavior, especially Gastown and Beads command semantics, treat upstream docs as the authority and refresh assumptions before updating roadmap-managed tasks.
+
 ## ID Conventions
 
 - Milestones: `M0` to `M4`
@@ -37,6 +39,12 @@ Every task must link to at least one story. Every story must link to an epic and
 - easy machine updates for GitHub issue numbers and URLs
 
 Do not hand-edit GitHub issue numbers in issue bodies. Update `backlog.yaml` or rerun the sync tool instead.
+
+Backlog lifecycle rules:
+
+- `delivery_state` on milestones, epics, and tasks is canonical and must be `open` or `done`.
+- Open tasks also carry a readiness `state:*` label.
+- Done tasks remain in the backlog for traceability, but the sync tool closes them on GitHub and removes readiness labels.
 
 ## Managed GitHub Objects
 
@@ -64,13 +72,19 @@ The sync tool overwrites managed issue metadata and body content except for the 
 npm run ai-docs:dry-run
 ```
 
-3. Apply the sync:
+3. Optionally run the script self-check:
+
+```bash
+npm run ai-docs:self-check
+```
+
+4. Apply the sync:
 
 ```bash
 npm run ai-docs:sync
 ```
 
-4. Commit the updated docs, script changes, and any refreshed GitHub IDs in `backlog.yaml`.
+5. Commit the updated docs, script changes, and any refreshed GitHub IDs in `backlog.yaml`.
 
 If the sync will generate GitHub issue links back into this repo, push the referenced docs before or immediately after the sync so the links resolve on GitHub.
 

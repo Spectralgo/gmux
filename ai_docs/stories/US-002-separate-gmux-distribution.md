@@ -14,14 +14,14 @@ A fork that still publishes cmux-branded DMGs, casks, or cleanup paths is operat
 
 ## Acceptance criteria
 
-- Release packaging, download names, casks, and docs reference Gmux.
+- Release packaging, download names, casks, docs, and support-entry surfaces reference Gmux.
 - CLI install flow produces `gmux` and does not overwrite `cmux`.
 - Cleanup and zap logic target Gmux-owned state only.
 
 ## Linked epic and tasks
 
 - Epic: `EPIC-002`
-- Tasks: `TASK-003`, `TASK-004`
+- Tasks: `TASK-003`, `TASK-029`, `TASK-004`
 
 ## Research anchors
 

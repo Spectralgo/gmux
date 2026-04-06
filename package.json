@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "ai-docs:self-check": "node ./scripts/sync-ai-docs.mjs --self-check",
     "ai-docs:dry-run": "node ./scripts/sync-ai-docs.mjs --dry-run",
     "ai-docs:sync": "node ./scripts/sync-ai-docs.mjs --sync"
   },

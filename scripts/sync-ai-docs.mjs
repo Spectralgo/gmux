@@ -11,17 +11,20 @@ const repoRoot = path.resolve(__dirname, "..");
 const backlogPath = path.join(repoRoot, "ai_docs", "backlog.yaml");
 const marker = "<!-- Managed-by: ai_docs -->";
 const freeformHeading = "## Freeform notes";
+const itemIdPattern = /<!-- Item-ID: ([^>]+) -->/;
+const deliveryStates = new Set(["open", "done"]);
 
 function usage() {
-  console.error("Usage: node scripts/sync-ai-docs.mjs --dry-run | --sync");
+  console.error("Usage: node scripts/sync-ai-docs.mjs --dry-run | --sync | --self-check");
   process.exit(1);
 }
 
 const argv = new Set(process.argv.slice(2));
 const dryRun = argv.has("--dry-run");
 const sync = argv.has("--sync");
+const selfCheck = argv.has("--self-check");
 
-if ((dryRun && sync) || (!dryRun && !sync)) {
+if ([dryRun, sync, selfCheck].filter(Boolean).length !== 1) {
   usage();
 }
 
@@ -55,6 +58,11 @@ function ghJson(args) {
   return output.trim() ? JSON.parse(output) : null;
 }
 
+function ghPaginatedArray(endpoint) {
+  const pages = ghJson([endpoint, "--paginate", "--slurp"]) ?? [];
+  return flattenPages(pages);
+}
+
 function requestJson(method, endpoint, payload) {
   if (dryRun) {
     logAction(`${method} ${endpoint}`, payload);
@@ -80,20 +88,19 @@ function assert(condition, message) {
   }
 }
 
+function flattenPages(pages) {
+  if (!Array.isArray(pages)) {
+    return [];
+  }
+  return pages.flatMap((page) => (Array.isArray(page) ? page : [page]));
+}
+
 function relativeDocUrl(repo, branch, docPath) {
   return `https://github.com/${repo}/blob/${branch}/${docPath}`;
 }
 
 function issueTitle(item) {
   return `[${item.id}] ${item.title}`;
-}
-
-function issueRef(item, kind) {
-  const number = item.github?.issue_number;
-  if (number) {
-    return `#${number}`;
-  }
-  return `[${kind} ${item.id}]`;
 }
 
 function listSection(items) {
@@ -114,6 +121,22 @@ function preserveFreeformNotes(existingBody) {
 
 function normalizeBody(body) {
   return body.trim().replace(/\r\n/g, "\n");
+}
+
+function deliveryStateFor(item) {
+  return item.delivery_state ?? "open";
+}
+
+function githubStateFor(item) {
+  return deliveryStateFor(item) === "done" ? "closed" : "open";
+}
+
+function itemIdFromBody(body) {
+  if (!body || !body.includes(marker)) {
+    return null;
+  }
+  const match = body.match(itemIdPattern);
+  return match?.[1] ?? null;
 }
 
 function milestoneBody(milestone) {
@@ -142,7 +165,8 @@ function epicBody(epic, backlog, context, existingBody) {
 
   const taskLines = tasks.map((task) => {
     const ref = task.github?.issue_number ? `#${task.github.issue_number}` : task.id;
-    return `- ${ref} — ${task.title}`;
+    const suffix = deliveryStateFor(task) === "done" ? " (done)" : "";
+    return `- ${ref} — ${task.title}${suffix}`;
   });
 
   const referenceLines = [
@@ -159,6 +183,7 @@ function epicBody(epic, backlog, context, existingBody) {
     `# ${issueTitle(epic)}`,
     "",
     `Milestone: **${milestone.id} — ${milestone.title}**`,
+    `Delivery state: **${deliveryStateFor(epic)}**`,
     "",
     "## Summary",
     epic.summary,
@@ -222,6 +247,7 @@ function taskBody(task, context, existingBody) {
     `<!-- Item-ID: ${task.id} -->`,
     `Milestone: **${milestone.id} — ${milestone.title}**`,
     `Epic: **${epicRef} — ${epic.title}**`,
+    `Delivery state: **${deliveryStateFor(task)}**`,
     "",
     "## Story refs",
     storyLines.join("\n"),
@@ -268,9 +294,9 @@ function taskBody(task, context, existingBody) {
 
 function fetchGithubState(repo) {
   return {
-    labels: ghJson([`repos/${repo}/labels?per_page=100`]) ?? [],
-    milestones: ghJson([`repos/${repo}/milestones?state=all&per_page=100`]) ?? [],
-    issues: (ghJson([`repos/${repo}/issues?state=all&per_page=100`]) ?? []).filter(
+    labels: ghPaginatedArray(`repos/${repo}/labels?per_page=100`),
+    milestones: ghPaginatedArray(`repos/${repo}/milestones?state=all&per_page=100`),
+    issues: ghPaginatedArray(`repos/${repo}/issues?state=all&per_page=100`).filter(
       (issue) => !issue.pull_request
     ),
   };
@@ -290,12 +316,23 @@ function syncLabel(repo, desired, existingMap) {
   requestJson("PATCH", `repos/${repo}/labels/${encodeURIComponent(desired.name)}`, desired);
 }
 
+function findExistingMilestone(milestone, existingMap) {
+  if (milestone.github?.number) {
+    for (const existing of existingMap.values()) {
+      if (existing.number === milestone.github.number) {
+        return existing;
+      }
+    }
+  }
+  return existingMap.get(milestone.title) ?? null;
+}
+
 function syncMilestone(repo, milestone, existingMap) {
-  const existing = existingMap.get(milestone.title);
+  const existing = findExistingMilestone(milestone, existingMap);
   const payload = {
     title: milestone.title,
     description: milestoneBody(milestone),
-    state: "open",
+    state: githubStateFor(milestone),
   };
 
   if (!existing) {
@@ -305,6 +342,14 @@ function syncMilestone(repo, milestone, existingMap) {
         number: created.number,
         url: created.html_url,
       };
+      existingMap.set(created.title, created);
+    } else if (dryRun) {
+      const synthetic = synthesizeMilestone(repo, nextSyntheticNumber([...existingMap.values()]), payload);
+      milestone.github = {
+        number: synthetic.number,
+        url: synthetic.html_url,
+      };
+      existingMap.set(synthetic.title, synthetic);
     }
     return;
   }
@@ -314,23 +359,83 @@ function syncMilestone(repo, milestone, existingMap) {
     url: existing.html_url,
   };
 
-  if ((existing.description ?? "") === payload.description && existing.title === payload.title) {
+  const stateEqual = (existing.state ?? "open") === payload.state;
+  if ((existing.description ?? "") === payload.description && existing.title === payload.title && stateEqual) {
     return;
   }
 
-  requestJson("PATCH", `repos/${repo}/milestones/${existing.number}`, payload);
+  const updated = requestJson("PATCH", `repos/${repo}/milestones/${existing.number}`, payload);
+  if (updated) {
+    existingMap.set(updated.title, updated);
+  } else if (dryRun) {
+    existingMap.set(payload.title, {
+      ...existing,
+      title: payload.title,
+      description: payload.description,
+      state: payload.state,
+    });
+  }
 }
 
 function findExistingIssue(item, existingIssues) {
   if (item.github?.issue_number) {
     return existingIssues.find((issue) => issue.number === item.github.issue_number) ?? null;
   }
+
+  const byManagedId = existingIssues.find((issue) => itemIdFromBody(issue.body ?? "") === item.id);
+  if (byManagedId) {
+    return byManagedId;
+  }
+
   return existingIssues.find((issue) => issue.title === issueTitle(item)) ?? null;
+}
+
+function nextSyntheticNumber(items) {
+  const numbers = items
+    .map((item) => item.number)
+    .filter((value) => Number.isInteger(value));
+  return (numbers.length ? Math.max(...numbers) : 0) + 1;
+}
+
+function synthesizeIssue(repo, number, payload) {
+  return {
+    number,
+    html_url: `https://github.com/${repo}/issues/${number}`,
+    title: payload.title,
+    body: payload.body,
+    labels: (payload.labels ?? []).map((name) => ({ name })),
+    milestone: payload.milestone == null ? null : { number: payload.milestone },
+    state: payload.state ?? "open",
+  };
+}
+
+function synthesizeMilestone(repo, number, payload) {
+  return {
+    number,
+    html_url: `https://github.com/${repo}/milestone/${number}`,
+    title: payload.title,
+    description: payload.description,
+    state: payload.state ?? "open",
+  };
+}
+
+function desiredTaskLabels(task) {
+  const labels = ["type:task"];
+  if (deliveryStateFor(task) === "open") {
+    labels.push(task.state);
+  }
+  labels.push(task.priority, ...task.area_labels);
+  return labels;
+}
+
+function desiredEpicLabels(epic) {
+  return ["type:epic", epic.priority, ...epic.area_labels];
 }
 
 function syncIssue(repo, item, existingIssues, body, labels, milestoneNumber) {
   const existing = findExistingIssue(item, existingIssues);
-  const payload = {
+  const desiredState = githubStateFor(item);
+  const basePayload = {
     title: issueTitle(item),
     body,
     labels,
@@ -338,13 +443,30 @@ function syncIssue(repo, item, existingIssues, body, labels, milestoneNumber) {
   };
 
   if (!existing) {
-    const created = requestJson("POST", `repos/${repo}/issues`, payload);
+    const created = requestJson("POST", `repos/${repo}/issues`, basePayload);
     if (created) {
       item.github = {
         issue_number: created.number,
         url: created.html_url,
       };
       existingIssues.push(created);
+
+      if (desiredState === "closed") {
+        const closed = requestJson("PATCH", `repos/${repo}/issues/${created.number}`, {
+          state: "closed",
+        });
+        if (closed) {
+          const index = existingIssues.findIndex((issue) => issue.number === created.number);
+          existingIssues[index] = closed;
+        }
+      }
+    } else if (dryRun) {
+      existingIssues.push(
+        synthesizeIssue(repo, nextSyntheticNumber(existingIssues), {
+          ...basePayload,
+          state: desiredState,
+        })
+      );
     }
     return;
   }
@@ -359,16 +481,31 @@ function syncIssue(repo, item, existingIssues, body, labels, milestoneNumber) {
   const labelsEqual = JSON.stringify(existingLabels) === JSON.stringify(desiredLabels);
   const bodyEqual = normalizeBody(existing.body ?? "") === normalizeBody(body);
   const milestoneEqual = (existing.milestone?.number ?? null) === milestoneNumber;
+  const stateEqual = (existing.state ?? "open") === desiredState;
 
-  if (labelsEqual && bodyEqual && milestoneEqual && existing.title === payload.title) {
+  if (labelsEqual && bodyEqual && milestoneEqual && stateEqual && existing.title === basePayload.title) {
     return;
   }
 
-  const updated = requestJson("PATCH", `repos/${repo}/issues/${existing.number}`, payload);
+  const updated = requestJson("PATCH", `repos/${repo}/issues/${existing.number}`, {
+    ...basePayload,
+    state: desiredState,
+  });
   if (updated) {
     const index = existingIssues.findIndex((issue) => issue.number === existing.number);
     existingIssues[index] = updated;
+  } else if (dryRun) {
+    const index = existingIssues.findIndex((issue) => issue.number === existing.number);
+    existingIssues[index] = synthesizeIssue(repo, existing.number, {
+      ...basePayload,
+      state: desiredState,
+    });
   }
+}
+
+function validateDeliveryState(item, label) {
+  const state = deliveryStateFor(item);
+  assert(deliveryStates.has(state), `${label} must declare delivery_state as open or done`);
 }
 
 function validateBacklog(backlog) {
@@ -380,11 +517,13 @@ function validateBacklog(backlog) {
   assert(Array.isArray(backlog.tasks), "backlog.tasks must be an array");
 
   for (const milestone of backlog.milestones) {
+    validateDeliveryState(milestone, milestone.id);
     assert(milestone.doc, `${milestone.id} must declare doc`);
     assert(fs.existsSync(path.join(repoRoot, milestone.doc)), `${milestone.id} doc is missing: ${milestone.doc}`);
   }
 
   for (const epic of backlog.epics) {
+    validateDeliveryState(epic, epic.id);
     assert(epic.doc, `${epic.id} must declare doc`);
     assert(fs.existsSync(path.join(repoRoot, epic.doc)), `${epic.id} doc is missing: ${epic.doc}`);
   }
@@ -394,18 +533,33 @@ function validateBacklog(backlog) {
     assert(fs.existsSync(path.join(repoRoot, story.doc)), `${story.id} doc is missing: ${story.doc}`);
   }
 
+  const readinessLabels = new Set(
+    backlog.labels
+      .map((label) => label.name)
+      .filter((name) => name.startsWith("state:"))
+  );
   const milestoneIds = new Set(backlog.milestones.map((item) => item.id));
   const epicIds = new Set(backlog.epics.map((item) => item.id));
   const storyIds = new Set(backlog.stories.map((item) => item.id));
   const taskIds = new Set(backlog.tasks.map((item) => item.id));
+  const taskById = new Map(backlog.tasks.map((item) => [item.id, item]));
+  const epicById = new Map(backlog.epics.map((item) => [item.id, item]));
 
   for (const epic of backlog.epics) {
     assert(milestoneIds.has(epic.milestone), `${epic.id} references unknown milestone ${epic.milestone}`);
     for (const storyId of epic.story_refs) {
       assert(storyIds.has(storyId), `${epic.id} references unknown story ${storyId}`);
+      const story = backlog.stories.find((item) => item.id === storyId);
+      assert(story.epic_refs.includes(epic.id), `${epic.id} must be listed in ${storyId}.epic_refs`);
     }
     for (const taskId of epic.task_refs) {
       assert(taskIds.has(taskId), `${epic.id} references unknown task ${taskId}`);
+      const task = taskById.get(taskId);
+      assert(task.epic === epic.id, `${epic.id} must own ${taskId}`);
+    }
+    if (deliveryStateFor(epic) === "done") {
+      const openTasks = epic.task_refs.filter((taskId) => deliveryStateFor(taskById.get(taskId)) !== "done");
+      assert(openTasks.length === 0, `${epic.id} is done but still has open tasks: ${openTasks.join(", ")}`);
     }
   }
 
@@ -415,11 +569,14 @@ function validateBacklog(backlog) {
     }
     for (const taskId of story.task_refs) {
       assert(taskIds.has(taskId), `${story.id} references unknown task ${taskId}`);
+      const task = taskById.get(taskId);
+      assert(task.story_refs.includes(story.id), `${story.id} must be listed in ${taskId}.story_refs`);
     }
     assert(story.task_refs.length > 0, `${story.id} must link to at least one task`);
   }
 
   for (const task of backlog.tasks) {
+    validateDeliveryState(task, task.id);
     assert(milestoneIds.has(task.milestone), `${task.id} references unknown milestone ${task.milestone}`);
     assert(epicIds.has(task.epic), `${task.id} references unknown epic ${task.epic}`);
     assert(task.story_refs.length > 0, `${task.id} must link to at least one story`);
@@ -428,6 +585,13 @@ function validateBacklog(backlog) {
     }
     for (const dependency of task.depends_on) {
       assert(taskIds.has(dependency), `${task.id} references unknown dependency ${dependency}`);
+    }
+
+    if (deliveryStateFor(task) === "open") {
+      assert(task.state, `${task.id} must declare a readiness state while open`);
+      assert(readinessLabels.has(task.state), `${task.id} uses unknown readiness state ${task.state}`);
+    } else {
+      assert(!task.state, `${task.id} must omit readiness state when delivery_state is done`);
     }
   }
 
@@ -439,10 +603,62 @@ function validateBacklog(backlog) {
   for (const milestone of backlog.milestones) {
     const linkedEpics = backlog.epics.filter((epic) => epic.milestone === milestone.id);
     assert(linkedEpics.length > 0, `${milestone.id} is orphaned; no epic references it`);
+    if (deliveryStateFor(milestone) === "done") {
+      const openEpics = linkedEpics.filter((epic) => deliveryStateFor(epic) !== "done");
+      assert(openEpics.length === 0, `${milestone.id} is done but still has open epics`);
+    }
+  }
+
+  for (const epic of backlog.epics) {
+    const parentMilestone = backlog.milestones.find((milestone) => milestone.id === epic.milestone);
+    assert(parentMilestone, `${epic.id} references missing milestone ${epic.milestone}`);
+    if (deliveryStateFor(parentMilestone) === "done") {
+      assert(deliveryStateFor(epic) === "done", `${epic.id} cannot stay open inside done milestone ${parentMilestone.id}`);
+    }
   }
 }
 
+function runSelfCheck() {
+  const flattened = flattenPages([[{ number: 1 }], [{ number: 2 }, { number: 3 }]]);
+  assert(flattened.length === 3, "flattenPages should combine multiple GitHub pages");
+
+  const secondPageIssue = {
+    number: 42,
+    title: "[TASK-999] Placeholder",
+    body: `${marker}\n<!-- Item-ID: TASK-999 -->\nBody`,
+    labels: [],
+    state: "open",
+    milestone: null,
+  };
+  const found = findExistingIssue({ id: "TASK-999" }, [{ number: 1, body: "" }, secondPageIssue]);
+  assert(found?.number === 42, "findExistingIssue should match managed items by Item-ID even when not first");
+
+  const openLabels = desiredTaskLabels({
+    delivery_state: "open",
+    state: "state:agent-ready",
+    priority: "priority:p0",
+    area_labels: ["area:fork"],
+  });
+  assert(openLabels.includes("state:agent-ready"), "open tasks should keep readiness labels");
+
+  const doneLabels = desiredTaskLabels({
+    delivery_state: "done",
+    priority: "priority:p0",
+    area_labels: ["area:fork"],
+  });
+  assert(!doneLabels.some((label) => label.startsWith("state:")), "done tasks should drop readiness labels");
+
+  const backlog = readJsonLikeYaml(backlogPath);
+  validateBacklog(backlog);
+  console.log("Self-check passed for sync-ai-docs.mjs");
+}
+
 function main() {
+  if (selfCheck) {
+    runSelfCheck();
+    return;
+  }
+
   const backlog = readJsonLikeYaml(backlogPath);
   validateBacklog(backlog);
 
@@ -473,24 +689,21 @@ function main() {
     const milestone = context.milestoneById.get(epic.milestone);
     const existing = findExistingIssue(epic, githubState.issues);
     const body = epicBody(epic, backlog, context, existing?.body ?? "");
-    const labels = ["type:epic", epic.priority, ...epic.area_labels];
-    syncIssue(repo, epic, githubState.issues, body, labels, milestone.github?.number ?? null);
+    syncIssue(repo, epic, githubState.issues, body, desiredEpicLabels(epic), milestone.github?.number ?? null);
   }
 
   for (const task of backlog.tasks) {
     const milestone = context.milestoneById.get(task.milestone);
     const existing = findExistingIssue(task, githubState.issues);
     const body = taskBody(task, context, existing?.body ?? "");
-    const labels = ["type:task", task.state, task.priority, ...task.area_labels];
-    syncIssue(repo, task, githubState.issues, body, labels, milestone.github?.number ?? null);
+    syncIssue(repo, task, githubState.issues, body, desiredTaskLabels(task), milestone.github?.number ?? null);
   }
 
   for (const epic of backlog.epics) {
     const milestone = context.milestoneById.get(epic.milestone);
     const existing = findExistingIssue(epic, githubState.issues);
     const body = epicBody(epic, backlog, context, existing?.body ?? "");
-    const labels = ["type:epic", epic.priority, ...epic.area_labels];
-    syncIssue(repo, epic, githubState.issues, body, labels, milestone.github?.number ?? null);
+    syncIssue(repo, epic, githubState.issues, body, desiredEpicLabels(epic), milestone.github?.number ?? null);
   }
 
   if (sync) {

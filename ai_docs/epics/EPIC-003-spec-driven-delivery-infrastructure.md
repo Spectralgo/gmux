@@ -18,7 +18,8 @@ Install the planning and sync system that makes `ai_docs` the canonical roadmap 
 ## Definition of done
 
 - Milestones, epics, stories, and tasks are traceable through stable IDs.
-- The sync tool can create and update labels, milestones, epic issues, and task issues idempotently.
+- The sync tool can create, update, close, and reopen labels, milestones, epic issues, and task issues idempotently.
+- Managed-item matching and fetches remain correct even when roadmap items are no longer on the first GitHub page.
 - Agents can start from a task issue plus the linked `ai_docs` docs without extra planning context.
 
 ## Research anchors

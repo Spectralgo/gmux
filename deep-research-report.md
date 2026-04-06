@@ -122,7 +122,7 @@ Builds hooks, scripts, and agent harness integrations. Wants deterministic contr
 
 - Rig root is a container (not a clone); `.repo.git` is bare; refinery and polecats are worktrees; mayor’s clone holds canonical `.beads`; settings are placed in parent directories for upward traversal. citeturn5view2turn5view1  
 - Crew workspaces are full clones; polecats are witness-managed and ephemeral in session but with persistent sandbox/worktree architecture. citeturn8view2turn5view1turn1search2  
-- Convoys are town-level beads (`hq-cv-*`) tracking batched work across rigs; the “tracks” relation is added via Beads dependency edges (because `gt convoy add` is not implemented yet). citeturn9view2turn9view1turn9view2  
+- Convoys are town-level beads (`hq-cv-*`) tracking batched work across rigs; current upstream docs include `gt convoy add`, so Gmux should treat upstream Gastown docs as the authority for convoy write semantics and re-verify volatile command details before implementation (last verified 2026-04-06). citeturn9view2turn9view1turn9view2  
 - Hooks management is centralized with base + overrides and `gt hooks` tooling; hook mechanisms differ by agent provider (Claude/Gemini settings.json lifecycle hooks; OpenCode plugin; Copilot JSON hooks; “nudge only” fallback for others). citeturn11view1turn11view2  
 - cmux provides automation via CLI + a JSON-RPC socket at `/tmp/cmux.sock`; it emits workspace/surface environment variables; notifications can be triggered via OSC or `cmux notify`. citeturn5view4turn13view0turn13view2
 
@@ -142,8 +142,8 @@ The table below is intended as a **complete list** for MVP/v1/v2 in this PRD. It
 | Identity navigation | Open crew workspace by name | MVP | As a crew dev, I want “Open joe” and to land in the correct full clone. | For a rig, Gmux opens `crew/<name>/rig/` and indicates “crew = full clone” (not worktree). citeturn8view2turn5view2 |
 | Identity navigation | Open polecat by name | MVP | As an operator, I want “Open polecat amber” and see its bead/hook context. | Opens `polecats/<name>/rig/`; shows `.polecat-checkpoint.json` if present; shows hooked bead. citeturn5view2turn8view3 |
 | Convoy dashboard | Active convoy list | MVP | As an operator, I want to see active convoys (default attention view). | Uses `gt convoy list`; supports `--all` and `--json`; displays status dots and IDs. citeturn9view1turn9view2 |
-| Convoy dashboard | Convoy details view | MVP | As an operator, I want convoy status, progress, tracked issues, and swarm membership. | Uses `gt convoy status <id>` and displays tracked issues and progress; clearly distinguishes convoy vs swarm. citeturn9view1turn9view2 |
-| Convoy actions | Add issue to convoy | v1 | As an operator, I want to add a tracked issue to an existing convoy. | Because `gt convoy add` is not implemented, UI uses `bd dep add <hq-cv-id> <issue> --type=tracks` and handles reopening via `bd update --status=open`. citeturn9view2turn9view2 |
+| Convoy dashboard | Convoy details view | MVP | As an operator, I want convoy status, progress, tracked issues, and swarm membership. | Uses `gt convoy show <id>` and displays tracked issues and progress; clearly distinguishes convoy vs swarm. citeturn9view1turn9view2 |
+| Convoy actions | Add issue to convoy | v1 | As an operator, I want to add a tracked issue to an existing convoy. | Uses the current upstream `gt convoy add` flow and re-verifies any command-shape assumptions against upstream docs before implementation. citeturn9view2turn9view2 |
 | Beads dashboard | “Ready work” view | MVP | As an operator, I want a panel that shows what is ready to work now. | Uses `bd ready` semantics for dependency-aware readiness; refreshed/updated via polling. citeturn1search7turn1search11 |
 | Bead detail | Bead inspector | MVP | As a user, I want bead details, deps, and audit trail. | Uses `bd show` including `--current`; renders dependencies, status, and audit trail. citeturn1search3turn1search7 |
 | Bead actions | Claim / close / status update | v1 | As an operator, I want to update bead state without leaving Gmux. | Invokes Beads CLI update/close; UI reflects state within polling interval; logs the actor identity. citeturn8view3turn1search7 |
@@ -173,7 +173,7 @@ The table below is intended as a **complete list** for MVP/v1/v2 in this PRD. It
 
 ```mermaid
 flowchart TD
-  A[Select convoy hq-cv-*] --> B[gt convoy status <id> --json]
+  A[Select convoy hq-cv-*] --> B[gt convoy show <id> --json]
   B --> C[Pick tracked issue]
   C --> D[bd show <issue> --json]
   D --> E{Assignee/worker known?}
@@ -287,7 +287,7 @@ Key grounded facts:
 
 - **Worktree layout**: polecats and refinery are git worktrees based off `mayor/rig`; crew workspaces are full clones. citeturn5view1turn8view2  
 - **Beads routing**: bead IDs route across rigs using prefix mappings in `~/gt/.beads/routes.jsonl` pointing to `mayor/rig` where the canonical `.beads` lives. citeturn5view1turn5view2  
-- **Convoys**: live in town-level beads (`hq-cv-*`) and track issues across rigs; status is retrieved via `gt convoy status`; list supports `--json`. citeturn9view2turn9view1  
+- **Convoys**: live in town-level beads (`hq-cv-*`) and track issues across rigs; detail is retrieved via `gt convoy show`; list supports `--json`. citeturn9view2turn9view1  
 - **Hooks**: base+overrides system with `gt hooks list/diff/sync/scan/init`, and hook mechanisms vary by agent provider. citeturn11view1turn11view2  
 - **cmux model**: window → workspace → pane → surface, with a CLI and a socket API used to create/select/rename workspaces and target surfaces; environment variables include `CMUX_WORKSPACE_ID`, `CMUX_SURFACE_ID`, and `CMUX_SOCKET_PATH`. citeturn1search24turn12view1turn5view4
 
@@ -403,7 +403,7 @@ A minimal but complete catalog (for this PRD) is below. All commands must suppor
 
 **Gastown-native commands**
 - `gmux convoy list [--all] [--status=open|closed] --json` (wraps `gt convoy list`) citeturn9view2  
-- `gmux convoy status <hq-cv-id> --json` (wraps `gt convoy status`) citeturn9view2  
+- `gmux convoy show <hq-cv-id> --json` (wraps `gt convoy show`) citeturn9view2  
 - `gmux convoy open <hq-cv-id> [--focus]` (UI action)  
 - `gmux bead show <id> --json` (wraps `bd show`) citeturn1search3  
 - `gmux bead ready --json` (wraps `bd ready`) citeturn1search7  
@@ -477,7 +477,7 @@ Beads is described as agent-optimized with JSON output, dependency tracking, and
 Therefore:
 
 - Gmux should treat `gt` and `bd` as systems of record and use their JSON outputs wherever possible.  
-- When a capability is “not yet implemented” in `gt` (e.g., `gt convoy add`), Gmux should use the documented workaround (`bd dep add ... --type=tracks`). citeturn9view2
+- For volatile Gastown command surfaces, especially convoy write flows, Gmux should re-verify upstream docs before implementation instead of freezing old assumptions into roadmap tasks. Last verified 2026-04-06: `gt convoy add`, `gt convoy show`, and `gt hooks list` are documented upstream. citeturn9view2
 
 #### Path resolution and identity correctness
 
@@ -598,17 +598,17 @@ These estimates assume one senior engineer familiar with macOS + Swift + IPC and
 
 | Milestone | Deliverables | Est. effort |
 |---|---|---:|
-| MVP | Town/rig discovery, convoy list/status UI, bead inspector + ready view, open-by-agent, hooks list view, notification routing, basic persistence (restore last session) | 10–14 |
+| MVP | Town/rig discovery, convoy list/show UI, bead inspector + ready view, open-by-agent, hooks list view, notification routing, basic persistence (restore last session) | 10–14 |
 | v1 | Bead write actions, convoy add via `bd dep add`, hooks edit/sync integration, inbox mail protocol panel, named sessions, persistent terminal mode (tmux-resurrect) | 16–24 |
 | v2 | MCP server + tool schemas, multi-profile, zellij experimental mode, richer analytics from `gt audit` and event feed, optional daemon track feasibility study | 20–30 |
 
 #### Risks and mitigations
 
 **Risk: CLI output instability / missing JSON in some commands**  
-Mitigation: hard-require JSON mode for the exact commands UI depends on (`gt convoy list/status --json`, `gt hooks list --json`) and maintain compatibility tests against fixtures. Convoy list JSON is explicitly documented, as is hooks list JSON. citeturn9view2turn11view2
+Mitigation: hard-require JSON mode for the exact commands UI depends on (`gt convoy list/show --json`, `gt hooks list --json`) and maintain compatibility tests against fixtures. Convoy list JSON is explicitly documented, as is hooks list JSON. citeturn9view2turn11view2
 
 **Risk: Mis-modeling convoy editing**  
-Mitigation: treat `gt convoy add` as unavailable and use the documented Beads dependency approach (`tracks` relation). citeturn9view2
+Mitigation: re-verify convoy mutation commands against upstream Gastown docs before implementation and record the verified command surface in task references or code comments. citeturn9view2
 
 **Risk: Persistence expectations vs feasible implementation**  
 Mitigation: expose persistence as an explicit mode with clear UX explanation. Use tmux-resurrect/continuum for best-effort “program restore,” use Gastown checkpoints for semantic resume, avoid promising CRIU-class checkpointing on macOS. citeturn5view3turn8view3turn3search10turn3search2

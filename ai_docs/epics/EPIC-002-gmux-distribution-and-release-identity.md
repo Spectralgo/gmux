@@ -13,11 +13,12 @@ Rebrand the release, installation, and packaging surfaces so Gmux ships as a dis
 ## Task refs
 
 - `TASK-003`
+- `TASK-029`
 - `TASK-004`
 
 ## Definition of done
 
-- Release assets, Homebrew metadata, and install flows all use Gmux names and identifiers.
+- Release automation, public install/support surfaces, and Homebrew metadata all use Gmux names and identifiers.
 - The shipped CLI installs as `gmux` and coexists with `cmux`.
 - Packaging automation stops mutating cmux-only metadata or cleanup paths.
 

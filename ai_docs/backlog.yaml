@@ -123,7 +123,8 @@
       "github": {
         "number": 1,
         "url": "https://github.com/Spectralgo/gmux/milestone/1"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "M1",
@@ -138,7 +139,8 @@
       "github": {
         "number": 2,
         "url": "https://github.com/Spectralgo/gmux/milestone/2"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "M2",
@@ -153,7 +155,8 @@
       "github": {
         "number": 3,
         "url": "https://github.com/Spectralgo/gmux/milestone/3"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "M3",
@@ -168,7 +171,8 @@
       "github": {
         "number": 4,
         "url": "https://github.com/Spectralgo/gmux/milestone/4"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "M4",
@@ -183,7 +187,8 @@
       "github": {
         "number": 5,
         "url": "https://github.com/Spectralgo/gmux/milestone/5"
-      }
+      },
+      "delivery_state": "open"
     }
   ],
   "epics": [
@@ -218,7 +223,8 @@
       "github": {
         "issue_number": 1,
         "url": "https://github.com/Spectralgo/gmux/issues/1"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-002",
@@ -230,6 +236,7 @@
       ],
       "task_refs": [
         "TASK-003",
+        "TASK-029",
         "TASK-004"
       ],
       "priority": "priority:p0",
@@ -239,9 +246,9 @@
         "area:cli"
       ],
       "acceptance_criteria": [
-        "Release assets and metadata use Gmux naming.",
+        "Release automation, public docs, and support surfaces use Gmux naming.",
         "The shipped CLI installs as gmux and coexists with cmux.",
-        "Automation stops mutating cmux-only casks or cleanup domains."
+        "Automation stops mutating cmux-only casks, cleanup domains, or user-facing support flows."
       ],
       "references": [
         "deep-research-report.md",
@@ -251,7 +258,8 @@
       "github": {
         "issue_number": 2,
         "url": "https://github.com/Spectralgo/gmux/issues/2"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-003",
@@ -272,7 +280,7 @@
       ],
       "acceptance_criteria": [
         "Milestones, epics, stories, and tasks are traceable through stable IDs.",
-        "GitHub labels, milestones, epic issues, and task issues sync from ai_docs.",
+        "GitHub labels, milestones, epic issues, and task issues sync from ai_docs, including close and reopen transitions.",
         "Agents can execute tasks without extra context beyond the linked docs."
       ],
       "references": [
@@ -283,7 +291,8 @@
       "github": {
         "issue_number": 3,
         "url": "https://github.com/Spectralgo/gmux/issues/3"
-      }
+      },
+      "delivery_state": "done"
     },
     {
       "id": "EPIC-004",
@@ -315,7 +324,8 @@
       "github": {
         "issue_number": 4,
         "url": "https://github.com/Spectralgo/gmux/issues/4"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-005",
@@ -347,7 +357,8 @@
       "github": {
         "issue_number": 5,
         "url": "https://github.com/Spectralgo/gmux/issues/5"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-006",
@@ -380,7 +391,8 @@
       "github": {
         "issue_number": 6,
         "url": "https://github.com/Spectralgo/gmux/issues/6"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-007",
@@ -412,7 +424,8 @@
       "github": {
         "issue_number": 7,
         "url": "https://github.com/Spectralgo/gmux/issues/7"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-008",
@@ -444,7 +457,8 @@
       "github": {
         "issue_number": 8,
         "url": "https://github.com/Spectralgo/gmux/issues/8"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-009",
@@ -477,7 +491,8 @@
       "github": {
         "issue_number": 9,
         "url": "https://github.com/Spectralgo/gmux/issues/9"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-010",
@@ -510,7 +525,8 @@
       "github": {
         "issue_number": 10,
         "url": "https://github.com/Spectralgo/gmux/issues/10"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-011",
@@ -543,7 +559,8 @@
       "github": {
         "issue_number": 11,
         "url": "https://github.com/Spectralgo/gmux/issues/11"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-012",
@@ -575,7 +592,8 @@
       "github": {
         "issue_number": 12,
         "url": "https://github.com/Spectralgo/gmux/issues/12"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-013",
@@ -608,7 +626,8 @@
       "github": {
         "issue_number": 13,
         "url": "https://github.com/Spectralgo/gmux/issues/13"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "EPIC-014",
@@ -641,7 +660,8 @@
       "github": {
         "issue_number": 14,
         "url": "https://github.com/Spectralgo/gmux/issues/14"
-      }
+      },
+      "delivery_state": "open"
     }
   ],
   "stories": [
@@ -676,7 +696,7 @@
       "narrative": "As a user, I want Gmux to install and update as its own product so I can keep it alongside cmux without replacing cmux tooling or release metadata.",
       "why": "A fork that still publishes cmux-branded DMGs, casks, or cleanup paths is operationally ambiguous.",
       "acceptance_criteria": [
-        "Release packaging and download names reference Gmux.",
+        "Release packaging, download names, docs, and support-entry surfaces reference Gmux.",
         "The CLI install flow produces gmux instead of overwriting cmux.",
         "Cleanup and zap logic target Gmux-owned state only."
       ],
@@ -685,6 +705,7 @@
       ],
       "task_refs": [
         "TASK-003",
+        "TASK-029",
         "TASK-004"
       ],
       "references": [
@@ -701,7 +722,7 @@
       "why": "Planning drift between docs and GitHub issues makes autonomous execution brittle.",
       "acceptance_criteria": [
         "ai_docs contains milestone, epic, story, and task traceability.",
-        "GitHub issues and milestones are generated from repo docs.",
+        "GitHub issues and milestones are generated from repo docs, and delivered items close from canonical backlog state.",
         "Task issues are decision complete and point back to canonical docs."
       ],
       "epic_refs": [
@@ -1040,7 +1061,8 @@
       "github": {
         "issue_number": 15,
         "url": "https://github.com/Spectralgo/gmux/issues/15"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-002",
@@ -1055,7 +1077,6 @@
         "area:fork",
         "area:cli"
       ],
-      "state": "state:agent-ready",
       "depends_on": [
         "TASK-001"
       ],
@@ -1098,11 +1119,12 @@
       "github": {
         "issue_number": 16,
         "url": "https://github.com/Spectralgo/gmux/issues/16"
-      }
+      },
+      "delivery_state": "done"
     },
     {
       "id": "TASK-003",
-      "title": "Rebrand release packaging assets and Homebrew metadata",
+      "title": "Rebrand release automation and distribution metadata",
       "milestone": "M0",
       "epic": "EPIC-002",
       "story_refs": [
@@ -1115,47 +1137,49 @@
       ],
       "state": "state:agent-ready",
       "depends_on": [],
-      "problem": "Release automation still presents the fork as cmux in artifact names, cask expectations, and cleanup logic. That makes distribution and upgrades look like the original product.",
-      "outcome": "Release artifacts, cask metadata, docs links, and cleanup logic all present Gmux as a separate downloadable product.",
+      "problem": "Release automation still presents the fork as cmux in artifact names, workflow expectations, cask paths, and cleanup logic. That makes tagged builds, nightly builds, and downloadable artifacts look like the original product.",
+      "outcome": "Release and distribution automation consistently emit Gmux-branded artifacts and target Gmux-owned cask, cleanup, and shipping metadata.",
       "scope": [
-        "Rename release artifact names and URLs to Gmux-owned names.",
-        "Update Homebrew tap expectations, cask naming, and related automation paths.",
-        "Audit cleanup or zap logic so it targets Gmux-owned domains and caches."
+        "Update release and nightly automation to build, sign, and publish Gmux-owned artifact names and bundle expectations.",
+        "Align Homebrew cask automation paths with an actual gmux cask file and update flow.",
+        "Audit automated cleanup or zap logic so release tooling no longer mutates cmux-only domains or caches."
       ],
       "non_goals": [
-        "Solving runtime identity collisions inside the running app.",
-        "Designing a brand-new distribution channel beyond the existing release flow.",
-        "Changing versioning strategy."
+        "Runtime identity fixes inside the running app.",
+        "Public README, issue-template, or support-document rebranding beyond what release automation directly consumes.",
+        "Changing versioning or signing strategy beyond targeted rebrand corrections."
       ],
       "implementation_notes": [
-        "Start from scripts/build-sign-upload.sh and the homebrew-cmux tap contents.",
-        "The current repo still has a cmux cask file; decide whether to rename it or create a gmux cask and update automation consistently.",
-        "Keep the release flow idempotent and avoid breaking existing secrets or signing assumptions."
+        "Start from scripts/build-sign-upload.sh, .github/workflows/release.yml, .github/workflows/nightly.yml, and the homebrew-cmux tap contents.",
+        "Keep the existing release structure and secrets model intact while replacing cmux-owned filenames, bundle names, and cask targets.",
+        "If external release assets or feeds still assume cmux naming, document them in the issue body instead of leaving hidden drift."
       ],
       "acceptance_criteria": [
-        "Release automation emits Gmux-named artifacts instead of cmux-macos.dmg.",
-        "The Homebrew update path points at an actual gmux cask file and updates it successfully.",
-        "Cleanup or zap logic no longer removes cmux-owned preferences or caches."
+        "Release and nightly automation emit Gmux-named artifacts instead of cmux-branded DMGs or app names.",
+        "The Homebrew update path points at an actual gmux cask file and updates it consistently.",
+        "Automated cleanup or zap logic no longer removes cmux-owned preferences or caches."
       ],
       "verification": [
-        "Inspect the release script and generated dry-run outputs for Gmux-owned artifact names.",
-        "Verify the referenced cask file exists in the tap submodule or repo.",
-        "Use build-only verification where feasible; do not run local tests."
+        "Inspect scripts/build-sign-upload.sh plus release/nightly workflow definitions for Gmux-owned artifact names and paths.",
+        "Verify the referenced gmux cask file exists and matches the automation path.",
+        "Use build-only or dry-run-style verification where feasible; do not run local tests."
       ],
       "repo_constraints": [
         "Preserve the current signing and release pipeline structure unless a targeted change is required.",
-        "Do not rewrite unrelated release history.",
+        "Do not rewrite unrelated release history or secrets handling.",
         "Report any external release prerequisites that cannot be verified locally."
       ],
       "references": [
         "scripts/build-sign-upload.sh",
-        "homebrew-cmux/Casks/cmux.rb",
-        "README.md"
+        ".github/workflows/release.yml",
+        ".github/workflows/nightly.yml",
+        "homebrew-cmux/Casks/cmux.rb"
       ],
       "github": {
         "issue_number": 17,
         "url": "https://github.com/Spectralgo/gmux/issues/17"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-004",
@@ -1215,7 +1239,8 @@
       "github": {
         "issue_number": 18,
         "url": "https://github.com/Spectralgo/gmux/issues/18"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-005",
@@ -1230,7 +1255,6 @@
         "area:review",
         "area:fork"
       ],
-      "state": "state:agent-ready",
       "depends_on": [],
       "problem": "The repo needs a canonical roadmap that a human or AI can treat as the source of truth. Without it, GitHub issues drift and tasks require repeated context dumps.",
       "outcome": "ai_docs contains the roadmap, agent contract, milestone docs, epic docs, story docs, and a machine-readable backlog with stable IDs and traceability.",
@@ -1272,7 +1296,8 @@
       "github": {
         "issue_number": 19,
         "url": "https://github.com/Spectralgo/gmux/issues/19"
-      }
+      },
+      "delivery_state": "done"
     },
     {
       "id": "TASK-006",
@@ -1287,15 +1312,15 @@
         "area:review",
         "area:fork"
       ],
-      "state": "state:agent-ready",
       "depends_on": [
         "TASK-005"
       ],
       "problem": "Without an idempotent sync layer, the roadmap still depends on manual GitHub issue editing and cannot guarantee that issue bodies match ai_docs.",
-      "outcome": "A single script can create and update roadmap labels, milestones, epic issues, and task issues from backlog.yaml, while preserving only an explicit freeform section.",
+      "outcome": "A single script can create, update, close, and reopen roadmap labels, milestones, epic issues, and task issues from backlog.yaml, while preserving only an explicit freeform section.",
       "scope": [
         "Read backlog.yaml and validate its cross references and linked docs.",
-        "Create or update roadmap labels, milestones, epic issues, and task issues through gh api.",
+        "Create, update, close, or reopen roadmap labels, milestones, epic issues, and task issues through gh api.",
+        "Fetch labels, milestones, and issues across all GitHub pages before matching managed items.",
         "Write back GitHub issue numbers and URLs so future syncs are idempotent."
       ],
       "non_goals": [
@@ -1304,16 +1329,18 @@
         "Supporting two-way sync from GitHub back into docs."
       ],
       "implementation_notes": [
-        "Use a machine marker in managed issues and preserve only the Freeform notes section.",
+        "Use a machine marker plus Item-ID in managed issues and preserve only the Freeform notes section.",
         "Epic issues should summarize stories and tasks; task issues are the agent pickup unit.",
-        "Make dry-run output explicit enough to audit planned mutations before applying them."
+        "Make dry-run output explicit enough to audit planned mutations before applying them, including close/reopen actions."
       ],
       "acceptance_criteria": [
         "A dry run shows all intended label, milestone, and issue mutations without changing GitHub state.",
-        "A live sync creates the planned milestones and managed issues in Spectralgo/gmux without duplicates.",
-        "A second sync updates existing managed issues rather than recreating them."
+        "A live sync creates or updates the planned milestones and managed issues in Spectralgo/gmux without duplicates.",
+        "Delivered items close from backlog delivery_state and can reopen if delivery_state returns to open.",
+        "A second sync updates existing managed issues rather than recreating them, even when items are not on the first GitHub page."
       ],
       "verification": [
+        "Run node scripts/sync-ai-docs.mjs --self-check and confirm the pagination and matching checks pass.",
         "Run node scripts/sync-ai-docs.mjs --dry-run and inspect the output.",
         "Run node scripts/sync-ai-docs.mjs --sync once the docs are pushed and verify the created GitHub objects.",
         "Build with ./scripts/reload.sh --tag task-006-ai-docs-sync because repo scripts changed."
@@ -1331,7 +1358,8 @@
       "github": {
         "issue_number": 20,
         "url": "https://github.com/Spectralgo/gmux/issues/20"
-      }
+      },
+      "delivery_state": "done"
     },
     {
       "id": "TASK-007",
@@ -1387,7 +1415,8 @@
       "github": {
         "issue_number": 21,
         "url": "https://github.com/Spectralgo/gmux/issues/21"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-008",
@@ -1445,7 +1474,8 @@
       "github": {
         "issue_number": 22,
         "url": "https://github.com/Spectralgo/gmux/issues/22"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-009",
@@ -1504,7 +1534,8 @@
       "github": {
         "issue_number": 23,
         "url": "https://github.com/Spectralgo/gmux/issues/23"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-010",
@@ -1563,7 +1594,8 @@
       "github": {
         "issue_number": 24,
         "url": "https://github.com/Spectralgo/gmux/issues/24"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-011",
@@ -1621,7 +1653,8 @@
       "github": {
         "issue_number": 25,
         "url": "https://github.com/Spectralgo/gmux/issues/25"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-012",
@@ -1680,7 +1713,8 @@
       "github": {
         "issue_number": 26,
         "url": "https://github.com/Spectralgo/gmux/issues/26"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-013",
@@ -1739,7 +1773,8 @@
       "github": {
         "issue_number": 27,
         "url": "https://github.com/Spectralgo/gmux/issues/27"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-014",
@@ -1799,7 +1834,8 @@
       "github": {
         "issue_number": 28,
         "url": "https://github.com/Spectralgo/gmux/issues/28"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-015",
@@ -1857,7 +1893,8 @@
       "github": {
         "issue_number": 29,
         "url": "https://github.com/Spectralgo/gmux/issues/29"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-016",
@@ -1916,7 +1953,8 @@
       "github": {
         "issue_number": 30,
         "url": "https://github.com/Spectralgo/gmux/issues/30"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-017",
@@ -1976,7 +2014,8 @@
       "github": {
         "issue_number": 31,
         "url": "https://github.com/Spectralgo/gmux/issues/31"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-018",
@@ -2035,7 +2074,8 @@
       "github": {
         "issue_number": 32,
         "url": "https://github.com/Spectralgo/gmux/issues/32"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-019",
@@ -2093,7 +2133,8 @@
       "github": {
         "issue_number": 33,
         "url": "https://github.com/Spectralgo/gmux/issues/33"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-020",
@@ -2114,11 +2155,11 @@
         "TASK-011",
         "TASK-014"
       ],
-      "problem": "Operators can see work state, but without supported write flows they still have to drop back to CLI tooling for common status changes and convoy tracked-work updates.",
+      "problem": "Operators can see work state, but without supported write flows they still have to drop back to CLI tooling for common status changes and convoy membership updates.",
       "outcome": "Gmux supports the core Bead and convoy write operations defined by the roadmap, with clear boundaries and immediate read-model refresh.",
       "scope": [
         "Implement supported Bead state changes such as update or close.",
-        "Implement the convoy tracked-work update path defined in the research notes.",
+        "Implement the current upstream convoy tracked-work write path documented by Gastown.",
         "Refresh the relevant read models after a successful mutation."
       ],
       "non_goals": [
@@ -2127,9 +2168,9 @@
         "Building the full mail or review workflow."
       ],
       "implementation_notes": [
-        "Follow the research report's documented convoy tracked-work workaround rather than inventing a different model.",
-        "Keep mutations explicit and auditable.",
-        "Reuse existing bead and convoy read models for post-write refresh."
+        "Use the current upstream Gastown convoy commands and docs as the source of truth for convoy mutations, not stale report assumptions.",
+        "Last verified against upstream docs on 2026-04-06: gt convoy add, gt convoy show, and gt hooks list are documented upstream.",
+        "Keep mutations explicit and auditable, and reuse existing bead and convoy read models for post-write refresh."
       ],
       "acceptance_criteria": [
         "Supported Bead or convoy write actions can be triggered from Gmux.",
@@ -2147,13 +2188,16 @@
         "Preserve localization and focus rules for any new UI flows."
       ],
       "references": [
-        "deep-research-report.md",
-        "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
+        "https://github.com/gastownhall/gastown",
+        "https://github.com/gastownhall/gastown/blob/main/docs/HOOKS.md",
+        "https://github.com/steveyegge/beads",
+        "deep-research-report.md"
       ],
       "github": {
         "issue_number": 34,
         "url": "https://github.com/Spectralgo/gmux/issues/34"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-021",
@@ -2216,7 +2260,8 @@
       "github": {
         "issue_number": 35,
         "url": "https://github.com/Spectralgo/gmux/issues/35"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-022",
@@ -2277,7 +2322,8 @@
       "github": {
         "issue_number": 36,
         "url": "https://github.com/Spectralgo/gmux/issues/36"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-023",
@@ -2335,7 +2381,8 @@
       "github": {
         "issue_number": 37,
         "url": "https://github.com/Spectralgo/gmux/issues/37"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-024",
@@ -2395,7 +2442,8 @@
       "github": {
         "issue_number": 38,
         "url": "https://github.com/Spectralgo/gmux/issues/38"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-025",
@@ -2453,7 +2501,8 @@
       "github": {
         "issue_number": 39,
         "url": "https://github.com/Spectralgo/gmux/issues/39"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-026",
@@ -2511,7 +2560,8 @@
       "github": {
         "issue_number": 40,
         "url": "https://github.com/Spectralgo/gmux/issues/40"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-027",
@@ -2571,7 +2621,8 @@
       "github": {
         "issue_number": 41,
         "url": "https://github.com/Spectralgo/gmux/issues/41"
-      }
+      },
+      "delivery_state": "open"
     },
     {
       "id": "TASK-028",
@@ -2632,6 +2683,65 @@
       "github": {
         "issue_number": 42,
         "url": "https://github.com/Spectralgo/gmux/issues/42"
+      },
+      "delivery_state": "open"
+    },
+    {
+      "id": "TASK-029",
+      "title": "Rebrand public install and support surfaces for Gmux",
+      "milestone": "M0",
+      "epic": "EPIC-002",
+      "story_refs": [
+        "US-002"
+      ],
+      "priority": "priority:p0",
+      "area_labels": [
+        "area:release",
+        "area:fork"
+      ],
+      "delivery_state": "open",
+      "state": "state:agent-ready",
+      "depends_on": [],
+      "problem": "Even if release artifacts are renamed, the public repo still presents the product as cmux in install docs, support templates, and download guidance. That leaves users following the wrong product identity.",
+      "outcome": "README, support templates, and other user-facing repo surfaces consistently present Gmux as the product users install, run, and report issues against.",
+      "scope": [
+        "Update README install, download, and release references to use Gmux naming and destinations.",
+        "Rebrand issue templates or other support-entry surfaces that still instruct users to report against cmux.",
+        "Audit user-facing support docs and repo metadata references that still point at cmux-specific commands or assets."
+      ],
+      "non_goals": [
+        "Changing runtime identity behavior inside the app.",
+        "Reworking release automation that belongs in TASK-003.",
+        "Broad product-marketing rewrites unrelated to install or support correctness."
+      ],
+      "implementation_notes": [
+        "Start from README.md and .github/ISSUE_TEMPLATE, then sweep for user-facing cmux references that would misdirect installers or bug reporters.",
+        "Keep compatibility notes explicit when cmux is mentioned, but make Gmux the primary product throughout.",
+        "Do not touch unrelated internal developer notes unless they are surfaced to end users."
+      ],
+      "acceptance_criteria": [
+        "Top-level install and download docs point at Gmux artifacts and commands.",
+        "Issue templates and support-entry surfaces tell users to report against Gmux rather than cmux.",
+        "Remaining cmux mentions are deliberate compatibility references, not accidental product drift."
+      ],
+      "verification": [
+        "Inspect README and support-template content for Gmux-owned install and reporting language.",
+        "Confirm referenced download or release links point at Gmux-owned artifact names.",
+        "Do not run local tests."
+      ],
+      "repo_constraints": [
+        "Do not overwrite unrelated user-local repo changes while updating docs.",
+        "Prefer targeted doc changes over broad copy rewrites.",
+        "Call out any external hosted pages that still need follow-up outside this repo."
+      ],
+      "references": [
+        "README.md",
+        ".github/ISSUE_TEMPLATE/bug_report.yml",
+        ".github/ISSUE_TEMPLATE/feature_request.yml"
+      ],
+      "github": {
+        "issue_number": 43,
+        "url": "https://github.com/Spectralgo/gmux/issues/43"
       }
     }
   ]

@@ -15,7 +15,7 @@ Planning drift between docs and GitHub issues makes autonomous execution brittle
 ## Acceptance criteria
 
 - `ai_docs` contains milestone, epic, story, and task traceability with stable IDs.
-- GitHub issues and milestones are generated from repo docs, not edited manually.
+- GitHub issues and milestones are generated from repo docs, not edited manually, and delivered items close from the canonical backlog state.
 - Task issues are decision complete and point back to the canonical docs.
 
 ## Linked epic and tasks
