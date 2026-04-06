@@ -55,6 +55,16 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
+        case .readyWork:
+            if let readyWorkPanel = panel as? ReadyWorkPanel {
+                ReadyWorkPanelView(
+                    panel: readyWorkPanel,
+                    isFocused: isFocused,
+                    isVisibleInUI: isVisibleInUI,
+                    portalPriority: portalPriority,
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+            }
         }
     }
 }

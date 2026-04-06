@@ -491,6 +491,10 @@ extension Workspace {
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = SessionMarkdownPanelSnapshot(filePath: markdownPanel.filePath)
+        case .readyWork:
+            terminalSnapshot = nil
+            browserSnapshot = nil
+            markdownSnapshot = nil
         }
 
         return SessionPanelSnapshot(
@@ -681,6 +685,15 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: markdownPanel.id)
             return markdownPanel.id
+        case .readyWork:
+            guard let readyWorkPanel = newReadyWorkSurface(
+                inPane: paneId,
+                focus: false
+            ) else {
+                return nil
+            }
+            applySessionPanelMetadata(snapshot, toPanelId: readyWorkPanel.id)
+            return readyWorkPanel.id
         }
     }
 
@@ -6719,6 +6732,7 @@ final class Workspace: Identifiable, ObservableObject {
         static let terminal = "terminal"
         static let browser = "browser"
         static let markdown = "markdown"
+        static let readyWork = "readyWork"
     }
 
     enum PanelShellActivityState: String {
@@ -7232,6 +7246,8 @@ final class Workspace: Identifiable, ObservableObject {
             return SurfaceKind.browser
         case .markdown:
             return SurfaceKind.markdown
+        case .readyWork:
+            return SurfaceKind.readyWork
         }
     }
 
@@ -9253,6 +9269,76 @@ final class Workspace: Identifiable, ObservableObject {
 
         installMarkdownPanelSubscription(markdownPanel)
         return markdownPanel
+    }
+
+    @discardableResult
+    func newReadyWorkSurface(
+        inPane paneId: PaneID,
+        focus: Bool? = nil
+    ) -> ReadyWorkPanel? {
+        let shouldFocusNewTab = focus ?? (bonsplitController.focusedPaneId == paneId)
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let readyWorkPanel = ReadyWorkPanel(workspaceId: id)
+        panels[readyWorkPanel.id] = readyWorkPanel
+        panelTitles[readyWorkPanel.id] = readyWorkPanel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: readyWorkPanel.displayTitle,
+            icon: readyWorkPanel.displayIcon,
+            kind: SurfaceKind.readyWork,
+            isDirty: readyWorkPanel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: readyWorkPanel.id)
+            panelTitles.removeValue(forKey: readyWorkPanel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = readyWorkPanel.id
+        if shouldFocusNewTab {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: readyWorkPanel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        installReadyWorkPanelSubscription(readyWorkPanel)
+        return readyWorkPanel
+    }
+
+    private func installReadyWorkPanelSubscription(_ readyWorkPanel: ReadyWorkPanel) {
+        let subscription = readyWorkPanel.$displayTitle
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self, weak readyWorkPanel] newTitle in
+                guard let self,
+                      let readyWorkPanel,
+                      let tabId = self.surfaceIdFromPanelId(readyWorkPanel.id) else { return }
+                guard let existing = self.bonsplitController.tab(tabId) else { return }
+
+                if self.panelTitles[readyWorkPanel.id] != newTitle {
+                    self.panelTitles[readyWorkPanel.id] = newTitle
+                }
+                let resolvedTitle = self.resolvedPanelTitle(panelId: readyWorkPanel.id, fallback: newTitle)
+                guard existing.title != resolvedTitle else { return }
+                self.bonsplitController.updateTab(
+                    tabId,
+                    title: resolvedTitle,
+                    icon: readyWorkPanel.displayIcon,
+                    isDirty: readyWorkPanel.isDirty,
+                    isLoading: false
+                )
+            }
+        panelSubscriptions[readyWorkPanel.id] = subscription
     }
 
     /// Tear down all panels in this workspace, freeing their Ghostty surfaces.

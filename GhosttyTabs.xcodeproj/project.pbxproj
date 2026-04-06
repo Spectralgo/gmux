@@ -39,6 +39,8 @@
 		A5007420 /* BrowserPopupWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5007421 /* BrowserPopupWindowController.swift */; };
 		A5001420 /* MarkdownPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001418 /* MarkdownPanel.swift */; };
 		A5001421 /* MarkdownPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001419 /* MarkdownPanelView.swift */; };
+		A5001680 /* ReadyWorkPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001681 /* ReadyWorkPanel.swift */; };
+		A5001682 /* ReadyWorkPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001683 /* ReadyWorkPanelView.swift */; };
 		A5001290 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A5001291 /* MarkdownUI */; };
 		A5001405 /* PanelContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001415 /* PanelContentView.swift */; };
 		A5001406 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001416 /* Workspace.swift */; };
@@ -244,6 +246,8 @@
 		A5001415 /* PanelContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/PanelContentView.swift; sourceTree = "<group>"; };
 		A5001418 /* MarkdownPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanel.swift; sourceTree = "<group>"; };
 		A5001419 /* MarkdownPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelView.swift; sourceTree = "<group>"; };
+		A5001681 /* ReadyWorkPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ReadyWorkPanel.swift; sourceTree = "<group>"; };
+		A5001683 /* ReadyWorkPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ReadyWorkPanelView.swift; sourceTree = "<group>"; };
 		A5001416 /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		A5001417 /* WorkspaceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceContentView.swift; sourceTree = "<group>"; };
 		A5001090 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -500,6 +504,8 @@
 				A5007421 /* BrowserPopupWindowController.swift */,
 				A5001418 /* MarkdownPanel.swift */,
 				A5001419 /* MarkdownPanelView.swift */,
+				A5001681 /* ReadyWorkPanel.swift */,
+				A5001683 /* ReadyWorkPanelView.swift */,
 				A5001510 /* CmuxWebView.swift */,
 				A5001415 /* PanelContentView.swift */,
 				A5001211 /* UpdateController.swift */,
@@ -826,6 +832,8 @@
 				A5007420 /* BrowserPopupWindowController.swift in Sources */,
 				A5001420 /* MarkdownPanel.swift in Sources */,
 				A5001421 /* MarkdownPanelView.swift in Sources */,
+				A5001680 /* ReadyWorkPanel.swift in Sources */,
+				A5001682 /* ReadyWorkPanelView.swift in Sources */,
 				A5001500 /* CmuxWebView.swift in Sources */,
 				A5001405 /* PanelContentView.swift in Sources */,
 				A5001201 /* UpdateController.swift in Sources */,
