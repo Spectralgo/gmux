@@ -996,7 +996,7 @@ final class WorkspaceRemoteDaemonPendingCallRegistry {
         case timedOut
     }
 
-    private let queue = DispatchQueue(label: "com.cmux.remote-ssh.daemon-rpc.pending.\(UUID().uuidString)")
+    private let queue = DispatchQueue(label: "com.gmux.remote-ssh.daemon-rpc.pending.\(UUID().uuidString)")
     private var nextRequestID = 1
     private var pendingCalls: [Int: PendingCall] = [:]
 
@@ -1206,8 +1206,8 @@ private final class WorkspaceRemoteDaemonRPCClient {
     private let configuration: WorkspaceRemoteConfiguration
     private let remotePath: String
     private let onUnexpectedTermination: (String) -> Void
-    private let writeQueue = DispatchQueue(label: "com.cmux.remote-ssh.daemon-rpc.write.\(UUID().uuidString)")
-    private let stateQueue = DispatchQueue(label: "com.cmux.remote-ssh.daemon-rpc.state.\(UUID().uuidString)")
+    private let writeQueue = DispatchQueue(label: "com.gmux.remote-ssh.daemon-rpc.write.\(UUID().uuidString)")
+    private let stateQueue = DispatchQueue(label: "com.gmux.remote-ssh.daemon-rpc.state.\(UUID().uuidString)")
     private let pendingCalls = WorkspaceRemoteDaemonPendingCallRegistry()
 
     private var process: Process?
@@ -1273,7 +1273,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
         do {
             try process.run()
         } catch {
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 1, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "Failed to launch SSH daemon transport: \(error.localizedDescription)",
             ])
         }
@@ -1295,7 +1295,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
             let hello = try call(method: "hello", params: [:], timeout: 8.0)
             let capabilities = (hello["capabilities"] as? [String]) ?? []
             guard capabilities.contains(Self.requiredProxyStreamCapability) else {
-                throw NSError(domain: "cmux.remote.daemon.rpc", code: 2, userInfo: [
+                throw NSError(domain: "gmux.remote.daemon.rpc", code: 2, userInfo: [
                     NSLocalizedDescriptionKey: "remote daemon missing required capability \(Self.requiredProxyStreamCapability)",
                 ])
             }
@@ -1321,7 +1321,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
         )
         let streamID = (result["stream_id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !streamID.isEmpty else {
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 3, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 3, userInfo: [
                 NSLocalizedDescriptionKey: "proxy.open missing stream_id",
             ])
         }
@@ -1346,7 +1346,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
     ) throws {
         let trimmedStreamID = streamID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedStreamID.isEmpty else {
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 17, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 17, userInfo: [
                 NSLocalizedDescriptionKey: "proxy.stream.subscribe requires stream_id",
             ])
         }
@@ -1397,7 +1397,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
             ])
         } catch {
             pendingCalls.remove(pendingCall)
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 10, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 10, userInfo: [
                 NSLocalizedDescriptionKey: "failed to encode daemon RPC request \(method): \(error.localizedDescription)",
             ])
         }
@@ -1415,15 +1415,15 @@ private final class WorkspaceRemoteDaemonRPCClient {
         switch pendingCalls.wait(for: pendingCall, timeout: timeout) {
         case .timedOut:
             stop(suppressTerminationCallback: false)
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 11, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 11, userInfo: [
                 NSLocalizedDescriptionKey: "daemon RPC timeout waiting for \(method) response",
             ])
         case .failure(let failure):
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 12, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 12, userInfo: [
                 NSLocalizedDescriptionKey: failure,
             ])
         case .missing:
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 13, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 13, userInfo: [
                 NSLocalizedDescriptionKey: "daemon RPC \(method) returned empty response",
             ])
         case .response(let pendingResponse):
@@ -1438,7 +1438,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
         let errorObject = (response["error"] as? [String: Any]) ?? [:]
         let code = (errorObject["code"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "rpc_error"
         let message = (errorObject["message"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "daemon RPC call failed"
-        throw NSError(domain: "cmux.remote.daemon.rpc", code: 14, userInfo: [
+        throw NSError(domain: "gmux.remote.daemon.rpc", code: 14, userInfo: [
             NSLocalizedDescriptionKey: "\(method) failed (\(code)): \(message)",
         ])
     }
@@ -1448,7 +1448,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
             self.stdinHandle ?? FileHandle.nullDevice
         }
         if stdinHandle === FileHandle.nullDevice {
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 15, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 15, userInfo: [
                 NSLocalizedDescriptionKey: "daemon transport is not connected",
             ])
         }
@@ -1457,7 +1457,7 @@ private final class WorkspaceRemoteDaemonRPCClient {
             try stdinHandle.write(contentsOf: Data([0x0A]))
         } catch {
             stop(suppressTerminationCallback: false)
-            throw NSError(domain: "cmux.remote.daemon.rpc", code: 16, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon.rpc", code: 16, userInfo: [
                 NSLocalizedDescriptionKey: "failed writing daemon RPC request: \(error.localizedDescription)",
             ])
         }
@@ -1916,7 +1916,7 @@ enum RemoteLoopbackHTTPResponseRewriter {
 private final class WorkspaceRemoteDaemonProxyTunnel {
     private final class ProxySession {
         private static let maxHandshakeBytes = 64 * 1024
-        private static let remoteLoopbackProxyAliasHost = "cmux-loopback.localtest.me"
+        private static let remoteLoopbackProxyAliasHost = "gmux-loopback.localtest.me"
 
         private enum HandshakeProtocol {
             case undecided
@@ -2098,7 +2098,7 @@ private final class WorkspaceRemoteDaemonProxyTunnel {
             let bytes = [UInt8](data)
             guard bytes.count >= 4 else { return nil }
             guard bytes[0] == 0x05 else {
-                throw NSError(domain: "cmux.remote.proxy", code: 1, userInfo: [NSLocalizedDescriptionKey: "invalid SOCKS version"])
+                throw NSError(domain: "gmux.remote.proxy", code: 1, userInfo: [NSLocalizedDescriptionKey: "invalid SOCKS version"])
             }
 
             let command = bytes[1]
@@ -2138,18 +2138,18 @@ private final class WorkspaceRemoteDaemonProxyTunnel {
                 cursor += 16
 
             default:
-                throw NSError(domain: "cmux.remote.proxy", code: 2, userInfo: [NSLocalizedDescriptionKey: "invalid SOCKS address type"])
+                throw NSError(domain: "gmux.remote.proxy", code: 2, userInfo: [NSLocalizedDescriptionKey: "invalid SOCKS address type"])
             }
 
             guard !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw NSError(domain: "cmux.remote.proxy", code: 3, userInfo: [NSLocalizedDescriptionKey: "empty SOCKS host"])
+                throw NSError(domain: "gmux.remote.proxy", code: 3, userInfo: [NSLocalizedDescriptionKey: "empty SOCKS host"])
             }
             guard bytes.count >= cursor + 2 else { return nil }
             let port = Int(UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1]))
             cursor += 2
 
             guard port > 0 && port <= 65535 else {
-                throw NSError(domain: "cmux.remote.proxy", code: 4, userInfo: [NSLocalizedDescriptionKey: "invalid SOCKS port"])
+                throw NSError(domain: "gmux.remote.proxy", code: 4, userInfo: [NSLocalizedDescriptionKey: "invalid SOCKS port"])
             }
 
             return SocksRequest(host: host, port: port, command: command, consumedBytes: cursor)
@@ -2378,7 +2378,7 @@ private final class WorkspaceRemoteDaemonProxyTunnel {
         }
 
         private static func httpResponse(status: String, closeAfterResponse: Bool = true) -> Data {
-            var text = "HTTP/1.1 \(status)\r\nProxy-Agent: cmux\r\n"
+            var text = "HTTP/1.1 \(status)\r\nProxy-Agent: gmux\r\n"
             if closeAfterResponse {
                 text += "Connection: close\r\n"
             }
@@ -2391,7 +2391,7 @@ private final class WorkspaceRemoteDaemonProxyTunnel {
     private let remotePath: String
     private let localPort: Int
     private let onFatalError: (String) -> Void
-    private let queue = DispatchQueue(label: "com.cmux.remote-ssh.daemon-tunnel.\(UUID().uuidString)", qos: .utility)
+    private let queue = DispatchQueue(label: "com.gmux.remote-ssh.daemon-tunnel.\(UUID().uuidString)", qos: .utility)
 
     private var listener: NWListener?
     private var rpcClient: WorkspaceRemoteDaemonRPCClient?
@@ -2414,7 +2414,7 @@ private final class WorkspaceRemoteDaemonProxyTunnel {
         var capturedError: Error?
         queue.sync {
             guard !isStopped else {
-                capturedError = NSError(domain: "cmux.remote.proxy", code: 20, userInfo: [
+                capturedError = NSError(domain: "gmux.remote.proxy", code: 20, userInfo: [
                     NSLocalizedDescriptionKey: "proxy tunnel already stopped",
                 ])
                 return
@@ -2521,7 +2521,7 @@ private final class WorkspaceRemoteDaemonProxyTunnel {
 
     private static func makeLoopbackListener(port: Int) throws -> NWListener {
         guard let localPort = NWEndpoint.Port(rawValue: UInt16(port)) else {
-            throw NSError(domain: "cmux.remote.proxy", code: 21, userInfo: [
+            throw NSError(domain: "gmux.remote.proxy", code: 21, userInfo: [
                 NSLocalizedDescriptionKey: "invalid local proxy port \(port)",
             ])
         }
@@ -2581,7 +2581,7 @@ private final class WorkspaceRemoteProxyBroker {
 
     static let shared = WorkspaceRemoteProxyBroker()
 
-    private let queue = DispatchQueue(label: "com.cmux.remote-ssh.proxy-broker", qos: .utility)
+    private let queue = DispatchQueue(label: "com.gmux.remote-ssh.proxy-broker", qos: .utility)
     private var entries: [String: Entry] = [:]
 
     func acquire(
@@ -2798,7 +2798,7 @@ private final class WorkspaceRemoteCLIRelayServer {
         private let relayToken: Data
         private let queue: DispatchQueue
         private let onClose: () -> Void
-        private let challengeProtocol = "cmux-relay-auth"
+        private let challengeProtocol = "gmux-relay-auth"
         private let challengeVersion = 1
         private let minimumFailureDelay: TimeInterval = 0.05
         private let maximumFrameBytes = 16 * 1024
@@ -3035,7 +3035,7 @@ private final class WorkspaceRemoteCLIRelayServer {
         private static func roundTripUnixSocket(socketPath: String, request: Data) throws -> Data {
             let fd = socket(AF_UNIX, SOCK_STREAM, 0)
             guard fd >= 0 else {
-                throw NSError(domain: "cmux.remote.relay", code: 1, userInfo: [
+                throw NSError(domain: "gmux.remote.relay", code: 1, userInfo: [
                     NSLocalizedDescriptionKey: "failed to create local relay socket",
                 ])
             }
@@ -3051,7 +3051,7 @@ private final class WorkspaceRemoteCLIRelayServer {
             address.sun_family = sa_family_t(AF_UNIX)
             let pathBytes = Array(socketPath.utf8CString)
             guard pathBytes.count <= MemoryLayout.size(ofValue: address.sun_path) else {
-                throw NSError(domain: "cmux.remote.relay", code: 2, userInfo: [
+                throw NSError(domain: "gmux.remote.relay", code: 2, userInfo: [
                     NSLocalizedDescriptionKey: "local relay socket path is too long",
                 ])
             }
@@ -3070,8 +3070,8 @@ private final class WorkspaceRemoteCLIRelayServer {
                 }
             }
             guard connectResult == 0 else {
-                throw NSError(domain: "cmux.remote.relay", code: 3, userInfo: [
-                    NSLocalizedDescriptionKey: "failed to connect to local cmux socket",
+                throw NSError(domain: "gmux.remote.relay", code: 3, userInfo: [
+                    NSLocalizedDescriptionKey: "failed to connect to local gmux socket",
                 ])
             }
 
@@ -3082,7 +3082,7 @@ private final class WorkspaceRemoteCLIRelayServer {
                 while bytesRemaining > 0 {
                     let written = Darwin.write(fd, pointer, bytesRemaining)
                     if written <= 0 {
-                        throw NSError(domain: "cmux.remote.relay", code: 4, userInfo: [
+                        throw NSError(domain: "gmux.remote.relay", code: 4, userInfo: [
                             NSLocalizedDescriptionKey: "failed to write relay request",
                         ])
                     }
@@ -3108,12 +3108,12 @@ private final class WorkspaceRemoteCLIRelayServer {
                     if !response.isEmpty {
                         break
                     }
-                    throw NSError(domain: "cmux.remote.relay", code: 5, userInfo: [
-                        NSLocalizedDescriptionKey: "timed out waiting for local cmux response",
+                    throw NSError(domain: "gmux.remote.relay", code: 5, userInfo: [
+                        NSLocalizedDescriptionKey: "timed out waiting for local gmux response",
                     ])
                 }
-                throw NSError(domain: "cmux.remote.relay", code: 6, userInfo: [
-                    NSLocalizedDescriptionKey: "failed to read local cmux response",
+                throw NSError(domain: "gmux.remote.relay", code: 6, userInfo: [
+                    NSLocalizedDescriptionKey: "failed to read local gmux response",
                 ])
             }
             return response
@@ -3123,7 +3123,7 @@ private final class WorkspaceRemoteCLIRelayServer {
     private let localSocketPath: String
     private let relayID: String
     private let relayToken: Data
-    private let queue = DispatchQueue(label: "com.cmux.remote-ssh.cli-relay.\(UUID().uuidString)", qos: .utility)
+    private let queue = DispatchQueue(label: "com.gmux.remote-ssh.cli-relay.\(UUID().uuidString)", qos: .utility)
 
     private var listener: NWListener?
     private var sessions: [UUID: Session] = [:]
@@ -3132,7 +3132,7 @@ private final class WorkspaceRemoteCLIRelayServer {
 
     init(localSocketPath: String, relayID: String, relayTokenHex: String) throws {
         guard let relayToken = Session.hexData(from: relayTokenHex), !relayToken.isEmpty else {
-            throw NSError(domain: "cmux.remote.relay", code: 7, userInfo: [
+            throw NSError(domain: "gmux.remote.relay", code: 7, userInfo: [
                 NSLocalizedDescriptionKey: "invalid relay token",
             ])
         }
@@ -3185,7 +3185,7 @@ private final class WorkspaceRemoteCLIRelayServer {
             listener.newConnectionHandler = nil
             listener.stateUpdateHandler = nil
             listener.cancel()
-            throw NSError(domain: "cmux.remote.relay", code: 8, userInfo: [
+            throw NSError(domain: "gmux.remote.relay", code: 8, userInfo: [
                 NSLocalizedDescriptionKey: "timed out waiting for local relay listener",
             ])
         }
@@ -3199,7 +3199,7 @@ private final class WorkspaceRemoteCLIRelayServer {
             listener.newConnectionHandler = nil
             listener.stateUpdateHandler = nil
             listener.cancel()
-            throw NSError(domain: "cmux.remote.relay", code: 8, userInfo: [
+            throw NSError(domain: "gmux.remote.relay", code: 8, userInfo: [
                 NSLocalizedDescriptionKey: "failed to bind local relay listener",
             ])
         }
@@ -3315,7 +3315,7 @@ final class WorkspaceRemoteSessionController {
         let remotePath: String
     }
 
-    private let queue = DispatchQueue(label: "com.cmux.remote-ssh.\(UUID().uuidString)", qos: .utility)
+    private let queue = DispatchQueue(label: "com.gmux.remote-ssh.\(UUID().uuidString)", qos: .utility)
     private let queueKey = DispatchSpecificKey<Void>()
     private weak var workspace: Workspace?
     private let configuration: WorkspaceRemoteConfiguration
@@ -3530,7 +3530,7 @@ final class WorkspaceRemoteSessionController {
         do {
             let hello = try bootstrapDaemonLocked()
             guard hello.capabilities.contains(WorkspaceRemoteDaemonRPCClient.requiredProxyStreamCapability) else {
-                throw NSError(domain: "cmux.remote.daemon", code: 43, userInfo: [
+                throw NSError(domain: "gmux.remote.daemon", code: 43, userInfo: [
                     NSLocalizedDescriptionKey: "remote daemon missing required capability \(WorkspaceRemoteDaemonRPCClient.requiredProxyStreamCapability)",
                 ])
             }
@@ -4058,9 +4058,9 @@ final class WorkspaceRemoteSessionController {
         _ = try? sshExec(arguments: arguments, timeout: 4)
     }
 
-    private static let remotePlatformProbeOSMarker = "__CMUX_REMOTE_OS__="
-    private static let remotePlatformProbeArchMarker = "__CMUX_REMOTE_ARCH__="
-    private static let remotePlatformProbeExistsMarker = "__CMUX_REMOTE_EXISTS__="
+    private static let remotePlatformProbeOSMarker = "__GMUX_REMOTE_OS__="
+    private static let remotePlatformProbeArchMarker = "__GMUX_REMOTE_ARCH__="
+    private static let remotePlatformProbeExistsMarker = "__GMUX_REMOTE_EXISTS__="
     private static let bootstrapRemoteTTYRetryDelay: TimeInterval = 0.5
     private static let bootstrapRemoteTTYRetryLimit = 8
 
@@ -4195,7 +4195,7 @@ final class WorkspaceRemoteSessionController {
 
         let stdoutHandle = stdoutPipe.fileHandleForReading
         let stderrHandle = stderrPipe.fileHandleForReading
-        let captureQueue = DispatchQueue(label: "cmux.remote.process.capture")
+        let captureQueue = DispatchQueue(label: "gmux.remote.process.capture")
         let exitSemaphore = DispatchSemaphore(value: 0)
         var stdoutData = Data()
         var stderrData = Data()
@@ -4230,7 +4230,7 @@ final class WorkspaceRemoteSessionController {
                 "remote.proc.launchFailed exec=\(URL(fileURLWithPath: executable).lastPathComponent) " +
                 "error=\(error.localizedDescription)"
             )
-            throw NSError(domain: "cmux.remote.process", code: 1, userInfo: [
+            throw NSError(domain: "gmux.remote.process", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "Failed to launch \(URL(fileURLWithPath: executable).lastPathComponent): \(error.localizedDescription)",
             ])
         }
@@ -4268,7 +4268,7 @@ final class WorkspaceRemoteSessionController {
                 "remote.proc.timeout exec=\(URL(fileURLWithPath: executable).lastPathComponent) " +
                 "timeout=\(Int(timeout)) args=\(debugShellCommand(executable: executable, arguments: arguments))"
             )
-            throw NSError(domain: "cmux.remote.process", code: 2, userInfo: [
+            throw NSError(domain: "gmux.remote.process", code: 2, userInfo: [
                 NSLocalizedDescriptionKey: "\(URL(fileURLWithPath: executable).lastPathComponent) timed out after \(Int(timeout))s",
             ])
         }
@@ -4375,7 +4375,7 @@ final class WorkspaceRemoteSessionController {
         let result = try sshExec(arguments: sshCommonArguments(batchMode: true) + [configuration.destination, command], timeout: 8)
         guard result.status == 0 else {
             let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "ssh exited \(result.status)"
-            throw NSError(domain: "cmux.remote.relay", code: 70, userInfo: [
+            throw NSError(domain: "gmux.remote.relay", code: 70, userInfo: [
                 NSLocalizedDescriptionKey: "failed to install remote relay metadata: \(detail)",
             ])
         }
@@ -4439,14 +4439,14 @@ final class WorkspaceRemoteSessionController {
             .map { String($0.dropFirst(Self.remotePlatformProbeArchMarker.count)) }
         guard let unameOS, let unameArch else {
             let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "ssh exited \(result.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 11, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 11, userInfo: [
                 NSLocalizedDescriptionKey: "failed to query remote platform: \(detail)",
             ])
         }
 
         guard let goOS = Self.mapUnameOS(unameOS),
               let goArch = Self.mapUnameArch(unameArch) else {
-            throw NSError(domain: "cmux.remote.daemon", code: 12, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 12, userInfo: [
                 NSLocalizedDescriptionKey: "unsupported remote platform \(unameOS)/\(unameArch)",
             ])
         }
@@ -4455,7 +4455,7 @@ final class WorkspaceRemoteSessionController {
             .map { String($0.dropFirst(Self.remotePlatformProbeExistsMarker.count)) == "yes" }
         if result.status != 0, binaryExists == nil {
             let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "ssh exited \(result.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 13, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 13, userInfo: [
                 NSLocalizedDescriptionKey: "failed to query remote daemon state: \(detail)",
             ])
         }
@@ -4488,7 +4488,7 @@ final class WorkspaceRemoteSessionController {
             create: true
         )
         let cacheRoot = appSupportRoot
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("gmux", isDirectory: true)
             .appendingPathComponent("remote-daemons", isDirectory: true)
         try fileManager.createDirectory(at: cacheRoot, withIntermediateDirectories: true)
         return cacheRoot
@@ -4513,12 +4513,12 @@ final class WorkspaceRemoteSessionController {
     }
 
     private static func allowLocalDaemonBuildFallback(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
-        environment["CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD"] == "1"
+        environment["GMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD"] == "1" || environment["CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD"] == "1"
     }
 
     private static func explicitRemoteDaemonBinaryURL(environment: [String: String] = ProcessInfo.processInfo.environment) -> URL? {
         guard allowLocalDaemonBuildFallback(environment: environment) else { return nil }
-        guard let path = environment["CMUX_REMOTE_DAEMON_BINARY"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let path = (environment["GMUX_REMOTE_DAEMON_BINARY"] ?? environment["CMUX_REMOTE_DAEMON_BINARY"])?.trimmingCharacters(in: .whitespacesAndNewlines),
               !path.isEmpty else {
             return nil
         }
@@ -4527,7 +4527,7 @@ final class WorkspaceRemoteSessionController {
 
     private static func versionedRemoteDaemonBuildURL(goOS: String, goArch: String, version: String) -> URL {
         URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            .appendingPathComponent("cmux-remote-daemon-build", isDirectory: true)
+            .appendingPathComponent("gmux-remote-daemon-build", isDirectory: true)
             .appendingPathComponent(version, isDirectory: true)
             .appendingPathComponent("\(goOS)-\(goArch)", isDirectory: true)
             .appendingPathComponent("cmuxd-remote", isDirectory: false)
@@ -4538,7 +4538,7 @@ final class WorkspaceRemoteSessionController {
         guard let manifestURL = URL(string: "\(releaseURL)/cmuxd-remote-manifest.json") else { return nil }
         let request = NSMutableURLRequest(url: manifestURL)
         request.timeoutInterval = 15
-        request.setValue("cmux/\(version)", forHTTPHeaderField: "User-Agent")
+        request.setValue("gmux/\(version)", forHTTPHeaderField: "User-Agent")
         let session = URLSession(configuration: .ephemeral)
         let semaphore = DispatchSemaphore(value: 0)
         var resultData: Data?
@@ -4557,7 +4557,7 @@ final class WorkspaceRemoteSessionController {
 
     private func downloadRemoteDaemonBinaryLocked(entry: WorkspaceRemoteDaemonManifest.Entry, version: String, releaseURL: String? = nil) throws -> URL {
         guard let url = URL(string: entry.downloadURL) else {
-            throw NSError(domain: "cmux.remote.daemon", code: 25, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 25, userInfo: [
                 NSLocalizedDescriptionKey: "remote daemon manifest has an invalid download URL",
             ])
         }
@@ -4568,7 +4568,7 @@ final class WorkspaceRemoteSessionController {
 
         let request = NSMutableURLRequest(url: url)
         request.timeoutInterval = 60
-        request.setValue("cmux/\(version)", forHTTPHeaderField: "User-Agent")
+        request.setValue("gmux/\(version)", forHTTPHeaderField: "User-Agent")
         let session = URLSession(configuration: .ephemeral)
 
         let semaphore = DispatchSemaphore(value: 0)
@@ -4582,7 +4582,7 @@ final class WorkspaceRemoteSessionController {
             }
             if let httpResponse = response as? HTTPURLResponse,
                !(200...299).contains(httpResponse.statusCode) {
-                downloadError = NSError(domain: "cmux.remote.daemon", code: 26, userInfo: [
+                downloadError = NSError(domain: "gmux.remote.daemon", code: 26, userInfo: [
                     NSLocalizedDescriptionKey: "remote daemon download failed with HTTP \(httpResponse.statusCode)",
                 ])
                 return
@@ -4596,7 +4596,7 @@ final class WorkspaceRemoteSessionController {
             throw downloadError
         }
         guard let downloadedURL else {
-            throw NSError(domain: "cmux.remote.daemon", code: 27, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 27, userInfo: [
                 NSLocalizedDescriptionKey: "remote daemon download did not produce a file",
             ])
         }
@@ -4613,7 +4613,7 @@ final class WorkspaceRemoteSessionController {
                downloadedSHA == liveEntry.sha256.lowercased() {
                 debugLog("remote.download.checksum-fallback: embedded manifest checksum stale, live manifest matched for \(entry.assetName)")
             } else {
-                throw NSError(domain: "cmux.remote.daemon", code: 28, userInfo: [
+                throw NSError(domain: "gmux.remote.daemon", code: 28, userInfo: [
                     NSLocalizedDescriptionKey: "remote daemon checksum mismatch for \(entry.assetName)",
                 ])
             }
@@ -4655,25 +4655,25 @@ final class WorkspaceRemoteSessionController {
         }
 
         guard Self.allowLocalDaemonBuildFallback() else {
-            throw NSError(domain: "cmux.remote.daemon", code: 20, userInfo: [
-                NSLocalizedDescriptionKey: "this build does not include a verified cmuxd-remote manifest for \(goOS)-\(goArch). Use a release/nightly build, or set CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1 for a dev-only fallback.",
+            throw NSError(domain: "gmux.remote.daemon", code: 20, userInfo: [
+                NSLocalizedDescriptionKey: "this build does not include a verified cmuxd-remote manifest for \(goOS)-\(goArch). Use a release/nightly build, or set GMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1 for a dev-only fallback.",
             ])
         }
 
         guard let repoRoot = Self.findRepoRoot() else {
-            throw NSError(domain: "cmux.remote.daemon", code: 20, userInfo: [
-                NSLocalizedDescriptionKey: "cannot locate cmux repo root for dev-only cmuxd-remote build fallback",
+            throw NSError(domain: "gmux.remote.daemon", code: 20, userInfo: [
+                NSLocalizedDescriptionKey: "cannot locate gmux repo root for dev-only cmuxd-remote build fallback",
             ])
         }
         let daemonRoot = repoRoot.appendingPathComponent("daemon/remote", isDirectory: true)
         let goModPath = daemonRoot.appendingPathComponent("go.mod").path
         guard FileManager.default.fileExists(atPath: goModPath) else {
-            throw NSError(domain: "cmux.remote.daemon", code: 21, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 21, userInfo: [
                 NSLocalizedDescriptionKey: "missing daemon module at \(goModPath)",
             ])
         }
         guard let goBinary = Self.which("go") else {
-            throw NSError(domain: "cmux.remote.daemon", code: 22, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 22, userInfo: [
                 NSLocalizedDescriptionKey: "go is required for the dev-only cmuxd-remote build fallback",
             ])
         }
@@ -4696,12 +4696,12 @@ final class WorkspaceRemoteSessionController {
         )
         guard result.status == 0 else {
             let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "go build failed with status \(result.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 23, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 23, userInfo: [
                 NSLocalizedDescriptionKey: "failed to build cmuxd-remote: \(detail)",
             ])
         }
         guard FileManager.default.isExecutableFile(atPath: output.path) else {
-            throw NSError(domain: "cmux.remote.daemon", code: 24, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 24, userInfo: [
                 NSLocalizedDescriptionKey: "cmuxd-remote build output is not executable",
             ])
         }
@@ -4721,7 +4721,7 @@ final class WorkspaceRemoteSessionController {
         let mkdirResult = try sshExec(arguments: sshCommonArguments(batchMode: true) + [configuration.destination, mkdirCommand], timeout: 12)
         guard mkdirResult.status == 0 else {
             let detail = Self.bestErrorLine(stderr: mkdirResult.stderr, stdout: mkdirResult.stdout) ?? "ssh exited \(mkdirResult.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 30, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 30, userInfo: [
                 NSLocalizedDescriptionKey: "failed to create remote daemon directory: \(detail)",
             ])
         }
@@ -4746,7 +4746,7 @@ final class WorkspaceRemoteSessionController {
         let scpResult = try scpExec(arguments: scpArgs, timeout: 45)
         guard scpResult.status == 0 else {
             let detail = Self.bestErrorLine(stderr: scpResult.stderr, stdout: scpResult.stdout) ?? "scp exited \(scpResult.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 31, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 31, userInfo: [
                 NSLocalizedDescriptionKey: "failed to upload cmuxd-remote: \(detail)",
             ])
         }
@@ -4759,7 +4759,7 @@ final class WorkspaceRemoteSessionController {
         let finalizeResult = try sshExec(arguments: sshCommonArguments(batchMode: true) + [configuration.destination, finalizeCommand], timeout: 12)
         guard finalizeResult.status == 0 else {
             let detail = Self.bestErrorLine(stderr: finalizeResult.stderr, stdout: finalizeResult.stdout) ?? "ssh exited \(finalizeResult.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 32, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 32, userInfo: [
                 NSLocalizedDescriptionKey: "failed to install remote daemon binary: \(detail)",
             ])
         }
@@ -4836,7 +4836,7 @@ final class WorkspaceRemoteSessionController {
         let result = try sshExec(arguments: sshCommonArguments(batchMode: true) + [configuration.destination, command], timeout: 12)
         guard result.status == 0 else {
             let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "ssh exited \(result.status)"
-            throw NSError(domain: "cmux.remote.daemon", code: 40, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 40, userInfo: [
                 NSLocalizedDescriptionKey: "failed to start remote daemon: \(detail)",
             ])
         }
@@ -4848,7 +4848,7 @@ final class WorkspaceRemoteSessionController {
         guard !responseLine.isEmpty,
               let data = responseLine.data(using: .utf8),
               let payload = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-            throw NSError(domain: "cmux.remote.daemon", code: 41, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 41, userInfo: [
                 NSLocalizedDescriptionKey: "remote daemon hello returned invalid JSON",
             ])
         }
@@ -4862,7 +4862,7 @@ final class WorkspaceRemoteSessionController {
                 }
                 return "hello call failed"
             }()
-            throw NSError(domain: "cmux.remote.daemon", code: 42, userInfo: [
+            throw NSError(domain: "gmux.remote.daemon", code: 42, userInfo: [
                 NSLocalizedDescriptionKey: "remote daemon hello failed: \(errorMessage)",
             ])
         }
@@ -4936,7 +4936,7 @@ final class WorkspaceRemoteSessionController {
         set -eu
 
         daemon="$HOME/.gmux/bin/cmuxd-remote-current"
-        socket_path="${CMUX_SOCKET_PATH:-}"
+        socket_path="${GMUX_SOCKET_PATH:-${CMUX_SOCKET_PATH:-}}"
         if [ -z "$socket_path" ] && [ -r "$HOME/.gmux/socket_addr" ]; then
           socket_path="$(tr -d '\\r\\n' < "$HOME/.gmux/socket_addr")"
         fi
@@ -5306,11 +5306,11 @@ final class WorkspaceRemoteSessionController {
             .deletingLastPathComponent() // repo root
         candidates.append(compileTimeRoot)
         let environment = ProcessInfo.processInfo.environment
-        if let envRoot = environment["CMUX_REMOTE_DAEMON_SOURCE_ROOT"],
+        if let envRoot = environment["GMUX_REMOTE_DAEMON_SOURCE_ROOT"] ?? environment["CMUX_REMOTE_DAEMON_SOURCE_ROOT"],
            !envRoot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             candidates.append(URL(fileURLWithPath: envRoot, isDirectory: true))
         }
-        if let envRoot = environment["CMUXTERM_REPO_ROOT"],
+        if let envRoot = environment["GMUXTERM_REPO_ROOT"] ?? environment["CMUXTERM_REPO_ROOT"],
            !envRoot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             candidates.append(URL(fileURLWithPath: envRoot, isDirectory: true))
         }
@@ -5551,7 +5551,7 @@ final class WorkspaceRemoteSessionController {
         )
         guard result.status == 0 else {
             let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "ssh exited \(result.status)"
-            throw NSError(domain: "cmux.remote.ports", code: 90, userInfo: [
+            throw NSError(domain: "gmux.remote.ports", code: 90, userInfo: [
                 NSLocalizedDescriptionKey: "remote port scan failed: \(detail)",
             ])
         }
@@ -5646,7 +5646,7 @@ final class WorkspaceRemoteSessionController {
             )
             guard result.status == 0 else {
                 let detail = Self.bestErrorLine(stderr: result.stderr, stdout: result.stdout) ?? "ssh exited \(result.status)"
-                throw NSError(domain: "cmux.remote.ports", code: 90, userInfo: [
+                throw NSError(domain: "gmux.remote.ports", code: 90, userInfo: [
                     NSLocalizedDescriptionKey: "remote port scan failed: \(detail)",
                 ])
             }
@@ -6610,7 +6610,7 @@ final class Workspace: Identifiable, ObservableObject {
     private static let remotePortConflictStatusKey = "remote.port_conflicts"
     private static let remoteNotificationCooldown: TimeInterval = 5 * 60
     private static let sshControlMasterCleanupQueue = DispatchQueue(
-        label: "com.cmux.remote-ssh.control-master-cleanup",
+        label: "com.gmux.remote-ssh.control-master-cleanup",
         qos: .utility
     )
     private static let remoteHeartbeatDateFormatter: ISO8601DateFormatter = {
@@ -11061,7 +11061,7 @@ final class Workspace: Identifiable, ObservableObject {
             let failure = NSAlert()
             failure.alertStyle = .warning
             failure.messageText = String(localized: "alert.moveTab.failed.title", defaultValue: "Move Failed")
-            failure.informativeText = String(localized: "alert.moveTab.failed.message", defaultValue: "cmux could not move this tab to the selected destination.")
+            failure.informativeText = String(localized: "alert.moveTab.failed.message", defaultValue: "Gmux could not move this tab to the selected destination.")
             failure.addButton(withTitle: String(localized: "alert.ok", defaultValue: "OK"))
             _ = failure.runModal()
         }

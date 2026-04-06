@@ -75,7 +75,8 @@ func isCommandPaletteFocusStealingTerminalOrBrowserView(_ view: NSView) -> Bool 
 enum CmuxTypingTiming {
     static let isEnabled: Bool = {
         let environment = ProcessInfo.processInfo.environment
-        if environment["CMUX_TYPING_TIMING_LOGS"] == "1" || environment["CMUX_KEY_LATENCY_PROBE"] == "1" {
+        if environment["GMUX_TYPING_TIMING_LOGS"] == "1" || environment["CMUX_TYPING_TIMING_LOGS"] == "1"
+            || environment["GMUX_KEY_LATENCY_PROBE"] == "1" || environment["CMUX_KEY_LATENCY_PROBE"] == "1" {
             return true
         }
         let defaults = UserDefaults.standard
@@ -83,7 +84,7 @@ enum CmuxTypingTiming {
     }()
     static let isVerboseProbeEnabled: Bool = {
         let environment = ProcessInfo.processInfo.environment
-        if environment["CMUX_KEY_LATENCY_PROBE"] == "1" {
+        if environment["GMUX_KEY_LATENCY_PROBE"] == "1" || environment["CMUX_KEY_LATENCY_PROBE"] == "1" {
             return true
         }
         return UserDefaults.standard.bool(forKey: "cmuxKeyLatencyProbe")
@@ -767,8 +768,8 @@ final class VSCodeServeWebController {
     static let shared = VSCodeServeWebController()
     private static let serveWebStartupTimeoutSeconds: TimeInterval = 60
 
-    private let queue = DispatchQueue(label: "cmux.vscode.serveWeb")
-    private let launchQueue = DispatchQueue(label: "cmux.vscode.serveWeb.launch")
+    private let queue = DispatchQueue(label: "gmux.vscode.serveWeb")
+    private let launchQueue = DispatchQueue(label: "gmux.vscode.serveWeb.launch")
     private let launchProcessOverride: ((URL, UInt64) -> (process: Process, url: URL)?)?
     private var serveWebProcess: Process?
     private var launchingProcess: Process?
@@ -1083,7 +1084,7 @@ final class VSCodeServeWebController {
 
     private static func makeConnectionTokenFile() -> URL? {
         let token = randomConnectionToken()
-        let tokenFileName = "cmux-vscode-token-\(UUID().uuidString)"
+        let tokenFileName = "gmux-vscode-token-\(UUID().uuidString)"
         let tokenFileURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent(tokenFileName, isDirectory: false)
         guard let tokenData = token.data(using: .utf8) else { return nil }
@@ -1216,7 +1217,7 @@ struct CmuxCLIPathInstaller {
         var errorDescription: String? {
             switch self {
             case .bundledCLIMissing(let expectedPath):
-                return "Bundled cmux CLI was not found at \(expectedPath)."
+                return "Bundled gmux CLI was not found at \(expectedPath)."
             case .destinationParentNotDirectory(let path):
                 return "Expected \(path) to be a directory."
             case .destinationIsDirectory(let path):
@@ -2134,7 +2135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if env["XCInjectBundle"] != nil { return true }
         if env["XCInjectBundleInto"] != nil { return true }
         if env["DYLD_INSERT_LIBRARIES"]?.contains("libXCTest") == true { return true }
-        if env.keys.contains(where: { $0.hasPrefix("CMUX_UI_TEST_") }) { return true }
+        if env.keys.contains(where: { $0.hasPrefix("GMUX_UI_TEST_") || $0.hasPrefix("CMUX_UI_TEST_") }) { return true }
         return false
     }
 
@@ -2194,9 +2195,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     nonisolated static let persistedWindowGeometrySchemaVersion = 2
-    private nonisolated static let persistedWindowGeometryDefaultsKey = "cmux.session.lastWindowGeometry.v2"
+    private nonisolated static let persistedWindowGeometryDefaultsKey = "gmux.session.lastWindowGeometry.v2"
     private nonisolated static let legacyPersistedWindowGeometryDefaultsKeys = [
-        "cmux.session.lastWindowGeometry.v1"
+        "gmux.session.lastWindowGeometry.v1"
     ]
 
     weak var tabManager: TabManager?
@@ -2886,7 +2887,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.alertStyle = .warning
-            alert.messageText = String(localized: "dialog.quitCmux.title", defaultValue: "Quit cmux?")
+            alert.messageText = String(localized: "dialog.quitGmux.title", defaultValue: "Quit Gmux?")
             alert.informativeText = String(localized: "dialog.quitCmux.message", defaultValue: "This will close all windows and workspaces.")
             alert.addButton(withTitle: String(localized: "dialog.quitCmux.quit", defaultValue: "Quit"))
             alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
@@ -5206,7 +5207,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
            let window = ctx.window {
             return window
         }
-        let expectedIdentifier = "cmux.main.\(windowId.uuidString)"
+        let expectedIdentifier = "gmux.main.\(windowId.uuidString)"
         return NSApp.windows.first(where: { $0.identifier?.rawValue == expectedIdentifier })
     }
 
@@ -5223,7 +5224,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     private func mainWindowId(from window: NSWindow) -> UUID? {
         guard let raw = window.identifier?.rawValue else { return nil }
-        let prefix = "cmux.main."
+        let prefix = "gmux.main."
         guard raw.hasPrefix(prefix) else { return nil }
         let suffix = String(raw.dropFirst(prefix.count))
         return UUID(uuidString: suffix)
@@ -5343,8 +5344,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             return context.windowId
         }
         guard let rawIdentifier = window.identifier?.rawValue,
-              rawIdentifier.hasPrefix("cmux.main.") else { return nil }
-        let idPart = String(rawIdentifier.dropFirst("cmux.main.".count))
+              rawIdentifier.hasPrefix("gmux.main.") else { return nil }
+        let idPart = String(rawIdentifier.dropFirst("gmux.main.".count))
         return UUID(uuidString: idPart)
     }
 
@@ -6383,7 +6384,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func sendWelcomeCommandWhenReady(to workspace: Workspace, markShownOnSend: Bool = false) {
-        sendTextWhenReady("cmux welcome\n", to: workspace) {
+        sendTextWhenReady("gmux welcome\n", to: workspace) {
             if markShownOnSend {
                 UserDefaults.standard.set(true, forKey: WelcomeSettings.shownKey)
             }
@@ -6413,13 +6414,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 informativeText += "\n\n" + String(localized: "cli.install.adminRequired", defaultValue: "Administrator privileges were required to write to /usr/local/bin.")
             }
             presentCLIPathAlert(
-                title: String(localized: "cli.installed", defaultValue: "cmux CLI Installed"),
+                title: String(localized: "cli.installed", defaultValue: "gmux CLI Installed"),
                 informativeText: informativeText,
                 style: .informational
             )
         } catch {
             presentCLIPathAlert(
-                title: String(localized: "cli.installFailed", defaultValue: "Couldn't Install cmux CLI"),
+                title: String(localized: "cli.installFailed", defaultValue: "Couldn't Install gmux CLI"),
                 informativeText: error.localizedDescription,
                 style: .warning
             )
@@ -6432,19 +6433,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             let outcome = try installer.uninstall()
             let prefix = outcome.removedExistingEntry
                 ? String(localized: "cli.uninstall.removed", defaultValue: "Removed \(outcome.destinationURL.path).")
-                : String(localized: "cli.uninstall.notFound", defaultValue: "No cmux CLI symlink was found at \(outcome.destinationURL.path).")
+                : String(localized: "cli.uninstall.notFound", defaultValue: "No gmux CLI symlink was found at \(outcome.destinationURL.path).")
             var informativeText = prefix
             if outcome.usedAdministratorPrivileges {
                 informativeText += "\n\n" + String(localized: "cli.uninstall.adminRequired", defaultValue: "Administrator privileges were required to modify /usr/local/bin.")
             }
             presentCLIPathAlert(
-                title: String(localized: "cli.uninstalled", defaultValue: "cmux CLI Uninstalled"),
+                title: String(localized: "cli.uninstalled", defaultValue: "gmux CLI Uninstalled"),
                 informativeText: informativeText,
                 style: .informational
             )
         } catch {
             presentCLIPathAlert(
-                title: String(localized: "cli.uninstallFailed", defaultValue: "Couldn't Uninstall cmux CLI"),
+                title: String(localized: "cli.uninstallFailed", defaultValue: "Couldn't Uninstall gmux CLI"),
                 informativeText: error.localizedDescription,
                 style: .warning
             )
@@ -7470,7 +7471,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         func hasMainTerminalWindow() -> Bool {
             NSApp.windows.contains { window in
                 guard let raw = window.identifier?.rawValue else { return false }
-                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
             }
         }
 
@@ -7534,7 +7535,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         func hasMainTerminalWindow() -> Bool {
             NSApp.windows.contains { window in
                 guard let raw = window.identifier?.rawValue else { return false }
-                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
             }
         }
 
@@ -7551,7 +7552,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
             if let mainWindow = NSApp.windows.first(where: { window in
                 guard let raw = window.identifier?.rawValue else { return false }
-                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
             }) {
                 let screenFrame = mainWindow.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
                 if let screenFrame {
@@ -9171,7 +9172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 var shortcutMs: Double = 0
                 CmuxTypingTiming.logEventDelay(path: "appMonitor", event: event)
                 let shortcutMonitorTraceEnabled =
-                    ProcessInfo.processInfo.environment["CMUX_SHORTCUT_MONITOR_TRACE"] == "1"
+                    (ProcessInfo.processInfo.environment["GMUX_SHORTCUT_MONITOR_TRACE"] ?? ProcessInfo.processInfo.environment["CMUX_SHORTCUT_MONITOR_TRACE"]) == "1"
                     || UserDefaults.standard.bool(forKey: "cmuxShortcutMonitorTrace")
                 if shortcutMonitorTraceEnabled {
                     let frType = NSApp.keyWindow?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil"
@@ -9415,7 +9416,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = String(localized: "dialog.quitCmux.title", defaultValue: "Quit cmux?")
+        alert.messageText = String(localized: "dialog.quitGmux.title", defaultValue: "Quit Gmux?")
         alert.informativeText = String(localized: "dialog.quitCmux.message", defaultValue: "This will close all windows and workspaces.")
         alert.addButton(withTitle: String(localized: "dialog.quitCmux.quit", defaultValue: "Quit"))
         alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
@@ -10068,7 +10069,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         if matchConfiguredShortcut(event: event, action: .closeOtherTabsInPane) {
             if let targetWindow = event.window ?? NSApp.keyWindow ?? NSApp.mainWindow,
-               targetWindow.identifier?.rawValue == "cmux.settings" {
+               targetWindow.identifier?.rawValue == "gmux.settings" {
                 targetWindow.performClose(nil)
             } else {
                 let targetWindow = event.window ?? NSApp.keyWindow ?? NSApp.mainWindow
@@ -10091,7 +10092,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             // event through the global shortcut handler first.
             if let targetWindow = [targetWindow, NSApp.keyWindow]
                 .compactMap({ $0 })
-                .first(where: { $0.identifier?.rawValue == "cmux.browser-popup" }) {
+                .first(where: { $0.identifier?.rawValue == "gmux.browser-popup" }) {
 #if DEBUG
                 dlog("shortcut.cmdW route=browserPopup")
 #endif
@@ -11959,7 +11960,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             return true
         }
         guard let raw = window.identifier?.rawValue else { return false }
-        return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+        return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
     }
 
     private func contextContainingTabId(_ tabId: UUID) -> MainWindowContext? {
@@ -11988,7 +11989,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func closeMainWindowContainingTabId(_ tabId: UUID) {
         guard let context = contextContainingTabId(tabId) else { return }
-        let expectedIdentifier = "cmux.main.\(context.windowId.uuidString)"
+        let expectedIdentifier = "gmux.main.\(context.windowId.uuidString)"
         let window: NSWindow? = context.window ?? NSApp.windows.first(where: { $0.identifier?.rawValue == expectedIdentifier })
         window?.performClose(nil)
     }
@@ -12036,7 +12037,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     private func openNotificationInContext(_ context: MainWindowContext, tabId: UUID, surfaceId: UUID?, notificationId: UUID?) -> Bool {
-        let expectedIdentifier = "cmux.main.\(context.windowId.uuidString)"
+        let expectedIdentifier = "gmux.main.\(context.windowId.uuidString)"
         let window: NSWindow? = context.window ?? NSApp.windows.first(where: { $0.identifier?.rawValue == expectedIdentifier })
         guard let window else {
 #if DEBUG
@@ -12307,7 +12308,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 @MainActor
 final class MenuBarExtraController: NSObject, NSMenuDelegate {
     private let statusItem: NSStatusItem
-    private let menu = NSMenu(title: "cmux")
+    private let menu = NSMenu(title: "Gmux")
     private let notificationStore: TerminalNotificationStore
     private let onShowNotifications: () -> Void
     private let onOpenNotification: (TerminalNotification) -> Void
@@ -12328,7 +12329,7 @@ final class MenuBarExtraController: NSObject, NSMenuDelegate {
     private let clearAllItem = NSMenuItem(title: String(localized: "statusMenu.clearAll", defaultValue: "Clear All"), action: nil, keyEquivalent: "")
     private let checkForUpdatesItem = NSMenuItem(title: String(localized: "menu.checkForUpdates", defaultValue: "Check for Updates…"), action: nil, keyEquivalent: "")
     private let preferencesItem = NSMenuItem(title: String(localized: "menu.preferences", defaultValue: "Preferences…"), action: nil, keyEquivalent: "")
-    private let quitItem = NSMenuItem(title: String(localized: "menu.quitCmux", defaultValue: "Quit cmux"), action: nil, keyEquivalent: "")
+    private let quitItem = NSMenuItem(title: String(localized: "menu.quitGmux", defaultValue: "Quit Gmux"), action: nil, keyEquivalent: "")
 
     private var notificationItems: [NSMenuItem] = []
     private let maxInlineNotificationItems = 6
@@ -12359,7 +12360,7 @@ final class MenuBarExtraController: NSObject, NSMenuDelegate {
             button.imagePosition = .imageOnly
             button.imageScaling = .scaleProportionallyDown
             button.image = MenuBarIconRenderer.makeImage(unreadCount: 0)
-            button.toolTip = "cmux"
+            button.toolTip = "Gmux"
         }
 
         notificationsCancellable = notificationStore.$notifications
@@ -12463,10 +12464,10 @@ final class MenuBarExtraController: NSObject, NSMenuDelegate {
         if let button = statusItem.button {
             button.image = MenuBarIconRenderer.makeImage(unreadCount: displayedUnreadCount)
             button.toolTip = displayedUnreadCount == 0
-                ? "cmux"
+                ? "Gmux"
                 : displayedUnreadCount == 1
-                    ? "cmux: " + String(localized: "statusMenu.tooltip.unread.one", defaultValue: "1 unread notification")
-                    : "cmux: " + String(localized: "statusMenu.tooltip.unread.other", defaultValue: "\(displayedUnreadCount) unread notifications")
+                    ? "Gmux: " + String(localized: "statusMenu.tooltip.unread.one", defaultValue: "1 unread notification")
+                    : "Gmux: " + String(localized: "statusMenu.tooltip.unread.other", defaultValue: "\(displayedUnreadCount) unread notifications")
         }
     }
 
@@ -12734,7 +12735,7 @@ enum MenuBarBuildHintFormatter {
     ) -> String? {
         guard isDebugBuild else { return nil }
         let normalized = appName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let prefix = "cmux DEV"
+        let prefix = "Gmux DEV"
         guard normalized.hasPrefix(prefix) else { return "Build: DEV" }
 
         let suffix = String(normalized.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)

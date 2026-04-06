@@ -516,12 +516,12 @@ final class CmuxCommandIdentityTests: XCTestCase {
 
     func testCommandIdIsDeterministic() {
         let cmd = CmuxCommandDefinition(name: "Run tests", command: "test")
-        XCTAssertEqual(cmd.id, "cmux.config.command.Run%20tests")
+        XCTAssertEqual(cmd.id, "gmux.config.command.Run%20tests")
     }
 
     func testCommandIdEncodesSpecialCharacters() {
         let cmd = CmuxCommandDefinition(name: "build & deploy", command: "make")
-        XCTAssertTrue(cmd.id.hasPrefix("cmux.config.command."))
+        XCTAssertTrue(cmd.id.hasPrefix("gmux.config.command."))
         XCTAssertFalse(cmd.id.contains("&"))
         XCTAssertFalse(cmd.id.contains(" "))
     }
@@ -534,7 +534,7 @@ final class CmuxCommandIdentityTests: XCTestCase {
 
     func testCommandIdDoesNotCollideWithBuiltinPrefix() {
         let cmd = CmuxCommandDefinition(name: "palette.newWorkspace", command: "echo")
-        XCTAssertTrue(cmd.id.hasPrefix("cmux.config.command."))
+        XCTAssertTrue(cmd.id.hasPrefix("gmux.config.command."))
         XCTAssertNotEqual(cmd.id, "palette.newWorkspace")
     }
 }

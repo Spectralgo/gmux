@@ -909,7 +909,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
                 backing: .buffered,
                 defer: false
             )
-            orphanWindow?.identifier = NSUserInterfaceItemIdentifier("cmux.main.\(orphanWindowId.uuidString)")
+            orphanWindow?.identifier = NSUserInterfaceItemIdentifier("gmux.main.\(orphanWindowId.uuidString)")
             appDelegate.registerMainWindow(
                 orphanWindow!,
                 windowId: orphanWindowId,
@@ -952,7 +952,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
                 backing: .buffered,
                 defer: false
             )
-            orphanWindow?.identifier = NSUserInterfaceItemIdentifier("cmux.main.\(orphanWindowId.uuidString)")
+            orphanWindow?.identifier = NSUserInterfaceItemIdentifier("gmux.main.\(orphanWindowId.uuidString)")
             appDelegate.registerMainWindow(
                 orphanWindow!,
                 windowId: orphanWindowId,
@@ -1464,7 +1464,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             defer: false
         )
         auxiliaryWindow.isReleasedWhenClosed = false
-        auxiliaryWindow.identifier = NSUserInterfaceItemIdentifier("cmux.about")
+        auxiliaryWindow.identifier = NSUserInterfaceItemIdentifier("gmux.about")
         auxiliaryWindow.makeKeyAndOrderFront(nil)
         RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
 
@@ -1496,7 +1496,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         XCTAssertFalse(auxiliaryWindow.isVisible, "Cmd+W should close the auxiliary window")
         XCTAssertNotNil(self.window(withId: windowId), "Cmd+W in auxiliary window should not close the main window")
         XCTAssertEqual(manager.tabs.count, mainWorkspaceCount, "Cmd+W in auxiliary window should not close a terminal panel")
-        XCTAssertNotEqual(NSApp.keyWindow?.identifier?.rawValue, "cmux.about", "Closed auxiliary window should not remain key")
+        XCTAssertNotEqual(NSApp.keyWindow?.identifier?.rawValue, "gmux.about", "Closed auxiliary window should not remain key")
     }
 
     func testCmdPhysicalIWithDvorakCharactersDoesNotTriggerShowNotifications() {
@@ -1602,7 +1602,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
 
         let hasTitlebarAccessory: () -> Bool = {
             window.titlebarAccessoryViewControllers.contains {
-                $0.view.identifier?.rawValue == "cmux.titlebarControls"
+                $0.view.identifier?.rawValue == "gmux.titlebarControls"
             }
         }
 
@@ -1744,7 +1744,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
     }
 
     func testKeyboardShortcutSettingsSetShortcutPostsSpecificChangeNotification() {
-        let notificationName = Notification.Name("cmux.keyboardShortcutSettingsDidChange")
+        let notificationName = Notification.Name("gmux.keyboardShortcutSettingsDidChange")
         let expectedAction = KeyboardShortcutSettings.Action.toggleSidebar.rawValue
         let expectation = expectation(forNotification: notificationName, object: nil) { notification in
             notification.userInfo?["action"] as? String == expectedAction
@@ -4251,7 +4251,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
     }
 
     private func window(withId windowId: UUID) -> NSWindow? {
-        let identifier = "cmux.main.\(windowId.uuidString)"
+        let identifier = "gmux.main.\(windowId.uuidString)"
         return NSApp.windows.first(where: { $0.identifier?.rawValue == identifier })
     }
 
@@ -4269,10 +4269,10 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
     private func mainWindowIds() -> Set<UUID> {
         Set(NSApp.windows.compactMap { window in
             guard let raw = window.identifier?.rawValue,
-                  raw.hasPrefix("cmux.main.") else {
+                  raw.hasPrefix("gmux.main.") else {
                 return nil
             }
-            return UUID(uuidString: String(raw.dropFirst("cmux.main.".count)))
+            return UUID(uuidString: String(raw.dropFirst("gmux.main.".count)))
         })
     }
 

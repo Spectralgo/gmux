@@ -523,7 +523,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testClaudeCodeIntegrationDefaultsToEnabledWhenUnset() {
-        let suiteName = "cmux.tests.claude-hooks.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.claude-hooks.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -537,7 +537,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testClaudeCodeIntegrationRespectsStoredPreference() {
-        let suiteName = "cmux.tests.claude-hooks.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.claude-hooks.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -554,7 +554,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testTelemetryDefaultsToEnabledWhenUnset() {
-        let suiteName = "cmux.tests.telemetry.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.telemetry.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -568,7 +568,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testTelemetryRespectsStoredPreference() {
-        let suiteName = "cmux.tests.telemetry.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.telemetry.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -1708,7 +1708,8 @@ final class RecentlyClosedBrowserStackTests: XCTestCase {
 final class SocketControlSettingsTests: XCTestCase {
     func testMigrateModeSupportsExpandedSocketModes() {
         XCTAssertEqual(SocketControlSettings.migrateMode("off"), .off)
-        XCTAssertEqual(SocketControlSettings.migrateMode("cmuxOnly"), .cmuxOnly)
+        XCTAssertEqual(SocketControlSettings.migrateMode("cmuxOnly"), .gmuxOnly)
+        XCTAssertEqual(SocketControlSettings.migrateMode("gmuxOnly"), .gmuxOnly)
         XCTAssertEqual(SocketControlSettings.migrateMode("automation"), .automation)
         XCTAssertEqual(SocketControlSettings.migrateMode("password"), .password)
         XCTAssertEqual(SocketControlSettings.migrateMode("allow-all"), .allowAll)
@@ -1720,7 +1721,7 @@ final class SocketControlSettingsTests: XCTestCase {
 
     func testSocketModePermissions() {
         XCTAssertEqual(SocketControlMode.off.socketFilePermissions, 0o600)
-        XCTAssertEqual(SocketControlMode.cmuxOnly.socketFilePermissions, 0o600)
+        XCTAssertEqual(SocketControlMode.gmuxOnly.socketFilePermissions, 0o600)
         XCTAssertEqual(SocketControlMode.automation.socketFilePermissions, 0o600)
         XCTAssertEqual(SocketControlMode.password.socketFilePermissions, 0o600)
         XCTAssertEqual(SocketControlMode.allowAll.socketFilePermissions, 0o666)

@@ -6,7 +6,7 @@ import Security
 
 enum SocketControlMode: String, CaseIterable, Identifiable {
     case off
-    case cmuxOnly
+    case gmuxOnly
     case automation
     case password
     /// Full open access (all local users/processes) with no ancestry or password gate.
@@ -14,14 +14,14 @@ enum SocketControlMode: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    static var uiCases: [SocketControlMode] { [.off, .cmuxOnly, .automation, .password, .allowAll] }
+    static var uiCases: [SocketControlMode] { [.off, .gmuxOnly, .automation, .password, .allowAll] }
 
     var displayName: String {
         switch self {
         case .off:
             return String(localized: "socketControl.off.name", defaultValue: "Off")
-        case .cmuxOnly:
-            return String(localized: "socketControl.cmuxOnly.name", defaultValue: "cmux processes only")
+        case .gmuxOnly:
+            return String(localized: "socketControl.gmuxOnly.name", defaultValue: "gmux processes only")
         case .automation:
             return String(localized: "socketControl.automation.name", defaultValue: "Automation mode")
         case .password:
@@ -35,8 +35,8 @@ enum SocketControlMode: String, CaseIterable, Identifiable {
         switch self {
         case .off:
             return String(localized: "socketControl.off.description", defaultValue: "Disable the local control socket.")
-        case .cmuxOnly:
-            return String(localized: "socketControl.cmuxOnly.description", defaultValue: "Only processes started inside cmux terminals can send commands.")
+        case .gmuxOnly:
+            return String(localized: "socketControl.gmuxOnly.description", defaultValue: "Only processes started inside gmux terminals can send commands.")
         case .automation:
             return String(localized: "socketControl.automation.description", defaultValue: "Allow external local automation clients from this macOS user (no ancestry check).")
         case .password:
@@ -50,7 +50,7 @@ enum SocketControlMode: String, CaseIterable, Identifiable {
         switch self {
         case .allowAll:
             return 0o666
-        case .off, .cmuxOnly, .automation, .password:
+        case .off, .gmuxOnly, .automation, .password:
             return 0o600
         }
     }
@@ -61,9 +61,9 @@ enum SocketControlMode: String, CaseIterable, Identifiable {
 }
 
 enum SocketControlPasswordStore {
-    static let directoryName = "cmux"
+    static let directoryName = "gmux"
     static let fileName = "socket-control-password"
-    static let didChangeNotification = Notification.Name("cmux.socketControlPasswordDidChange")
+    static let didChangeNotification = Notification.Name("gmux.socketControlPasswordDidChange")
     private static let keychainMigrationDefaultsKey = "socketControlPasswordMigrationVersion"
     private static let keychainMigrationVersion = 1
     private static let legacyKeychainService = "com.gmuxterm.app.socket-control"
@@ -81,7 +81,8 @@ enum SocketControlPasswordStore {
         allowLazyKeychainFallback: Bool = false,
         loadKeychainPassword: () -> String? = { loadLegacyPasswordFromKeychain() }
     ) -> String? {
-        if let envPassword = normalized(environment[SocketControlSettings.socketPasswordEnvKey]) {
+        if let envPassword = normalized(environment[SocketControlSettings.socketPasswordEnvKey])
+            ?? normalized(environment[SocketControlSettings.legacySocketPasswordEnvKey]) {
             return envPassword
         }
         let filePassword: String?
@@ -292,9 +293,12 @@ enum SocketControlPasswordStore {
 struct SocketControlSettings {
     static let appStorageKey = "socketControlMode"
     static let legacyEnabledKey = "socketControlEnabled"
-    static let allowSocketPathOverrideKey = "CMUX_ALLOW_SOCKET_OVERRIDE"
-    static let socketPasswordEnvKey = "CMUX_SOCKET_PASSWORD"
-    static let launchTagEnvKey = "CMUX_TAG"
+    static let allowSocketPathOverrideKey = "GMUX_ALLOW_SOCKET_OVERRIDE"
+    static let legacyAllowSocketPathOverrideKey = "CMUX_ALLOW_SOCKET_OVERRIDE"
+    static let socketPasswordEnvKey = "GMUX_SOCKET_PASSWORD"
+    static let legacySocketPasswordEnvKey = "CMUX_SOCKET_PASSWORD"
+    static let launchTagEnvKey = "GMUX_TAG"
+    static let legacyLaunchTagEnvKey = "CMUX_TAG"
     static let baseDebugBundleIdentifier = "com.gmuxterm.app.debug"
     private static let socketDirectoryName = "gmux"
     private static let stableSocketFileName = "gmux.sock"
@@ -329,8 +333,8 @@ struct SocketControlSettings {
         switch normalizeMode(raw) {
         case "off":
             return .off
-        case "cmuxonly":
-            return .cmuxOnly
+        case "cmuxonly", "gmuxonly":
+            return .gmuxOnly
         case "automation":
             return .automation
         case "password":
@@ -353,7 +357,7 @@ struct SocketControlSettings {
     }
 
     static var defaultMode: SocketControlMode {
-        return .cmuxOnly
+        return .gmuxOnly
     }
 
     private static var isDebugBuild: Bool {
@@ -367,7 +371,8 @@ struct SocketControlSettings {
     static func launchTag(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> String? {
-        guard let raw = environment[launchTagEnvKey] else { return nil }
+        let raw = environment[launchTagEnvKey] ?? environment[legacyLaunchTagEnvKey]
+        guard let raw else { return nil }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
@@ -383,7 +388,7 @@ struct SocketControlSettings {
         }
         // XCUITest launches the app as a separate process without XCTest env vars,
         // so isRunningUnderXCTest() misses it. Check for any CMUX_UI_TEST_ env var.
-        if environment.keys.contains(where: { $0.hasPrefix("CMUX_UI_TEST_") }) {
+        if environment.keys.contains(where: { $0.hasPrefix("GMUX_UI_TEST_") || $0.hasPrefix("CMUX_UI_TEST_") }) {
             return false
         }
 
@@ -441,15 +446,15 @@ struct SocketControlSettings {
             bundleIdentifier: bundleIdentifier,
             environment: environment
         ) {
-            if isTruthy(environment[allowSocketPathOverrideKey]),
-               let override = environment["CMUX_SOCKET_PATH"],
+            if isTruthy(environment[allowSocketPathOverrideKey]) || isTruthy(environment[legacyAllowSocketPathOverrideKey]),
+               let override = environment["GMUX_SOCKET_PATH"] ?? environment["CMUX_SOCKET_PATH"],
                !override.isEmpty {
                 return override
             }
             return taggedDebugPath
         }
 
-        guard let override = environment["CMUX_SOCKET_PATH"], !override.isEmpty else {
+        guard let override = environment["GMUX_SOCKET_PATH"] ?? environment["CMUX_SOCKET_PATH"], !override.isEmpty else {
             return fallback
         }
 
@@ -490,7 +495,7 @@ struct SocketControlSettings {
 
     static func userScopedStableSocketPath(currentUserID: uid_t = getuid()) -> String {
         stableSocketDirectoryURL()?
-            .appendingPathComponent("cmux-\(currentUserID).sock", isDirectory: false)
+            .appendingPathComponent("gmux-\(currentUserID).sock", isDirectory: false)
             .path ?? "/tmp/gmux-\(currentUserID).sock"
     }
 
@@ -521,7 +526,7 @@ struct SocketControlSettings {
         bundleIdentifier: String?,
         isDebugBuild: Bool
     ) -> Bool {
-        if isTruthy(environment[allowSocketPathOverrideKey]) {
+        if isTruthy(environment[allowSocketPathOverrideKey]) || isTruthy(environment[legacyAllowSocketPathOverrideKey]) {
             return true
         }
         if isDebugLikeBundleIdentifier(bundleIdentifier) || isStagingBundleIdentifier(bundleIdentifier) {
@@ -637,7 +642,7 @@ struct SocketControlSettings {
     static func envOverrideEnabled(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool? {
-        guard let raw = environment["CMUX_SOCKET_ENABLE"], !raw.isEmpty else {
+        guard let raw = environment["GMUX_SOCKET_ENABLE"] ?? environment["CMUX_SOCKET_ENABLE"], !raw.isEmpty else {
             return nil
         }
 
@@ -654,7 +659,7 @@ struct SocketControlSettings {
     static func envOverrideMode(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> SocketControlMode? {
-        guard let raw = environment["CMUX_SOCKET_MODE"], !raw.isEmpty else {
+        guard let raw = environment["GMUX_SOCKET_MODE"] ?? environment["CMUX_SOCKET_MODE"], !raw.isEmpty else {
             return nil
         }
         return parseMode(raw)
@@ -671,7 +676,7 @@ struct SocketControlSettings {
             if let overrideMode = envOverrideMode(environment: environment) {
                 return overrideMode
             }
-            return userMode == .off ? .cmuxOnly : userMode
+            return userMode == .off ? .gmuxOnly : userMode
         }
 
         if let overrideMode = envOverrideMode(environment: environment) {

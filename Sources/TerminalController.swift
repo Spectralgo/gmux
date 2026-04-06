@@ -5,11 +5,11 @@ import Bonsplit
 import WebKit
 
 extension Notification.Name {
-    static let socketListenerDidStart = Notification.Name("cmux.socketListenerDidStart")
-    static let terminalSurfaceDidBecomeReady = Notification.Name("cmux.terminalSurfaceDidBecomeReady")
-    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("cmux.terminalSurfaceHostedViewDidMoveToWindow")
-    static let mainWindowContextsDidChange = Notification.Name("cmux.mainWindowContextsDidChange")
-    static let browserDownloadEventDidArrive = Notification.Name("cmux.browserDownloadEventDidArrive")
+    static let socketListenerDidStart = Notification.Name("gmux.socketListenerDidStart")
+    static let terminalSurfaceDidBecomeReady = Notification.Name("gmux.terminalSurfaceDidBecomeReady")
+    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("gmux.terminalSurfaceHostedViewDidMoveToWindow")
+    static let mainWindowContextsDidChange = Notification.Name("gmux.mainWindowContextsDidChange")
+    static let browserDownloadEventDidArrive = Notification.Name("gmux.browserDownloadEventDidArrive")
 }
 
 /// Unix socket-based controller for programmatic terminal control
@@ -50,7 +50,7 @@ class TerminalController {
     private nonisolated let listenerStateLock = NSLock()
     private var clientHandlers: [Int32: Thread] = [:]
     private var tabManager: TabManager?
-    private var accessMode: SocketControlMode = .cmuxOnly
+    private var accessMode: SocketControlMode = .gmuxOnly
     private let myPid = getpid()
     private nonisolated(unsafe) static var socketCommandPolicyDepth: Int = 0
     private nonisolated(unsafe) static var socketCommandFocusAllowanceStack: [Bool] = []
@@ -1604,9 +1604,9 @@ class TerminalController {
     private func handleClient(_ socket: Int32, peerPid: pid_t? = nil) {
         defer { close(socket) }
 
-        // In cmuxOnly mode, verify the connecting process is a descendant of cmux.
+        // In gmuxOnly mode, verify the connecting process is a descendant of gmux.
         // In allowAll mode (env-var only), skip the ancestry check.
-        if accessMode == .cmuxOnly {
+        if accessMode == .gmuxOnly {
             // Use pre-captured peer PID if available (captured in accept loop before
             // the peer can disconnect), falling back to live lookup.
             let pid = peerPid ?? getPeerPid(socket)
@@ -5485,7 +5485,7 @@ class TerminalController {
                 }
 
                 guard let raw = window.identifier?.rawValue else { return (nil, nil) }
-                let prefix = "cmux.main."
+                let prefix = "gmux.main."
                 guard raw.hasPrefix(prefix),
                       let parsedWindowId = UUID(uuidString: String(raw.dropFirst(prefix.count))) else {
                     return (nil, nil)
@@ -11641,7 +11641,7 @@ class TerminalController {
             NSApp.unhide(nil)
             let hasMainTerminalWindow = NSApp.windows.contains { window in
                 guard let raw = window.identifier?.rawValue else { return false }
-                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
             }
 
             if !hasMainTerminalWindow {
@@ -11652,7 +11652,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
                 })
                 ?? NSApp.windows.first {
                 window.makeKeyAndOrderFront(nil)
@@ -11994,7 +11994,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -12035,7 +12035,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }

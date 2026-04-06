@@ -956,8 +956,8 @@ final class FileDropOverlayView: NSView {
 var fileDropOverlayKey: UInt8 = 0
 private var commandPaletteWindowOverlayKey: UInt8 = 0
 private var tmuxWorkspacePaneWindowOverlayKey: UInt8 = 0
-let commandPaletteOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("cmux.commandPalette.overlay.container")
-let tmuxWorkspacePaneOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("cmux.tmuxWorkspacePane.overlay.container")
+let commandPaletteOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("gmux.commandPalette.overlay.container")
+let tmuxWorkspacePaneOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("gmux.tmuxWorkspacePane.overlay.container")
 
 enum CommandPaletteOverlayPromotionPolicy {
     static func shouldPromote(previouslyVisible: Bool, isVisible: Bool) -> Bool {
@@ -2702,7 +2702,7 @@ struct ContentView: View {
     @AppStorage("debugTitlebarLeadingExtra") private var debugTitlebarLeadingExtra: Double = 0
 
     @State private var titlebarLeadingInset: CGFloat = 12
-    private var windowIdentifier: String { "cmux.main.\(windowId.uuidString)" }
+    private var windowIdentifier: String { "gmux.main.\(windowId.uuidString)" }
     private var fakeTitlebarTextColor: Color {
         _ = titlebarThemeGeneration
         let ghosttyBackground = GhosttyApp.shared.defaultBackgroundColor
@@ -3742,7 +3742,7 @@ struct ContentView: View {
     }
 
     private func setTitlebarControlsHidden(_ hidden: Bool, in window: NSWindow) {
-        let controlsId = NSUserInterfaceItemIdentifier("cmux.titlebarControls")
+        let controlsId = NSUserInterfaceItemIdentifier("gmux.titlebarControls")
         for accessory in window.titlebarAccessoryViewControllers {
             if accessory.view.identifier == controlsId {
                 accessory.isHidden = hidden
@@ -7046,7 +7046,7 @@ struct ContentView: View {
             )
         )
 
-        let cmuxConfigDefaultSubtitle = constant(String(localized: "command.cmuxConfig.subtitle", defaultValue: "cmux.json"))
+        let cmuxConfigDefaultSubtitle = constant(String(localized: "command.cmuxConfig.subtitle", defaultValue: "gmux.json"))
         for command in cmuxConfigStore.loadedCommands {
             let commandName = sanitizeCmuxConfigPaletteText(command.name)
             let subtitle = command.description
@@ -10575,8 +10575,8 @@ private enum FeedbackComposerClient {
 }
 
 enum SidebarDragLifecycleNotification {
-    static let stateDidChange = Notification.Name("cmux.sidebarDragStateDidChange")
-    static let requestClear = Notification.Name("cmux.sidebarDragRequestClear")
+    static let stateDidChange = Notification.Name("gmux.sidebarDragStateDidChange")
+    static let requestClear = Notification.Name("gmux.sidebarDragRequestClear")
     static let tabIdKey = "tabId"
     static let reasonKey = "reason"
 
@@ -14562,7 +14562,7 @@ private enum SidebarTabDragPayload {
     static let typeIdentifier = "com.cmux.sidebar-tab-reorder"
     static let dropContentType = UTType(exportedAs: typeIdentifier)
     static let dropContentTypes: [UTType] = [dropContentType]
-    private static let prefix = "cmux.sidebar-tab."
+    private static let prefix = "gmux.sidebar-tab."
 
     static func provider(for tabId: UUID) -> NSItemProvider {
         let provider = NSItemProvider()

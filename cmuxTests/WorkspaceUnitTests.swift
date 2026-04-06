@@ -323,7 +323,7 @@ final class WorkspaceRenameShortcutDefaultsTests: XCTestCase {
 
 final class KeyboardShortcutSettingsFileStoreTests: XCTestCase {
     private var originalSettingsFileStore: KeyboardShortcutSettingsFileStore!
-    private let settingsFileBackupsDefaultsKey = "cmux.settingsFile.backups.v1"
+    private let settingsFileBackupsDefaultsKey = "gmux.settingsFile.backups.v1"
 
     override func setUp() {
         super.setUp()

@@ -958,9 +958,9 @@ final class MultiWindowNotificationsUITests: XCTestCase {
 
     private func stableSocketPath() -> String {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("cmux", isDirectory: true)
-            .appendingPathComponent("cmux.sock", isDirectory: false)
-            .path ?? "/tmp/cmux.sock"
+            .appendingPathComponent("gmux", isDirectory: true)
+            .appendingPathComponent("gmux.sock", isDirectory: false)
+            .path ?? "/tmp/gmux.sock"
     }
 
     private func socketMatchesRequiredWorkspace(_ candidatePath: String, workspaceId: String?) -> Bool {

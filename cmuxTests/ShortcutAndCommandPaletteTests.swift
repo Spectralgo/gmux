@@ -531,7 +531,7 @@ final class CommandPaletteRestoreFocusStateMachineTests: XCTestCase {
 
 
 final class CommandPaletteRenameSelectionSettingsTests: XCTestCase {
-    private let suiteName = "cmux.tests.commandPaletteRenameSelection.\(UUID().uuidString)"
+    private let suiteName = "gmux.tests.commandPaletteRenameSelection.\(UUID().uuidString)"
 
     private func makeDefaults() -> UserDefaults {
         let defaults = UserDefaults(suiteName: suiteName)!

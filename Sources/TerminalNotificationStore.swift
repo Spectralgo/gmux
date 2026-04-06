@@ -616,7 +616,7 @@ enum AppFocusState {
         // Only treat the app as "focused" for notification suppression when a main terminal window
         // is key. If Settings/About/debug panels are key, we still want notifications to show.
         if let raw = keyWindow.identifier?.rawValue {
-            return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+            return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
         }
         return false
     }
@@ -839,7 +839,7 @@ final class TerminalNotificationStore: ObservableObject {
             content.categoryIdentifier = Self.categoryIdentifier
 
             let request = UNNotificationRequest(
-                identifier: "cmux.settings.test.\(UUID().uuidString)",
+                identifier: "gmux.settings.test.\(UUID().uuidString)",
                 content: content,
                 trigger: nil
             )

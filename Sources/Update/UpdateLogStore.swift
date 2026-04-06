@@ -4,7 +4,7 @@ import AppKit
 final class UpdateLogStore {
     static let shared = UpdateLogStore()
 
-    private let queue = DispatchQueue(label: "cmux.update.log")
+    private let queue = DispatchQueue(label: "gmux.update.log")
     private var entries: [String] = []
     private let maxEntries = 200
     private let logURL: URL
@@ -67,7 +67,7 @@ final class UpdateLogStore {
 final class FocusLogStore {
     static let shared = FocusLogStore()
 
-    private let queue = DispatchQueue(label: "cmux.focus.log")
+    private let queue = DispatchQueue(label: "gmux.focus.log")
     private var entries: [String] = []
     private let maxEntries = 400
     private let logURL: URL

@@ -553,12 +553,12 @@ final class CommandPaletteAllSurfacesUITests: XCTestCase {
             at: diagnosticsPath,
             timeout: 3.0
         ) { data in
-            data["keyWindowIdentifier"] == "cmux.settings" && data["settingsWindowIsKey"] == "1"
+            data["keyWindowIdentifier"] == "gmux.settings" && data["settingsWindowIsKey"] == "1"
         }
 
         XCTAssertEqual(
             diagnostics?["keyWindowIdentifier"],
-            "cmux.settings",
+            "gmux.settings",
             "Expected the Settings window to remain key after toggling minimal mode. diagnostics=\(diagnostics ?? [:])"
         )
         XCTAssertEqual(
@@ -571,7 +571,7 @@ final class CommandPaletteAllSurfacesUITests: XCTestCase {
                 at: diagnosticsPath,
                 duration: 0.8
             ) { data in
-                data["keyWindowIdentifier"] == "cmux.settings" && data["settingsWindowIsKey"] == "1"
+                data["keyWindowIdentifier"] == "gmux.settings" && data["settingsWindowIsKey"] == "1"
             },
             "Expected the Settings window to stay key after toggling minimal mode. diagnostics=\(loadDiagnostics(at: diagnosticsPath) ?? [:])"
         )

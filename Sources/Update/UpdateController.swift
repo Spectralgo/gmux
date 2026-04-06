@@ -8,7 +8,7 @@ enum UpdateSettings {
     static let automaticallyUpdateKey = "SUAutomaticallyUpdate"
     static let scheduledCheckIntervalKey = "SUScheduledCheckInterval"
     static let sendProfileInfoKey = "SUSendProfileInfo"
-    static let migrationKey = "cmux.sparkle.automaticChecksMigration.v2"
+    static let migrationKey = "gmux.sparkle.automaticChecksMigration.v2"
     static let previousDefaultScheduledCheckInterval: TimeInterval = 60 * 60 * 24
     static let scheduledCheckInterval: TimeInterval = 60 * 60
 
@@ -252,7 +252,7 @@ class UpdateController {
             if case .checking = viewModel.state {
                 viewModel.state = .error(.init(
                     error: NSError(
-                        domain: "cmux.update",
+                        domain: "gmux.update",
                         code: 1,
                         userInfo: [NSLocalizedDescriptionKey: "Updater is still starting. Try again in a moment."]
                     ),

@@ -24,7 +24,7 @@ final class CmuxSettingsFileStore {
     static let schemaURLString = "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux-settings.schema.json"
 
     private static let releaseBundleIdentifier = "com.gmuxterm.app"
-    private static let backupsDefaultsKey = "cmux.settingsFile.backups.v1"
+    private static let backupsDefaultsKey = "gmux.settingsFile.backups.v1"
     fileprivate static let trustedDirectoriesBackupIdentifier = "customCommands.trustedDirectories"
     fileprivate static let socketPasswordBackupIdentifier = "automation.socketPassword"
 
