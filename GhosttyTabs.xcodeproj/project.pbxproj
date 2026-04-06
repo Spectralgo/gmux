@@ -7,6 +7,14 @@
 	objects = {
 
 		/* Begin PBXBuildFile section */
+		GT080001 /* GasTownRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080011 /* GasTownRoot.swift */; };
+		GT080002 /* Rig.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080012 /* Rig.swift */; };
+		GT080003 /* RigConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080013 /* RigConfig.swift */; };
+		GT080004 /* RigHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080014 /* RigHealth.swift */; };
+		GT080005 /* RigInventorySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080015 /* RigInventorySnapshot.swift */; };
+		GT080006 /* RigsManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080016 /* RigsManifest.swift */; };
+		GT080007 /* RoleDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080017 /* RoleDirectory.swift */; };
+		GT080008 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080018 /* RigInventoryAdapter.swift */; };
 			A5001001 /* cmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* cmuxApp.swift */; };
 			A5001002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001012 /* ContentView.swift */; };
 			E62155868BB29FEB5DAAAF25 /* SidebarSelectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */; };
@@ -205,6 +213,14 @@
 /* End PBXContainerItemProxy section */
 
 		/* Begin PBXFileReference section */
+		GT080011 /* GasTownRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasTownRoot.swift; sourceTree = "<group>"; };
+		GT080012 /* Rig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rig.swift; sourceTree = "<group>"; };
+		GT080013 /* RigConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigConfig.swift; sourceTree = "<group>"; };
+		GT080014 /* RigHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigHealth.swift; sourceTree = "<group>"; };
+		GT080015 /* RigInventorySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventorySnapshot.swift; sourceTree = "<group>"; };
+		GT080016 /* RigsManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigsManifest.swift; sourceTree = "<group>"; };
+		GT080017 /* RoleDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDirectory.swift; sourceTree = "<group>"; };
+		GT080018 /* RigInventoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventoryAdapter.swift; sourceTree = "<group>"; };
 			A5001000 /* Gmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 			F1000002A1B2C3D4E5F60718 /* cmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 			7E7E6EF344A568AC7FEE3715 /* cmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -456,6 +472,7 @@
 			A5001041 /* Sources */ = {
 				isa = PBXGroup;
 				children = (
+					GT080020 /* GasTown */,
 					A5001011 /* cmuxApp.swift */,
 					A5001012 /* ContentView.swift */,
 					9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */,
@@ -616,6 +633,21 @@
 				path = cmuxTests;
 				sourceTree = "<group>";
 			};
+		GT080020 /* GasTown */ = {
+			isa = PBXGroup;
+			children = (
+				GT080011 /* GasTownRoot.swift */,
+				GT080012 /* Rig.swift */,
+				GT080013 /* RigConfig.swift */,
+				GT080014 /* RigHealth.swift */,
+				GT080015 /* RigInventorySnapshot.swift */,
+				GT080016 /* RigsManifest.swift */,
+				GT080017 /* RoleDirectory.swift */,
+				GT080018 /* RigInventoryAdapter.swift */,
+			);
+			path = GasTown;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -844,6 +876,14 @@
 				A5001650 /* CmuxConfig.swift in Sources */,
 			A5001652 /* CmuxConfigExecutor.swift in Sources */,
 			A5001654 /* CmuxDirectoryTrust.swift in Sources */,
+			GT080001 /* GasTownRoot.swift in Sources */,
+			GT080002 /* Rig.swift in Sources */,
+			GT080003 /* RigConfig.swift in Sources */,
+			GT080004 /* RigHealth.swift in Sources */,
+			GT080005 /* RigInventorySnapshot.swift in Sources */,
+			GT080006 /* RigsManifest.swift in Sources */,
+			GT080007 /* RoleDirectory.swift in Sources */,
+			GT080008 /* RigInventoryAdapter.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
