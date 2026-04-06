@@ -449,6 +449,7 @@ extension Workspace {
         let terminalSnapshot: SessionTerminalPanelSnapshot?
         let browserSnapshot: SessionBrowserPanelSnapshot?
         let markdownSnapshot: SessionMarkdownPanelSnapshot?
+        let convoySnapshot: SessionConvoyPanelSnapshot?
         switch panel.panelType {
         case .terminal:
             guard let terminalPanel = panel as? TerminalPanel else { return nil }
@@ -472,6 +473,7 @@ extension Workspace {
             )
             browserSnapshot = nil
             markdownSnapshot = nil
+            convoySnapshot = nil
         case .browser:
             guard let browserPanel = panel as? BrowserPanel else { return nil }
             terminalSnapshot = nil
@@ -486,11 +488,19 @@ extension Workspace {
                 forwardHistoryURLStrings: historySnapshot.forwardHistoryURLStrings
             )
             markdownSnapshot = nil
+            convoySnapshot = nil
         case .markdown:
             guard let markdownPanel = panel as? MarkdownPanel else { return nil }
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = SessionMarkdownPanelSnapshot(filePath: markdownPanel.filePath)
+            convoySnapshot = nil
+        case .convoy:
+            guard let convoyPanel = panel as? ConvoyDetailPanel else { return nil }
+            terminalSnapshot = nil
+            browserSnapshot = nil
+            markdownSnapshot = nil
+            convoySnapshot = SessionConvoyPanelSnapshot(convoyId: convoyPanel.convoyId)
         }
 
         return SessionPanelSnapshot(
@@ -506,7 +516,8 @@ extension Workspace {
             ttyName: ttyName,
             terminal: terminalSnapshot,
             browser: browserSnapshot,
-            markdown: markdownSnapshot
+            markdown: markdownSnapshot,
+            convoy: convoySnapshot
         )
     }
 
@@ -681,6 +692,17 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: markdownPanel.id)
             return markdownPanel.id
+        case .convoy:
+            guard let convoyId = snapshot.convoy?.convoyId,
+                  let convoyPanel = newConvoySurface(
+                    inPane: paneId,
+                    convoyId: convoyId,
+                    focus: false
+                  ) else {
+                return nil
+            }
+            applySessionPanelMetadata(snapshot, toPanelId: convoyPanel.id)
+            return convoyPanel.id
         }
     }
 
@@ -6719,6 +6741,7 @@ final class Workspace: Identifiable, ObservableObject {
         static let terminal = "terminal"
         static let browser = "browser"
         static let markdown = "markdown"
+        static let convoy = "convoy"
     }
 
     enum PanelShellActivityState: String {
@@ -7232,6 +7255,8 @@ final class Workspace: Identifiable, ObservableObject {
             return SurfaceKind.browser
         case .markdown:
             return SurfaceKind.markdown
+        case .convoy:
+            return SurfaceKind.convoy
         }
     }
 
@@ -9253,6 +9278,139 @@ final class Workspace: Identifiable, ObservableObject {
 
         installMarkdownPanelSubscription(markdownPanel)
         return markdownPanel
+    }
+
+    // MARK: - Convoy Panel
+
+    @discardableResult
+    func newConvoySurface(
+        inPane paneId: PaneID,
+        convoyId: String,
+        focus: Bool? = nil
+    ) -> ConvoyDetailPanel? {
+        let shouldFocusNewTab = focus ?? (bonsplitController.focusedPaneId == paneId)
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let convoyPanel = ConvoyDetailPanel(workspaceId: id, convoyId: convoyId)
+        panels[convoyPanel.id] = convoyPanel
+        panelTitles[convoyPanel.id] = convoyPanel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: convoyPanel.displayTitle,
+            icon: convoyPanel.displayIcon,
+            kind: SurfaceKind.convoy,
+            isDirty: convoyPanel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: convoyPanel.id)
+            panelTitles.removeValue(forKey: convoyPanel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = convoyPanel.id
+        if shouldFocusNewTab {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: convoyPanel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        installConvoyPanelSubscription(convoyPanel)
+        return convoyPanel
+    }
+
+    func newConvoySplit(
+        from panelId: UUID,
+        orientation: SplitOrientation,
+        insertFirst: Bool = false,
+        convoyId: String,
+        focus: Bool = true
+    ) -> ConvoyDetailPanel? {
+        guard let sourceTabId = surfaceIdFromPanelId(panelId) else { return nil }
+        var sourcePaneId: PaneID?
+        for paneId in bonsplitController.allPaneIds {
+            let tabs = bonsplitController.tabs(inPane: paneId)
+            if tabs.contains(where: { $0.id == sourceTabId }) {
+                sourcePaneId = paneId
+                break
+            }
+        }
+
+        guard let paneId = sourcePaneId else { return nil }
+
+        let convoyPanel = ConvoyDetailPanel(workspaceId: id, convoyId: convoyId)
+        panels[convoyPanel.id] = convoyPanel
+        panelTitles[convoyPanel.id] = convoyPanel.displayTitle
+
+        let newTab = Bonsplit.Tab(
+            title: convoyPanel.displayTitle,
+            icon: convoyPanel.displayIcon,
+            kind: SurfaceKind.convoy,
+            isDirty: convoyPanel.isDirty,
+            isLoading: false,
+            isPinned: false
+        )
+        surfaceIdToPanelId[newTab.id] = convoyPanel.id
+        let previousFocusedPanelId = focusedPanelId
+
+        isProgrammaticSplit = true
+        defer { isProgrammaticSplit = false }
+        guard bonsplitController.splitPane(paneId, orientation: orientation, withTab: newTab, insertFirst: insertFirst) != nil else {
+            surfaceIdToPanelId.removeValue(forKey: newTab.id)
+            panels.removeValue(forKey: convoyPanel.id)
+            panelTitles.removeValue(forKey: convoyPanel.id)
+            return nil
+        }
+
+        let previousHostedView = focusedTerminalPanel?.hostedView
+        if focus {
+            previousHostedView?.suppressReparentFocus()
+            focusPanel(convoyPanel.id)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                previousHostedView?.clearSuppressReparentFocus()
+            }
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: convoyPanel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        installConvoyPanelSubscription(convoyPanel)
+        return convoyPanel
+    }
+
+    private func installConvoyPanelSubscription(_ convoyPanel: ConvoyDetailPanel) {
+        let subscription = convoyPanel.$displayTitle
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self, weak convoyPanel] newTitle in
+                guard let self,
+                      let convoyPanel,
+                      let tabId = self.surfaceIdFromPanelId(convoyPanel.id) else { return }
+                guard let existing = self.bonsplitController.tab(tabId) else { return }
+
+                if self.panelTitles[convoyPanel.id] != newTitle {
+                    self.panelTitles[convoyPanel.id] = newTitle
+                }
+                let resolvedTitle = self.resolvedPanelTitle(panelId: convoyPanel.id, fallback: newTitle)
+                guard existing.title != resolvedTitle else { return }
+                self.bonsplitController.updateTab(
+                    tabId,
+                    title: resolvedTitle,
+                    hasCustomTitle: self.panelCustomTitles[convoyPanel.id] != nil
+                )
+            }
+        panelSubscriptions[convoyPanel.id] = subscription
     }
 
     /// Tear down all panels in this workspace, freeing their Ghostty surfaces.

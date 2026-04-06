@@ -6025,6 +6025,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.browser", defaultValue: "Browser")
         case .markdown:
             return String(localized: "commandPalette.kind.markdown", defaultValue: "Markdown")
+        case .convoy:
+            return String(localized: "commandPalette.kind.convoy", defaultValue: "Convoy")
         }
     }
 
@@ -6036,6 +6038,8 @@ struct ContentView: View {
             return ["browser", "web", "page"]
         case .markdown:
             return ["markdown", "note", "preview"]
+        case .convoy:
+            return ["convoy", "work", "issues", "tracking"]
         }
     }
 
