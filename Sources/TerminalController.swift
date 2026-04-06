@@ -2384,6 +2384,10 @@ class TerminalController {
         case "markdown.open":
             return v2Result(id: id, self.v2MarkdownOpen(params: params))
 
+        // Bead Inspector
+        case "bead.inspect":
+            return v2Result(id: id, self.v2BeadInspect(params: params))
+
         case "surface.read_text":
             return v2Result(id: id, self.v2SurfaceReadText(params: params))
 
@@ -2532,6 +2536,7 @@ class TerminalController {
             "app.focus_override.set",
             "app.simulate_active",
             "markdown.open",
+            "bead.inspect",
             "browser.open_split",
             "browser.navigate",
             "browser.back",
@@ -7675,6 +7680,81 @@ class TerminalController {
                 "target_pane_id": v2OrNull(targetPaneUUID?.uuidString),
                 "target_pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
                 "path": filePath
+            ])
+        }
+        return result
+    }
+
+    // MARK: - Bead Inspector
+
+    private func v2BeadInspect(params: [String: Any]) -> V2CallResult {
+        guard let tabManager = v2ResolveTabManager(params: params) else {
+            return .err(code: "unavailable", message: "TabManager not available", data: nil)
+        }
+        guard let beadId = v2String(params, "bead_id") else {
+            return .err(code: "invalid_params", message: "Missing 'bead_id' parameter", data: nil)
+        }
+
+        var result: V2CallResult = .err(code: "internal_error", message: "Failed to create bead inspector panel", data: nil)
+        v2MainSync {
+            guard let ws = v2ResolveWorkspace(params: params, tabManager: tabManager) else {
+                result = .err(code: "not_found", message: "Workspace not found", data: nil)
+                return
+            }
+            v2MaybeFocusWindow(for: tabManager)
+            v2MaybeSelectWorkspace(tabManager, workspace: ws)
+
+            let sourceSurfaceId = v2UUID(params, "surface_id") ?? ws.focusedPanelId
+            guard let sourceSurfaceId else {
+                result = .err(code: "not_found", message: "No focused surface to split", data: nil)
+                return
+            }
+            guard ws.panels[sourceSurfaceId] != nil else {
+                result = .err(code: "not_found", message: "Source surface not found", data: ["surface_id": sourceSurfaceId.uuidString])
+                return
+            }
+
+            let sourcePaneUUID = ws.paneId(forPanelId: sourceSurfaceId)?.id
+
+            let directionStr = v2String(params, "direction") ?? "right"
+            guard let direction = parseSplitDirection(directionStr) else {
+                result = .err(code: "invalid_params", message: "Invalid direction '\(directionStr)' (left|right|up|down)", data: nil)
+                return
+            }
+            let orientation: SplitOrientation = direction.isHorizontal ? .horizontal : .vertical
+            let insertFirst = (direction == .left || direction == .up)
+
+            let createdPanel = ws.newBeadInspectorSplit(
+                from: sourceSurfaceId,
+                orientation: orientation,
+                insertFirst: insertFirst,
+                beadId: beadId,
+                focus: v2FocusAllowed()
+            )
+
+            guard let inspectorPanelId = createdPanel?.id else {
+                result = .err(code: "internal_error", message: "Failed to create bead inspector panel", data: nil)
+                return
+            }
+
+            let targetPaneUUID = ws.paneId(forPanelId: inspectorPanelId)?.id
+            let windowId = v2ResolveWindowId(tabManager: tabManager)
+            result = .ok([
+                "window_id": v2OrNull(windowId?.uuidString),
+                "window_ref": v2Ref(kind: .window, uuid: windowId),
+                "workspace_id": ws.id.uuidString,
+                "workspace_ref": v2Ref(kind: .workspace, uuid: ws.id),
+                "pane_id": v2OrNull(targetPaneUUID?.uuidString),
+                "pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
+                "surface_id": inspectorPanelId.uuidString,
+                "surface_ref": v2Ref(kind: .surface, uuid: inspectorPanelId),
+                "source_surface_id": sourceSurfaceId.uuidString,
+                "source_surface_ref": v2Ref(kind: .surface, uuid: sourceSurfaceId),
+                "source_pane_id": v2OrNull(sourcePaneUUID?.uuidString),
+                "source_pane_ref": v2Ref(kind: .pane, uuid: sourcePaneUUID),
+                "target_pane_id": v2OrNull(targetPaneUUID?.uuidString),
+                "target_pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
+                "bead_id": beadId
             ])
         }
         return result

@@ -1,0 +1,88 @@
+import Foundation
+import Combine
+
+/// A panel that displays detailed bead information from the Beads tracking system.
+/// Fetches data via the BeadsAdapter and auto-refreshes on request.
+@MainActor
+final class BeadInspectorPanel: Panel, ObservableObject {
+    let id: UUID
+    let panelType: PanelType = .beadInspector
+
+    /// The bead ID being inspected.
+    let beadId: String
+
+    /// The workspace this panel belongs to.
+    private(set) var workspaceId: UUID
+
+    /// Current bead detail data, nil while loading or if fetch failed.
+    @Published private(set) var beadDetail: BeadDetail?
+
+    /// Whether the adapter is currently loading.
+    @Published private(set) var isLoading: Bool = true
+
+    /// Error message from the last fetch, if any.
+    @Published private(set) var errorMessage: String?
+
+    /// Title shown in the tab bar.
+    @Published private(set) var displayTitle: String = ""
+
+    /// SF Symbol icon for the tab bar.
+    var displayIcon: String? { "doc.text.magnifyingglass" }
+
+    /// Token incremented to trigger focus flash animation.
+    @Published private(set) var focusFlashToken: Int = 0
+
+    private let adapter = BeadsAdapter()
+    private var isClosed = false
+
+    // MARK: - Init
+
+    init(workspaceId: UUID, beadId: String) {
+        self.id = UUID()
+        self.workspaceId = workspaceId
+        self.beadId = beadId
+        self.displayTitle = beadId
+
+        Task { @MainActor [weak self] in
+            await self?.refresh()
+        }
+    }
+
+    // MARK: - Panel protocol
+
+    func focus() {
+        // Bead inspector is read-only; no first responder to manage.
+    }
+
+    func unfocus() {
+        // No-op for read-only panel.
+    }
+
+    func close() {
+        isClosed = true
+    }
+
+    func triggerFlash(reason: WorkspaceAttentionFlashReason) {
+        _ = reason
+        guard NotificationPaneFlashSettings.isEnabled() else { return }
+        focusFlashToken += 1
+    }
+
+    // MARK: - Data
+
+    func refresh() async {
+        guard !isClosed else { return }
+        isLoading = true
+        errorMessage = nil
+
+        if let detail = await adapter.fetchBeadDetail(beadId: beadId) {
+            beadDetail = detail
+            displayTitle = detail.id
+        } else {
+            errorMessage = adapter.lastError
+                ?? String(localized: "beadInspector.error.unknown", defaultValue: "Failed to load bead")
+        }
+
+        isLoading = false
+    }
+}
