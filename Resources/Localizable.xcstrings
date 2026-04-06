@@ -11177,37 +11177,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't Install cmux CLI"
+            "value": "Couldn't Install gmux CLI"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI をインストールできませんでした"
+            "value": "gmux CLI をインストールできませんでした"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法安装 cmux CLI"
+            "value": "无法安装 gmux CLI"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法安裝 cmux CLI"
+            "value": "無法安裝 gmux CLI"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI를 설치할 수 없습니다"
+            "value": "gmux CLI를 설치할 수 없습니다"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI konnte nicht installiert werden"
+            "value": "gmux CLI konnte nicht installiert werden"
           }
         },
         "es": {
@@ -11231,7 +11231,7 @@
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kunne ikke installere cmux CLI"
+            "value": "Kunne ikke installere gmux CLI"
           }
         },
         "pl": {
@@ -11243,25 +11243,25 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось установить cmux CLI"
+            "value": "Не удалось установить gmux CLI"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nije moguće instalirati cmux CLI"
+            "value": "Nije moguće instalirati gmux CLI"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذر تثبيت واجهة أوامر cmux"
+            "value": "تعذر تثبيت واجهة أوامر gmux"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kunne ikke installere cmux CLI"
+            "value": "Kunne ikke installere gmux CLI"
           }
         },
         "pt-BR": {
@@ -11273,19 +11273,19 @@
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่สามารถติดตั้ง cmux CLI ได้"
+            "value": "ไม่สามารถติดตั้ง gmux CLI ได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI Yüklenemedi"
+            "value": "gmux CLI Yüklenemedi"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося встановити cmux CLI"
+            "value": "Не вдалося встановити gmux CLI"
           }
         }
       }
@@ -11296,37 +11296,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI Installed"
+            "value": "gmux CLI Installed"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI がインストールされました"
+            "value": "gmux CLI がインストールされました"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI 已安装"
+            "value": "gmux CLI 已安装"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI 已安裝"
+            "value": "gmux CLI 已安裝"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI 설치 완료"
+            "value": "gmux CLI 설치 완료"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI installiert"
+            "value": "gmux CLI installiert"
           }
         },
         "es": {
@@ -11350,7 +11350,7 @@
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI installeret"
+            "value": "gmux CLI installeret"
           }
         },
         "pl": {
@@ -11362,25 +11362,25 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI установлен"
+            "value": "gmux CLI установлен"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI instaliran"
+            "value": "gmux CLI instaliran"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تثبيت واجهة أوامر cmux"
+            "value": "تم تثبيت واجهة أوامر gmux"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI installert"
+            "value": "gmux CLI installert"
           }
         },
         "pt-BR": {
@@ -11392,19 +11392,19 @@
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ติดตั้ง cmux CLI แล้ว"
+            "value": "ติดตั้ง gmux CLI แล้ว"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI Yüklendi"
+            "value": "gmux CLI Yüklendi"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI встановлено"
+            "value": "gmux CLI встановлено"
           }
         }
       }
@@ -11534,37 +11534,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No cmux CLI symlink was found at %@."
+            "value": "No gmux CLI symlink was found at %@."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@にcmux CLIのシンボリックリンクが見つかりませんでした。"
+            "value": "%@にgmux CLIのシンボリックリンクが見つかりませんでした。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 %@ 处未找到 cmux CLI 符号链接。"
+            "value": "在 %@ 处未找到 gmux CLI 符号链接。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 %@ 找不到 cmux CLI 的符號連結。"
+            "value": "在 %@ 找不到 gmux CLI 的符號連結。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@에서 cmux CLI 심볼릭 링크를 찾을 수 없습니다."
+            "value": "%@에서 gmux CLI 심볼릭 링크를 찾을 수 없습니다."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Es wurde keine symbolische Verknüpfung für cmux CLI unter %@ gefunden."
+            "value": "Es wurde keine symbolische Verknüpfung für gmux CLI unter %@ gefunden."
           }
         },
         "es": {
@@ -11588,7 +11588,7 @@
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intet cmux CLI symbolsk link blev fundet på %@."
+            "value": "Intet gmux CLI symbolsk link blev fundet på %@."
           }
         },
         "pl": {
@@ -11600,25 +11600,25 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Символическая ссылка cmux CLI не найдена по пути %@."
+            "value": "Символическая ссылка gmux CLI не найдена по пути %@."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Simbolička veza cmux CLI nije pronađena na %@."
+            "value": "Simbolička veza gmux CLI nije pronađena na %@."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لم يتم العثور على رابط رمزي لواجهة أوامر cmux في %@."
+            "value": "لم يتم العثور على رابط رمزي لواجهة أوامر gmux في %@."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ingen cmux CLI-symbolsk lenke ble funnet på %@."
+            "value": "Ingen gmux CLI-symbolsk lenke ble funnet på %@."
           }
         },
         "pt-BR": {
@@ -11630,19 +11630,19 @@
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่พบลิงก์สัญลักษณ์ cmux CLI ที่ %@"
+            "value": "ไม่พบลิงก์สัญลักษณ์ gmux CLI ที่ %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ konumunda cmux CLI sembolik bağı bulunamadı."
+            "value": "%@ konumunda gmux CLI sembolik bağı bulunamadı."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Символічне посилання cmux CLI не знайдено за адресою %@."
+            "value": "Символічне посилання gmux CLI не знайдено за адресою %@."
           }
         }
       }
@@ -11772,37 +11772,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't Uninstall cmux CLI"
+            "value": "Couldn't Uninstall gmux CLI"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI をアンインストールできませんでした"
+            "value": "gmux CLI をアンインストールできませんでした"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法卸载 cmux CLI"
+            "value": "无法卸载 gmux CLI"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法解除安裝 cmux CLI"
+            "value": "無法解除安裝 gmux CLI"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI를 제거할 수 없습니다"
+            "value": "gmux CLI를 제거할 수 없습니다"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI konnte nicht deinstalliert werden"
+            "value": "gmux CLI konnte nicht deinstalliert werden"
           }
         },
         "es": {
@@ -11826,7 +11826,7 @@
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kunne ikke afinstallere cmux CLI"
+            "value": "Kunne ikke afinstallere gmux CLI"
           }
         },
         "pl": {
@@ -11838,25 +11838,25 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось удалить cmux CLI"
+            "value": "Не удалось удалить gmux CLI"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nije moguće deinstalirati cmux CLI"
+            "value": "Nije moguće deinstalirati gmux CLI"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذر إلغاء تثبيت واجهة أوامر cmux"
+            "value": "تعذر إلغاء تثبيت واجهة أوامر gmux"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kunne ikke avinstallere cmux CLI"
+            "value": "Kunne ikke avinstallere gmux CLI"
           }
         },
         "pt-BR": {
@@ -11868,19 +11868,19 @@
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่สามารถถอนการติดตั้ง cmux CLI ได้"
+            "value": "ไม่สามารถถอนการติดตั้ง gmux CLI ได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI Kaldırılamadı"
+            "value": "gmux CLI Kaldırılamadı"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося видалити cmux CLI"
+            "value": "Не вдалося видалити gmux CLI"
           }
         }
       }
@@ -11891,37 +11891,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI Uninstalled"
+            "value": "gmux CLI Uninstalled"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI がアンインストールされました"
+            "value": "gmux CLI がアンインストールされました"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI 已卸载"
+            "value": "gmux CLI 已卸载"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI 已解除安裝"
+            "value": "gmux CLI 已解除安裝"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI 제거 완료"
+            "value": "gmux CLI 제거 완료"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI deinstalliert"
+            "value": "gmux CLI deinstalliert"
           }
         },
         "es": {
@@ -11945,7 +11945,7 @@
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI afinstalleret"
+            "value": "gmux CLI afinstalleret"
           }
         },
         "pl": {
@@ -11957,25 +11957,25 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI удален"
+            "value": "gmux CLI удален"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI deinstaliran"
+            "value": "gmux CLI deinstaliran"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم إلغاء تثبيت واجهة أوامر cmux"
+            "value": "تم إلغاء تثبيت واجهة أوامر gmux"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI avinstallert"
+            "value": "gmux CLI avinstallert"
           }
         },
         "pt-BR": {
@@ -11987,19 +11987,19 @@
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ถอนการติดตั้ง cmux CLI แล้ว"
+            "value": "ถอนการติดตั้ง gmux CLI แล้ว"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI Kaldırıldı"
+            "value": "gmux CLI Kaldırıldı"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "cmux CLI видалено"
+            "value": "gmux CLI видалено"
           }
         }
       }
@@ -17292,61 +17292,61 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell Command: Install 'cmux' in PATH"
+            "value": "Shell Command: Install 'gmux' in PATH"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "シェルコマンド: 'cmux'をPATHにインストール"
+            "value": "シェルコマンド: 'gmux'をPATHにインストール"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell 命令：将 'cmux' 安装到 PATH"
+            "value": "Shell 命令：将 'gmux' 安装到 PATH"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell 指令：將「cmux」安裝至 PATH"
+            "value": "Shell 指令：將「gmux」安裝至 PATH"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "셸 명령어: PATH에 'cmux' 설치"
+            "value": "셸 명령어: PATH에 'gmux' 설치"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell-Befehl: 'cmux' im PATH installieren"
+            "value": "Shell-Befehl: 'gmux' im PATH installieren"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comando de shell: Instalar 'cmux' en PATH"
+            "value": "Comando de shell: Instalar 'gmux' en PATH"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commande Shell : installer « cmux » dans le PATH"
+            "value": "Commande Shell : installer « gmux » dans le PATH"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comando shell: installa 'cmux' nel PATH"
+            "value": "Comando shell: installa 'gmux' nel PATH"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skalkommando: Installer 'cmux' i PATH"
+            "value": "Skalkommando: Installer 'gmux' i PATH"
           }
         },
         "pl": {
@@ -17358,49 +17358,49 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Команда оболочки: установить «cmux» в PATH"
+            "value": "Команда оболочки: установить «gmux» в PATH"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell naredba: Instaliraj 'cmux' u PATH"
+            "value": "Shell naredba: Instaliraj 'gmux' u PATH"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أمر الصدفة: تثبيت 'cmux' في PATH"
+            "value": "أمر الصدفة: تثبيت 'gmux' في PATH"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skallkommando: Installer «cmux» i PATH"
+            "value": "Skallkommando: Installer «gmux» i PATH"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comando Shell: Instalar 'cmux' no PATH"
+            "value": "Comando Shell: Instalar 'gmux' no PATH"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คำสั่ง Shell: ติดตั้ง 'cmux' ใน PATH"
+            "value": "คำสั่ง Shell: ติดตั้ง 'gmux' ใน PATH"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kabuk Komutu: 'cmux'u PATH'e Yükle"
+            "value": "Kabuk Komutu: 'gmux'u PATH'e Yükle"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Команда оболонки: встановити 'cmux' у PATH"
+            "value": "Команда оболонки: встановити 'gmux' у PATH"
           }
         }
       }
@@ -24228,61 +24228,61 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell Command: Uninstall 'cmux' from PATH"
+            "value": "Shell Command: Uninstall 'gmux' from PATH"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "シェルコマンド: 'cmux'をPATHからアンインストール"
+            "value": "シェルコマンド: 'gmux'をPATHからアンインストール"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell 命令：从 PATH 卸载 'cmux'"
+            "value": "Shell 命令：从 PATH 卸载 'gmux'"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell 指令：從 PATH 解除安裝「cmux」"
+            "value": "Shell 指令：從 PATH 解除安裝「gmux」"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "셸 명령어: PATH에서 'cmux' 제거"
+            "value": "셸 명령어: PATH에서 'gmux' 제거"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell-Befehl: 'cmux' aus PATH entfernen"
+            "value": "Shell-Befehl: 'gmux' aus PATH entfernen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comando de shell: Desinstalar 'cmux' de PATH"
+            "value": "Comando de shell: Desinstalar 'gmux' de PATH"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commande Shell : désinstaller « cmux » du PATH"
+            "value": "Commande Shell : désinstaller « gmux » du PATH"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comando shell: disinstalla 'cmux' dal PATH"
+            "value": "Comando shell: disinstalla 'gmux' dal PATH"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skalkommando: Afinstaller 'cmux' fra PATH"
+            "value": "Skalkommando: Afinstaller 'gmux' fra PATH"
           }
         },
         "pl": {
@@ -24294,49 +24294,49 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Команда оболочки: удалить «cmux» из PATH"
+            "value": "Команда оболочки: удалить «gmux» из PATH"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shell naredba: Deinstaliraj 'cmux' iz PATH"
+            "value": "Shell naredba: Deinstaliraj 'gmux' iz PATH"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أمر الصدفة: إلغاء تثبيت 'cmux' من PATH"
+            "value": "أمر الصدفة: إلغاء تثبيت 'gmux' من PATH"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skallkommando: Avinstaller «cmux» fra PATH"
+            "value": "Skallkommando: Avinstaller «gmux» fra PATH"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comando Shell: Desinstalar 'cmux' do PATH"
+            "value": "Comando Shell: Desinstalar 'gmux' do PATH"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คำสั่ง Shell: ถอนการติดตั้ง 'cmux' จาก PATH"
+            "value": "คำสั่ง Shell: ถอนการติดตั้ง 'gmux' จาก PATH"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kabuk Komutu: 'cmux'u PATH'ten Kaldır"
+            "value": "Kabuk Komutu: 'gmux'u PATH'ten Kaldır"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Команда оболонки: видалити 'cmux' з PATH"
+            "value": "Команда оболонки: видалити 'gmux' з PATH"
           }
         }
       }

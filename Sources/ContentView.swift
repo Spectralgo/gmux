@@ -6337,7 +6337,7 @@ struct ContentView: View {
         contributions.append(
             CommandPaletteCommandContribution(
                 commandId: "palette.installCLI",
-                title: constant(String(localized: "command.installCLI.title", defaultValue: "Shell Command: Install 'cmux' in PATH")),
+                title: constant(String(localized: "command.installCLI.title", defaultValue: "Shell Command: Install 'gmux' in PATH")),
                 subtitle: constant(String(localized: "command.installCLI.subtitle", defaultValue: "CLI")),
                 keywords: ["install", "cli", "path", "shell", "command", "symlink"],
                 when: { !$0.bool(CommandPaletteContextKeys.cliInstalledInPATH) }
@@ -6346,7 +6346,7 @@ struct ContentView: View {
         contributions.append(
             CommandPaletteCommandContribution(
                 commandId: "palette.uninstallCLI",
-                title: constant(String(localized: "command.uninstallCLI.title", defaultValue: "Shell Command: Uninstall 'cmux' from PATH")),
+                title: constant(String(localized: "command.uninstallCLI.title", defaultValue: "Shell Command: Uninstall 'gmux' from PATH")),
                 subtitle: constant(String(localized: "command.uninstallCLI.subtitle", defaultValue: "CLI")),
                 keywords: ["uninstall", "remove", "cli", "path", "shell", "command", "symlink"],
                 when: { $0.bool(CommandPaletteContextKeys.cliInstalledInPATH) }

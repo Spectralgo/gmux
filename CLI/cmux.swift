@@ -1310,11 +1310,11 @@ final class SocketClient {
         }
 
         guard let watchDirectory = existingWatchDirectory(forPath: path) else {
-            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
         }
         let watchFD = open(watchDirectory, O_EVTONLY)
         guard watchFD >= 0 else {
-            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
         }
 
         let queue = DispatchQueue(label: "com.cmux.cli.socket-watch.\(UUID().uuidString)")
@@ -1348,7 +1348,7 @@ final class SocketClient {
         guard semaphore.wait(timeout: .now() + timeout) == .success else {
             source.cancel()
             client.close()
-            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
         }
 
         source.cancel()
@@ -1733,7 +1733,7 @@ struct CMUXCLI {
             if dispatchSubcommandHelp(command: command, commandArgs: commandArgs) {
                 return
             }
-            print("Unknown command '\(command)'. Run 'cmux help' to see available commands.")
+            print("Unknown command '\(command)'. Run 'gmux help' to see available commands.")
             return
         }
 
@@ -5341,7 +5341,7 @@ struct CMUXCLI {
                 lines.append("ready_state: \(readyState)")
             }
             if url.isEmpty || url == "about:blank" {
-                lines.append("hint: run 'cmux browser <surface> get url' to verify navigation")
+                lines.append("hint: run 'gmux browser <surface> get url' to verify navigation")
             }
 
             return lines.joined(separator: "\n")
@@ -7813,8 +7813,8 @@ struct CMUXCLI {
             Manage Codex CLI hooks integration.
 
             Subcommands:
-              install-hooks     Install cmux hooks into ~/.codex/hooks.json
-              uninstall-hooks   Remove cmux hooks from ~/.codex/hooks.json
+              install-hooks     Install gmux hooks into ~/.codex/hooks.json
+              uninstall-hooks   Remove gmux hooks from ~/.codex/hooks.json
             """
         case "codex-hook":
             return """
@@ -7897,21 +7897,21 @@ struct CMUXCLI {
             """
         // Legacy browser aliases — point users to `gmux browser --help`
         case "open-browser":
-            return "Legacy alias for 'cmux browser open'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser open'. Run 'gmux browser --help' for details."
         case "navigate":
-            return "Legacy alias for 'cmux browser navigate'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser navigate'. Run 'gmux browser --help' for details."
         case "browser-back":
-            return "Legacy alias for 'cmux browser back'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser back'. Run 'gmux browser --help' for details."
         case "browser-forward":
-            return "Legacy alias for 'cmux browser forward'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser forward'. Run 'gmux browser --help' for details."
         case "browser-reload":
-            return "Legacy alias for 'cmux browser reload'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser reload'. Run 'gmux browser --help' for details."
         case "get-url":
-            return "Legacy alias for 'cmux browser get-url'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser get-url'. Run 'gmux browser --help' for details."
         case "focus-webview":
-            return "Legacy alias for 'cmux browser focus-webview'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser focus-webview'. Run 'gmux browser --help' for details."
         case "is-webview-focused":
-            return "Legacy alias for 'cmux browser is-webview-focused'. Run 'cmux browser --help' for details."
+            return "Legacy alias for 'gmux browser is-webview-focused'. Run 'gmux browser --help' for details."
         case "markdown":
             return """
             Usage: gmux markdown open <path> [options]
@@ -8148,7 +8148,7 @@ struct CMUXCLI {
             try runThemesClear(jsonOutput: jsonOutput)
         default:
             if subcommand.hasPrefix("-") {
-                throw CLIError(message: "Unknown themes subcommand '\(subcommand)'. Run 'cmux themes --help'.")
+                throw CLIError(message: "Unknown themes subcommand '\(subcommand)'. Run 'gmux themes --help'.")
             }
 
             try runThemesSet(
@@ -8485,7 +8485,7 @@ struct CMUXCLI {
         if availableThemes.isEmpty {
             return trimmed
         }
-        throw CLIError(message: "Unknown theme '\(trimmed)'. Run 'cmux themes' to list available themes.")
+        throw CLIError(message: "Unknown theme '\(trimmed)'. Run 'gmux themes' to list available themes.")
     }
 
     private func themeConfigSearchURLs() -> [URL] {
@@ -10873,7 +10873,7 @@ struct CMUXCLI {
             try? checkProcess.run()
             checkProcess.waitUntilExit()
             if checkProcess.terminationStatus != 0 {
-                throw CLIError(message: "opencode is not installed. Install it first:\n  npm install -g opencode-ai\n  # or\n  bun install -g opencode-ai\n\nThen run: cmux omo")
+                throw CLIError(message: "opencode is not installed. Install it first:\n  npm install -g opencode-ai\n  # or\n  bun install -g opencode-ai\n\nThen run: gmux omo")
             }
         }
 
@@ -10944,7 +10944,7 @@ struct CMUXCLI {
                 boolFlags: ["-A", "-d", "-P"]
             )
             if parsed.hasFlag("-A") {
-                throw CLIError(message: "new-session -A is not supported in cmux claude-teams mode")
+                throw CLIError(message: "new-session -A is not supported in gmux claude-teams mode")
             }
             var params: [String: Any] = ["focus": false]
             if let cwd = parsed.value("-c") {
@@ -10981,7 +10981,7 @@ struct CMUXCLI {
                 boolFlags: ["-d", "-P"]
             )
             if parsed.value("-t") != nil {
-                throw CLIError(message: "new-window -t is not supported in cmux claude-teams mode")
+                throw CLIError(message: "new-window -t is not supported in gmux claude-teams mode")
             }
             var params: [String: Any] = ["focus": false]
             if let cwd = parsed.value("-c") {
@@ -11914,10 +11914,10 @@ struct CMUXCLI {
             print("OK")
 
         case "popup":
-            throw CLIError(message: "popup is not supported yet in cmux CLI parity mode")
+            throw CLIError(message: "popup is not supported yet in gmux CLI parity mode")
 
         case "bind-key", "unbind-key", "copy-mode":
-            throw CLIError(message: "\(command) is not supported yet in cmux CLI parity mode")
+            throw CLIError(message: "\(command) is not supported yet in gmux CLI parity mode")
 
         case "set-buffer":
             let (nameArg, rem0) = parseOption(commandArgs, name: "--name")
@@ -13156,8 +13156,8 @@ struct CMUXCLI {
         }
 
         print("")
-        print("Installed. Hooks activate inside cmux and silently no-op elsewhere.")
-        print("To remove: cmux codex uninstall-hooks")
+        print("Installed. Hooks activate inside gmux and silently no-op elsewhere.")
+        print("To remove: gmux codex uninstall-hooks")
     }
 
     private func runCodexUninstallHooks() throws {
@@ -13208,7 +13208,7 @@ struct CMUXCLI {
         let configChanged = existingConfigContent != newConfigContent
 
         if removedCount == 0 && !configChanged {
-            print("No cmux hooks found.")
+            print("No gmux hooks found.")
             return
         }
 
@@ -13245,7 +13245,7 @@ struct CMUXCLI {
         if configChanged {
             try newConfigContent.write(toFile: configPath, atomically: true, encoding: .utf8)
         }
-        print("Removed cmux Codex hooks.")
+        print("Removed gmux Codex hooks.")
     }
 
     /// Print a unified-diff-style view with context lines and line numbers.
@@ -13730,9 +13730,9 @@ struct CMUXCLI {
         print("  \(bold)GitHub\(reset)\(subdued)              https://github.com/manaflow-ai/cmux (please leave a star ⭐)\(reset)")
         print("  \(bold)Email\(reset)\(subdued)               founders@manaflow.com\(reset)")
         print()
-        print("  \(subdued)Run \(reset)\(bold)cmux --help\(reset)\(subdued) for all commands.\(reset)")
-        print("  \(subdued)Run \(reset)\(bold)cmux shortcuts\(reset)\(subdued) to edit shortcuts.\(reset)")
-        print("  \(subdued)Run \(reset)\(bold)cmux feedback\(reset)\(subdued) to report a bug.\(reset)")
+        print("  \(subdued)Run \(reset)\(bold)gmux --help\(reset)\(subdued) for all commands.\(reset)")
+        print("  \(subdued)Run \(reset)\(bold)gmux shortcuts\(reset)\(subdued) to edit shortcuts.\(reset)")
+        print("  \(subdued)Run \(reset)\(bold)gmux feedback\(reset)\(subdued) to report a bug.\(reset)")
         print()
     }
 
