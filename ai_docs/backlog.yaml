@@ -119,7 +119,11 @@
         "Release packaging and CLI install flows present Gmux as a separate product.",
         "ai_docs is the canonical roadmap and GitHub artifacts sync from it."
       ],
-      "doc": "ai_docs/milestones/M0-fork-completion-and-spec-infrastructure.md"
+      "doc": "ai_docs/milestones/M0-fork-completion-and-spec-infrastructure.md",
+      "github": {
+        "number": 1,
+        "url": "https://github.com/Spectralgo/gmux/milestone/1"
+      }
     },
     {
       "id": "M1",
@@ -130,7 +134,11 @@
         "Agent identities resolve into stable worktree targets.",
         "Beads and hooks data are available through normalized app adapters."
       ],
-      "doc": "ai_docs/milestones/M1-gastown-discovery-and-domain-foundation.md"
+      "doc": "ai_docs/milestones/M1-gastown-discovery-and-domain-foundation.md",
+      "github": {
+        "number": 2,
+        "url": "https://github.com/Spectralgo/gmux/milestone/2"
+      }
     },
     {
       "id": "M2",
@@ -141,7 +149,11 @@
         "Ready-work and bead detail surfaces are available in-product.",
         "Alerts and open flows can jump into the correct context."
       ],
-      "doc": "ai_docs/milestones/M2-operator-cockpit-mvp.md"
+      "doc": "ai_docs/milestones/M2-operator-cockpit-mvp.md",
+      "github": {
+        "number": 3,
+        "url": "https://github.com/Spectralgo/gmux/milestone/3"
+      }
     },
     {
       "id": "M3",
@@ -152,7 +164,11 @@
         "CLI and socket surfaces cover the main operator flows.",
         "Mail and inbox routing can reopen the relevant work context."
       ],
-      "doc": "ai_docs/milestones/M3-automation-hooks-and-write-actions.md"
+      "doc": "ai_docs/milestones/M3-automation-hooks-and-write-actions.md",
+      "github": {
+        "number": 4,
+        "url": "https://github.com/Spectralgo/gmux/milestone/4"
+      }
     },
     {
       "id": "M4",
@@ -163,7 +179,11 @@
         "Persistent terminal and review surfaces are available with clear tradeoffs.",
         "MCP and multi-profile platform boundaries are defined and isolated."
       ],
-      "doc": "ai_docs/milestones/M4-persistence-review-and-advanced-integrations.md"
+      "doc": "ai_docs/milestones/M4-persistence-review-and-advanced-integrations.md",
+      "github": {
+        "number": 5,
+        "url": "https://github.com/Spectralgo/gmux/milestone/5"
+      }
     }
   ],
   "epics": [
@@ -194,7 +214,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-001-gmux-runtime-identity-completion.md"
+      "doc": "ai_docs/epics/EPIC-001-gmux-runtime-identity-completion.md",
+      "github": {
+        "issue_number": 1,
+        "url": "https://github.com/Spectralgo/gmux/issues/1"
+      }
     },
     {
       "id": "EPIC-002",
@@ -223,7 +247,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-002-gmux-distribution-and-release-identity.md"
+      "doc": "ai_docs/epics/EPIC-002-gmux-distribution-and-release-identity.md",
+      "github": {
+        "issue_number": 2,
+        "url": "https://github.com/Spectralgo/gmux/issues/2"
+      }
     },
     {
       "id": "EPIC-003",
@@ -251,7 +279,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-003-spec-driven-delivery-infrastructure.md"
+      "doc": "ai_docs/epics/EPIC-003-spec-driven-delivery-infrastructure.md",
+      "github": {
+        "issue_number": 3,
+        "url": "https://github.com/Spectralgo/gmux/issues/3"
+      }
     },
     {
       "id": "EPIC-004",
@@ -279,7 +311,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-004-town-discovery-and-rig-inventory.md"
+      "doc": "ai_docs/epics/EPIC-004-town-discovery-and-rig-inventory.md",
+      "github": {
+        "issue_number": 4,
+        "url": "https://github.com/Spectralgo/gmux/issues/4"
+      }
     },
     {
       "id": "EPIC-005",
@@ -307,7 +343,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md"
+      "doc": "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md",
+      "github": {
+        "issue_number": 5,
+        "url": "https://github.com/Spectralgo/gmux/issues/5"
+      }
     },
     {
       "id": "EPIC-006",
@@ -336,7 +376,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md"
+      "doc": "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md",
+      "github": {
+        "issue_number": 6,
+        "url": "https://github.com/Spectralgo/gmux/issues/6"
+      }
     },
     {
       "id": "EPIC-007",
@@ -364,7 +408,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md"
+      "doc": "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md",
+      "github": {
+        "issue_number": 7,
+        "url": "https://github.com/Spectralgo/gmux/issues/7"
+      }
     },
     {
       "id": "EPIC-008",
@@ -392,7 +440,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md"
+      "doc": "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md",
+      "github": {
+        "issue_number": 8,
+        "url": "https://github.com/Spectralgo/gmux/issues/8"
+      }
     },
     {
       "id": "EPIC-009",
@@ -421,7 +473,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md"
+      "doc": "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md",
+      "github": {
+        "issue_number": 9,
+        "url": "https://github.com/Spectralgo/gmux/issues/9"
+      }
     },
     {
       "id": "EPIC-010",
@@ -450,7 +506,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
+      "doc": "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md",
+      "github": {
+        "issue_number": 10,
+        "url": "https://github.com/Spectralgo/gmux/issues/10"
+      }
     },
     {
       "id": "EPIC-011",
@@ -479,7 +539,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md"
+      "doc": "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md",
+      "github": {
+        "issue_number": 11,
+        "url": "https://github.com/Spectralgo/gmux/issues/11"
+      }
     },
     {
       "id": "EPIC-012",
@@ -507,7 +571,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md"
+      "doc": "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md",
+      "github": {
+        "issue_number": 12,
+        "url": "https://github.com/Spectralgo/gmux/issues/12"
+      }
     },
     {
       "id": "EPIC-013",
@@ -536,7 +604,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md"
+      "doc": "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md",
+      "github": {
+        "issue_number": 13,
+        "url": "https://github.com/Spectralgo/gmux/issues/13"
+      }
     },
     {
       "id": "EPIC-014",
@@ -565,7 +637,11 @@
         "deep-research-report.md",
         "ai_docs/roadmap.md"
       ],
-      "doc": "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md"
+      "doc": "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md",
+      "github": {
+        "issue_number": 14,
+        "url": "https://github.com/Spectralgo/gmux/issues/14"
+      }
     }
   ],
   "stories": [
@@ -960,7 +1036,11 @@
         "Sources/Workspace.swift",
         "Sources/AppDelegate.swift",
         "CLI/cmux.swift"
-      ]
+      ],
+      "github": {
+        "issue_number": 15,
+        "url": "https://github.com/Spectralgo/gmux/issues/15"
+      }
     },
     {
       "id": "TASK-002",
@@ -1014,7 +1094,11 @@
       "references": [
         "scripts/reload.sh",
         "deep-research-report.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 16,
+        "url": "https://github.com/Spectralgo/gmux/issues/16"
+      }
     },
     {
       "id": "TASK-003",
@@ -1067,7 +1151,11 @@
         "scripts/build-sign-upload.sh",
         "homebrew-cmux/Casks/cmux.rb",
         "README.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 17,
+        "url": "https://github.com/Spectralgo/gmux/issues/17"
+      }
     },
     {
       "id": "TASK-004",
@@ -1123,7 +1211,11 @@
         "Sources/AppDelegate.swift",
         "GhosttyTabs.xcodeproj/project.pbxproj",
         "CLI/cmux.swift"
-      ]
+      ],
+      "github": {
+        "issue_number": 18,
+        "url": "https://github.com/Spectralgo/gmux/issues/18"
+      }
     },
     {
       "id": "TASK-005",
@@ -1176,7 +1268,11 @@
         "ai_docs/README.md",
         "ai_docs/roadmap.md",
         "deep-research-report.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 19,
+        "url": "https://github.com/Spectralgo/gmux/issues/19"
+      }
     },
     {
       "id": "TASK-006",
@@ -1231,7 +1327,11 @@
         "scripts/sync-ai-docs.mjs",
         "package.json",
         "ai_docs/backlog.yaml"
-      ]
+      ],
+      "github": {
+        "issue_number": 20,
+        "url": "https://github.com/Spectralgo/gmux/issues/20"
+      }
     },
     {
       "id": "TASK-007",
@@ -1283,7 +1383,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/roadmap.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 21,
+        "url": "https://github.com/Spectralgo/gmux/issues/21"
+      }
     },
     {
       "id": "TASK-008",
@@ -1337,7 +1441,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-004-town-discovery-and-rig-inventory.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 22,
+        "url": "https://github.com/Spectralgo/gmux/issues/22"
+      }
     },
     {
       "id": "TASK-009",
@@ -1392,7 +1500,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 23,
+        "url": "https://github.com/Spectralgo/gmux/issues/23"
+      }
     },
     {
       "id": "TASK-010",
@@ -1447,7 +1559,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-005-agent-and-worktree-resolution.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 24,
+        "url": "https://github.com/Spectralgo/gmux/issues/24"
+      }
     },
     {
       "id": "TASK-011",
@@ -1501,7 +1617,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 25,
+        "url": "https://github.com/Spectralgo/gmux/issues/25"
+      }
     },
     {
       "id": "TASK-012",
@@ -1556,7 +1676,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-006-read-only-beads-and-hooks-ingestion.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 26,
+        "url": "https://github.com/Spectralgo/gmux/issues/26"
+      }
     },
     {
       "id": "TASK-013",
@@ -1611,7 +1735,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 27,
+        "url": "https://github.com/Spectralgo/gmux/issues/27"
+      }
     },
     {
       "id": "TASK-014",
@@ -1667,7 +1795,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-007-convoy-cockpit-mvp.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 28,
+        "url": "https://github.com/Spectralgo/gmux/issues/28"
+      }
     },
     {
       "id": "TASK-015",
@@ -1721,7 +1853,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 29,
+        "url": "https://github.com/Spectralgo/gmux/issues/29"
+      }
     },
     {
       "id": "TASK-016",
@@ -1776,7 +1912,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-008-bead-inspector-and-ready-work-surfaces.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 30,
+        "url": "https://github.com/Spectralgo/gmux/issues/30"
+      }
     },
     {
       "id": "TASK-017",
@@ -1832,7 +1972,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 31,
+        "url": "https://github.com/Spectralgo/gmux/issues/31"
+      }
     },
     {
       "id": "TASK-018",
@@ -1887,7 +2031,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-009-attention-routing-and-contextual-open-flows.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 32,
+        "url": "https://github.com/Spectralgo/gmux/issues/32"
+      }
     },
     {
       "id": "TASK-019",
@@ -1941,7 +2089,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 33,
+        "url": "https://github.com/Spectralgo/gmux/issues/33"
+      }
     },
     {
       "id": "TASK-020",
@@ -1997,7 +2149,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-010-hooks-and-bead-write-actions.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 34,
+        "url": "https://github.com/Spectralgo/gmux/issues/34"
+      }
     },
     {
       "id": "TASK-021",
@@ -2056,7 +2212,11 @@
         "CLI/cmux.swift",
         "deep-research-report.md",
         "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 35,
+        "url": "https://github.com/Spectralgo/gmux/issues/35"
+      }
     },
     {
       "id": "TASK-022",
@@ -2113,7 +2273,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-011-automation-surface-and-mail-workflow.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 36,
+        "url": "https://github.com/Spectralgo/gmux/issues/36"
+      }
     },
     {
       "id": "TASK-023",
@@ -2167,7 +2331,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 37,
+        "url": "https://github.com/Spectralgo/gmux/issues/37"
+      }
     },
     {
       "id": "TASK-024",
@@ -2223,7 +2391,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-012-session-persistence-and-semantic-resume.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 38,
+        "url": "https://github.com/Spectralgo/gmux/issues/38"
+      }
     },
     {
       "id": "TASK-025",
@@ -2277,7 +2449,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 39,
+        "url": "https://github.com/Spectralgo/gmux/issues/39"
+      }
     },
     {
       "id": "TASK-026",
@@ -2331,7 +2507,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-013-persistent-terminal-modes-and-review-ux.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 40,
+        "url": "https://github.com/Spectralgo/gmux/issues/40"
+      }
     },
     {
       "id": "TASK-027",
@@ -2387,7 +2567,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 41,
+        "url": "https://github.com/Spectralgo/gmux/issues/41"
+      }
     },
     {
       "id": "TASK-028",
@@ -2444,7 +2628,11 @@
       "references": [
         "deep-research-report.md",
         "ai_docs/epics/EPIC-014-mcp-and-multi-profile-foundation.md"
-      ]
+      ],
+      "github": {
+        "issue_number": 42,
+        "url": "https://github.com/Spectralgo/gmux/issues/42"
+      }
     }
   ]
 }
