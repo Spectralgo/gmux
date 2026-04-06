@@ -15,6 +15,7 @@
 		GT080006 /* RigsManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080016 /* RigsManifest.swift */; };
 		GT080007 /* RoleDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080017 /* RoleDirectory.swift */; };
 		GT080008 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080018 /* RigInventoryAdapter.swift */; };
+		GT080009 /* HooksAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080019 /* HooksAdapter.swift */; };
 			A5001001 /* cmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* cmuxApp.swift */; };
 			A5001002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001012 /* ContentView.swift */; };
 			E62155868BB29FEB5DAAAF25 /* SidebarSelectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */; };
@@ -222,6 +223,7 @@
 		GT080016 /* RigsManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigsManifest.swift; sourceTree = "<group>"; };
 		GT080017 /* RoleDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDirectory.swift; sourceTree = "<group>"; };
 		GT080018 /* RigInventoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventoryAdapter.swift; sourceTree = "<group>"; };
+		GT080019 /* HooksAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksAdapter.swift; sourceTree = "<group>"; };
 			A5001000 /* Gmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 			F1000002A1B2C3D4E5F60718 /* cmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 			7E7E6EF344A568AC7FEE3715 /* cmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -647,6 +649,7 @@
 				GT080016 /* RigsManifest.swift */,
 				GT080017 /* RoleDirectory.swift */,
 				GT080018 /* RigInventoryAdapter.swift */,
+				GT080019 /* HooksAdapter.swift */,
 			);
 			path = GasTown;
 			sourceTree = "<group>";
@@ -888,6 +891,7 @@
 			GT080006 /* RigsManifest.swift in Sources */,
 			GT080007 /* RoleDirectory.swift in Sources */,
 			GT080008 /* RigInventoryAdapter.swift in Sources */,
+			GT080009 /* HooksAdapter.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
