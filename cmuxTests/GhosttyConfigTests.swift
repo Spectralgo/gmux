@@ -523,7 +523,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testClaudeCodeIntegrationDefaultsToEnabledWhenUnset() {
-        let suiteName = "cmux.tests.claude-hooks.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.claude-hooks.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -537,7 +537,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testClaudeCodeIntegrationRespectsStoredPreference() {
-        let suiteName = "cmux.tests.claude-hooks.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.claude-hooks.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -554,7 +554,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testTelemetryDefaultsToEnabledWhenUnset() {
-        let suiteName = "cmux.tests.telemetry.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.telemetry.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return
@@ -568,7 +568,7 @@ final class GhosttyConfigTests: XCTestCase {
     }
 
     func testTelemetryRespectsStoredPreference() {
-        let suiteName = "cmux.tests.telemetry.\(UUID().uuidString)"
+        let suiteName = "gmux.tests.telemetry.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             XCTFail("Failed to create isolated user defaults suite")
             return

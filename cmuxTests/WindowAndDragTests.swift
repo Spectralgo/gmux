@@ -53,7 +53,7 @@ final class AppDelegateWindowContextRoutingTests: XCTestCase {
             backing: .buffered,
             defer: false
         )
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.main.\(id.uuidString)")
+        window.identifier = NSUserInterfaceItemIdentifier("gmux.main.\(id.uuidString)")
         return window
     }
 
@@ -1178,7 +1178,7 @@ final class FileDropOverlayViewTests: XCTestCase {
         overlay.autoresizingMask = [.width, .height]
         container.addSubview(overlay, positioned: .above, relativeTo: nil)
 
-        let pasteboard = NSPasteboard(name: NSPasteboard.Name("cmux.test.drag.\(UUID().uuidString)"))
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("gmux.test.drag.\(UUID().uuidString)"))
         pasteboard.clearContents()
         XCTAssertTrue(
             pasteboard.writeObjects([URL(fileURLWithPath: "/tmp/upload.mov") as NSURL]),
