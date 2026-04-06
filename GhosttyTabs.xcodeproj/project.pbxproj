@@ -149,6 +149,7 @@
 		GT020004 /* BeadWriteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020005 /* BeadWriteService.swift */; };
 		GT020006 /* ConvoyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020007 /* ConvoyModel.swift */; };
 		GT020008 /* ConvoyWriteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020009 /* ConvoyWriteService.swift */; };
+		GT02100A /* GastownSocketHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT02100B /* GastownSocketHandlers.swift */; };
 		/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -362,6 +363,7 @@
 		GT020005 /* BeadWriteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/BeadWriteService.swift; sourceTree = "<group>"; };
 		GT020007 /* ConvoyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/ConvoyModel.swift; sourceTree = "<group>"; };
 		GT020009 /* ConvoyWriteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/ConvoyWriteService.swift; sourceTree = "<group>"; };
+		GT02100B /* GastownSocketHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasTown/GastownSocketHandlers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -556,6 +558,7 @@
 				GT020005 /* BeadWriteService.swift */,
 				GT020007 /* ConvoyModel.swift */,
 				GT020009 /* ConvoyWriteService.swift */,
+				GT02100B /* GastownSocketHandlers.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -912,6 +915,7 @@
 			GT020004 /* BeadWriteService.swift in Sources */,
 			GT020006 /* ConvoyModel.swift in Sources */,
 			GT020008 /* ConvoyWriteService.swift in Sources */,
+			GT02100A /* GastownSocketHandlers.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

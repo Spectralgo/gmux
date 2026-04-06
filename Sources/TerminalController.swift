@@ -138,6 +138,9 @@ class TerminalController {
         "browser.focus_webview",
         "browser.focus",
         "browser.tab.switch",
+        "gmux.open.by_agent",
+        "gmux.open.by_bead",
+        "gmux.open.by_convoy",
         "debug.command_palette.toggle",
         "debug.notification.focus",
         "debug.app.activate"
@@ -2387,6 +2390,41 @@ class TerminalController {
         case "surface.read_text":
             return v2Result(id: id, self.v2SurfaceReadText(params: params))
 
+        // Gmux Open (identity-based workspace routing)
+        case "gmux.open.by_agent":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.openByAgent(params: params) })
+        case "gmux.open.by_bead":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.openByBead(params: params) })
+        case "gmux.open.by_convoy":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.openByConvoy(params: params) })
+
+        // Beads (issue tracking read/write)
+        case "beads.show":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsShow(params: params) })
+        case "beads.ready":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsReady(params: params) })
+        case "beads.list":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsList(params: params) })
+        case "beads.update":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsUpdate(params: params) })
+        case "beads.close":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsClose(params: params) })
+
+        // Gastown (hooks, convoy, health)
+        case "gastown.hooks.list":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownHooksList(params: params) })
+        case "gastown.hooks.sync":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownHooksSync(params: params) })
+        case "gastown.convoy.list":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownConvoyList(params: params) })
+        case "gastown.convoy.show":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownConvoyShow(params: params) })
+        case "gastown.convoy.add":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownConvoyAdd(params: params) })
+        case "gastown.peek":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownPeek(params: params) })
+        case "gastown.vitals":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownVitals(params: params) })
 
 #if DEBUG
         // Debug / test-only
@@ -2616,6 +2654,21 @@ class TerminalController {
             "browser.input_mouse",
             "browser.input_keyboard",
             "browser.input_touch",
+            "gmux.open.by_agent",
+            "gmux.open.by_bead",
+            "gmux.open.by_convoy",
+            "beads.show",
+            "beads.ready",
+            "beads.list",
+            "beads.update",
+            "beads.close",
+            "gastown.hooks.list",
+            "gastown.hooks.sync",
+            "gastown.convoy.list",
+            "gastown.convoy.show",
+            "gastown.convoy.add",
+            "gastown.peek",
+            "gastown.vitals",
         ]
 #if DEBUG
         methods.append(contentsOf: [
@@ -3070,6 +3123,35 @@ class TerminalController {
                 }
             }
         }
+    }
+
+    // MARK: - V2 Gastown Async Bridge
+
+    /// Bridge async GastownSocketHandlers into synchronous V2CallResult.
+    ///
+    /// Uses the same DispatchSemaphore + Task pattern as v2FeedbackSubmit.
+    /// All Gastown commands run off-main via GastownCommandRunner — no
+    /// main-thread work happens inside this bridge.
+    private func v2GastownAsync(_ body: @escaping @Sendable () async -> GastownSocketHandlers.Result) -> V2CallResult {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: V2CallResult = .err(code: "internal_error", message: "Gastown command failed", data: nil)
+
+        Task {
+            let handlerResult = await body()
+            switch handlerResult {
+            case .ok(let payload):
+                result = .ok(payload)
+            case .err(let code, let message):
+                result = .err(code: code, message: message, data: nil)
+            }
+            semaphore.signal()
+        }
+
+        if semaphore.wait(timeout: .now() + 35) == .timedOut {
+            return .err(code: "timeout", message: "Gastown command timed out", data: nil)
+        }
+
+        return result
     }
 
     // MARK: - V2 Param Parsing
