@@ -114,6 +114,24 @@ select_cmux_shim_target() {
   return 1
 }
 
+resolve_dev_cli_path() {
+  local app_path="$1"
+  local bundled_cli="$app_path/Contents/Resources/bin/gmux"
+  local sibling_cli="$(dirname "$app_path")/gmux"
+
+  if [[ -x "$bundled_cli" ]]; then
+    echo "$bundled_cli"
+    return 0
+  fi
+
+  if [[ -x "$sibling_cli" ]]; then
+    echo "$sibling_cli"
+    return 0
+  fi
+
+  return 1
+}
+
 write_last_socket_path() {
   local socket_path="$1"
   mkdir -p "$LAST_SOCKET_PATH_DIR"
@@ -433,20 +451,7 @@ if [[ -n "$TAG" && "$APP_NAME" != "$SEARCH_APP_NAME" ]]; then
   APP_PATH="$TAG_APP_PATH"
 fi
 
-CLI_PATH="$(dirname "$APP_PATH")/cmux"
-if [[ -x "$CLI_PATH" ]]; then
-  (umask 077; printf '%s\n' "$CLI_PATH" > /tmp/gmux-last-cli-path) || true
-  ln -sfn "$CLI_PATH" /tmp/gmux-cli || true
-
-  # Stable shim that always follows the last reload-selected dev CLI.
-  DEV_CLI_SHIM="$HOME/.local/bin/gmux-dev"
-  write_dev_cli_shim "$DEV_CLI_SHIM" "/Applications/Gmux.app/Contents/Resources/bin/gmux"
-
-  CMUX_SHIM_TARGET="$(select_cmux_shim_target || true)"
-  if [[ -n "${CMUX_SHIM_TARGET:-}" ]]; then
-    write_dev_cli_shim "$CMUX_SHIM_TARGET" "/Applications/Gmux.app/Contents/Resources/bin/gmux"
-  fi
-fi
+CLI_PATH=""
 
 # Build cmuxd and ghostty helper binaries (needed for both launch and no-launch).
 CMUXD_SRC="$PWD/cmuxd/zig-out/bin/cmuxd"
@@ -473,9 +478,21 @@ if [[ -x "$GHOSTTY_HELPER_SRC" ]]; then
   cp "$GHOSTTY_HELPER_SRC" "$BIN_DIR/ghostty"
   chmod +x "$BIN_DIR/ghostty"
 fi
-CLI_PATH="$APP_PATH/Contents/Resources/bin/gmux"
-if [[ -x "$CLI_PATH" ]]; then
+if CLI_PATH="$(resolve_dev_cli_path "$APP_PATH")"; then
   echo "$CLI_PATH" > /tmp/gmux-last-cli-path || true
+  ln -sfn "$CLI_PATH" /tmp/gmux-cli || true
+
+  # Stable shim that always follows the last reload-selected dev CLI.
+  DEV_CLI_SHIM="$HOME/.local/bin/gmux-dev"
+  write_dev_cli_shim "$DEV_CLI_SHIM" "/Applications/Gmux.app/Contents/Resources/bin/gmux"
+
+  CMUX_SHIM_TARGET="$(select_cmux_shim_target || true)"
+  if [[ -n "${CMUX_SHIM_TARGET:-}" ]]; then
+    write_dev_cli_shim "$CMUX_SHIM_TARGET" "/Applications/Gmux.app/Contents/Resources/bin/gmux"
+  fi
+else
+  rm -f /tmp/gmux-last-cli-path /tmp/gmux-cli || true
+  CLI_PATH=""
 fi
 
 if [[ "$LAUNCH" -eq 1 ]]; then
