@@ -342,6 +342,10 @@ final class CmuxConfigStore: ObservableObject {
             if fs.fileExists(atPath: candidate) {
                 return candidate
             }
+            let legacyCandidate = (current as NSString).appendingPathComponent("cmux.json")
+            if fs.fileExists(atPath: legacyCandidate) {
+                return legacyCandidate
+            }
             let parent = (current as NSString).deletingLastPathComponent
             if parent == current { break }
             current = parent
