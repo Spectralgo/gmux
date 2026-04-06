@@ -133,6 +133,11 @@
 					8C4BBF2DEF6DF93F395A9EE7 /* TerminalControllerSocketSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491751CE2321474474F27DCF /* TerminalControllerSocketSecurityTests.swift */; };
 					2BB56A710BB1FC50367E5BCF /* TabManagerSessionSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */; };
 					C1A2B3C4D5E6F70800000001 /* CmuxConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E6F70800000002 /* CmuxConfigTests.swift */; };
+		GT020000 /* GastownCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020001 /* GastownCommandRunner.swift */; };
+		GT020002 /* BeadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020003 /* BeadModel.swift */; };
+		GT020004 /* BeadWriteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020005 /* BeadWriteService.swift */; };
+		GT020006 /* ConvoyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020007 /* ConvoyModel.swift */; };
+		GT020008 /* ConvoyWriteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT020009 /* ConvoyWriteService.swift */; };
 		/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -330,6 +335,11 @@
 				491751CE2321474474F27DCF /* TerminalControllerSocketSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalControllerSocketSecurityTests.swift; sourceTree = "<group>"; };
 				10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSessionSnapshotTests.swift; sourceTree = "<group>"; };
 				C1A2B3C4D5E6F70800000002 /* CmuxConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CmuxConfigTests.swift; sourceTree = "<group>"; };
+		GT020001 /* GastownCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/GastownCommandRunner.swift; sourceTree = "<group>"; };
+		GT020003 /* BeadModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/BeadModel.swift; sourceTree = "<group>"; };
+		GT020005 /* BeadWriteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/BeadWriteService.swift; sourceTree = "<group>"; };
+		GT020007 /* ConvoyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/ConvoyModel.swift; sourceTree = "<group>"; };
+		GT020009 /* ConvoyWriteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gastown/ConvoyWriteService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -516,6 +526,11 @@
 				A5001651 /* CmuxConfig.swift */,
 				A5001653 /* CmuxConfigExecutor.swift */,
 				A5001655 /* CmuxDirectoryTrust.swift */,
+				GT020001 /* GastownCommandRunner.swift */,
+				GT020003 /* BeadModel.swift */,
+				GT020005 /* BeadWriteService.swift */,
+				GT020007 /* ConvoyModel.swift */,
+				GT020009 /* ConvoyWriteService.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -840,6 +855,11 @@
 				A5001650 /* CmuxConfig.swift in Sources */,
 			A5001652 /* CmuxConfigExecutor.swift in Sources */,
 			A5001654 /* CmuxDirectoryTrust.swift in Sources */,
+			GT020000 /* GastownCommandRunner.swift in Sources */,
+			GT020002 /* BeadModel.swift in Sources */,
+			GT020004 /* BeadWriteService.swift in Sources */,
+			GT020006 /* ConvoyModel.swift in Sources */,
+			GT020008 /* ConvoyWriteService.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
