@@ -87,7 +87,7 @@ APP_PLIST="$APP_PATH/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Delete :SUPublicEDKey" "$APP_PLIST" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Delete :SUFeedURL" "$APP_PLIST" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Add :SUPublicEDKey string $SPARKLE_PUBLIC_KEY_DERIVED" "$APP_PLIST"
-/usr/libexec/PlistBuddy -c "Add :SUFeedURL string https://github.com/manaflow-ai/cmux/releases/latest/download/appcast.xml" "$APP_PLIST"
+/usr/libexec/PlistBuddy -c "Add :SUFeedURL string https://github.com/Spectralgo/gmux/releases/latest/download/appcast.xml" "$APP_PLIST"
 echo "Sparkle keys injected"
 
 # --- Codesign ---
@@ -173,10 +173,10 @@ cask "gmux" do
   version "${VERSION}"
   sha256 "${DMG_SHA256}"
 
-  url "https://github.com/manaflow-ai/cmux/releases/download/v#{version}/gmux-macos.dmg"
+  url "https://github.com/Spectralgo/gmux/releases/download/v#{version}/gmux-macos.dmg"
   name "Gmux"
   desc "Lightweight native macOS terminal with vertical tabs for AI coding agents"
-  homepage "https://github.com/manaflow-ai/cmux"
+  homepage "https://github.com/Spectralgo/gmux"
 
   livecheck do
     url :url
@@ -214,4 +214,4 @@ fi
 rm -rf build/ gmux-macos.dmg appcast.xml
 echo ""
 echo "=== Release $TAG complete ==="
-say "cmux release complete"
+say "gmux release complete"
