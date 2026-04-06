@@ -138,6 +138,7 @@ class TerminalController {
         "browser.focus_webview",
         "browser.focus",
         "browser.tab.switch",
+        "open.context",
         "debug.command_palette.toggle",
         "debug.notification.focus",
         "debug.app.activate"
@@ -2119,6 +2120,10 @@ class TerminalController {
         case "workspace.remote.terminal_session_end":
             return v2Result(id: id, self.v2WorkspaceRemoteTerminalSessionEnd(params: params))
 
+        // Contextual open
+        case "open.context":
+            return v2Result(id: id, self.v2OpenContext(params: params))
+
         // Settings
         case "settings.open":
             return v2Result(id: id, self.v2SettingsOpen(params: params))
@@ -3428,6 +3433,78 @@ class TerminalController {
             "workspace_ref": v2Ref(kind: .workspace, uuid: newId)
         ])
     }
+
+    // MARK: - Contextual Open
+
+    private func v2OpenContext(params: [String: Any]) -> V2CallResult {
+        guard let contextType = v2RawString(params, "type") else {
+            return .err(code: "invalid_params", message: "Missing 'type' (directory|convoy|bead|agent)", data: nil)
+        }
+
+        let workingDirectory = v2RawString(params, "working_directory")
+        let contextId = v2RawString(params, "id")
+        let presetRaw = v2RawString(params, "preset")
+        let preset = presetRaw.flatMap { WorkspacePreset(rawValue: $0) }
+        let title = v2RawString(params, "title")
+        let description = v2RawString(params, "description")
+        let focusRequested = (params["focus"] as? Bool) ?? true
+        let placementRaw = v2RawString(params, "placement") ?? "tab"
+
+        let intent: OpenIntent
+        switch contextType {
+        case "directory":
+            guard let path = workingDirectory ?? contextId else {
+                return .err(code: "invalid_params", message: "directory type requires 'working_directory' or 'id'", data: nil)
+            }
+            intent = .directory(path: path, preset: preset)
+        case "convoy":
+            guard let id = contextId else {
+                return .err(code: "invalid_params", message: "convoy type requires 'id'", data: nil)
+            }
+            intent = .convoy(id: id, workingDirectory: workingDirectory, preset: preset)
+        case "bead":
+            guard let id = contextId else {
+                return .err(code: "invalid_params", message: "bead type requires 'id'", data: nil)
+            }
+            intent = .bead(id: id, workingDirectory: workingDirectory, preset: preset)
+        case "agent":
+            guard let id = contextId else {
+                return .err(code: "invalid_params", message: "agent type requires 'id' (rig or rig/name)", data: nil)
+            }
+            let parts = id.split(separator: "/", maxSplits: 1)
+            let rig = String(parts.first ?? "")
+            let name = parts.count > 1 ? String(parts[1]) : nil
+            intent = .agent(rig: rig, name: name, workingDirectory: workingDirectory, preset: preset)
+        default:
+            return .err(code: "invalid_params", message: "Unknown context type '\(contextType)'", data: nil)
+        }
+
+        let options = OpenIntentOptions(
+            allowFocus: v2FocusAllowed(requested: focusRequested),
+            flash: false,
+            placement: placementRaw == "window" ? .window : .tab,
+            title: title,
+            description: description
+        )
+
+        var result: OpenIntentResult?
+        v2MainSync {
+            let router = OpenRouter()
+            result = router.open(intent, options: options)
+        }
+
+        guard let result else {
+            return .err(code: "open_failed", message: "Failed to open context", data: nil)
+        }
+
+        return .ok([
+            "workspace_id": result.workspaceId.uuidString,
+            "window_id": v2OrNull(result.windowId?.uuidString),
+            "created": result.createdWorkspace,
+            "preset": v2OrNull(result.appliedPreset?.rawValue)
+        ])
+    }
+
     private func v2WorkspaceSelect(params: [String: Any]) -> V2CallResult {
         guard let tabManager = v2ResolveTabManager(params: params) else {
             return .err(code: "unavailable", message: "TabManager not available", data: nil)

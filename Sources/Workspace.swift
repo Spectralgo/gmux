@@ -6500,6 +6500,11 @@ final class Workspace: Identifiable, ObservableObject {
     @Published var currentDirectory: String
     private(set) var preferredBrowserProfileID: UUID?
 
+    /// Tag set by ``OpenRouter`` to match this workspace to an ``OpenIntent``.
+    /// Used for workspace reuse: when a second open for the same context arrives,
+    /// the router focuses the existing workspace instead of creating a duplicate.
+    var openIntentContextTag: String?
+
     /// Ordinal for CMUX_PORT range assignment (monotonically increasing per app session)
     var portOrdinal: Int = 0
 
