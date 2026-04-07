@@ -664,6 +664,11 @@ struct TerminalNotification: Identifiable, Hashable {
     let body: String
     let createdAt: Date
     var isRead: Bool
+
+    /// Optional structured context for context-aware jump targets.
+    /// When present, notification actions can use ``NotificationContext/openIntent``
+    /// to route to the correct workspace preset instead of bare tab/surface focus.
+    var notificationContext: NotificationContext?
 }
 
 @MainActor
