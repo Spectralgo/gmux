@@ -42,8 +42,7 @@ private final class CLISocketSentryTelemetry {
     }
 
     private static func currentSentryBundleIdentifier() -> String? {
-        if let bundleIdentifier = (ProcessInfo.processInfo.environment["GMUX_BUNDLE_ID"]
-            ?? ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"])?
+        if let bundleIdentifier = ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !bundleIdentifier.isEmpty {
             return bundleIdentifier
@@ -133,13 +132,11 @@ private final class CLISocketSentryTelemetry {
         self.command = command.lowercased()
         self.subcommand = commandArgs.first?.lowercased() ?? "help"
         self.socketPath = socketPath
-        self.envSocketPath = processEnv["GMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET"]
-        self.workspaceId = processEnv["GMUX_WORKSPACE_ID"] ?? processEnv["CMUX_WORKSPACE_ID"]
-        self.surfaceId = processEnv["GMUX_SURFACE_ID"] ?? processEnv["CMUX_SURFACE_ID"]
+        self.envSocketPath = processEnv["CMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET"]
+        self.workspaceId = processEnv["CMUX_WORKSPACE_ID"]
+        self.surfaceId = processEnv["CMUX_SURFACE_ID"]
         self.disabledByEnv =
-            processEnv["GMUX_CLI_SENTRY_DISABLED"] == "1" ||
             processEnv["CMUX_CLI_SENTRY_DISABLED"] == "1" ||
-            processEnv["GMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1" ||
             processEnv["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1"
     }
 
@@ -151,7 +148,7 @@ private final class CLISocketSentryTelemetry {
         for (key, value) in data {
             payload[key] = value
         }
-        let crumb = Breadcrumb(level: .info, category: "gmux.cli")
+        let crumb = Breadcrumb(level: .info, category: "cmux.cli")
         crumb.message = message
         crumb.data = payload
         SentrySDK.addBreadcrumb(crumb)
@@ -172,7 +169,7 @@ private final class CLISocketSentryTelemetry {
         let command = self.command
         _ = SentrySDK.capture(error: error) { scope in
             scope.setLevel(.error)
-            scope.setTag(value: "gmux-cli", key: "component")
+            scope.setTag(value: "cmux-cli", key: "component")
             scope.setTag(value: command, key: "cli_command")
             scope.setTag(value: subcommand, key: "cli_subcommand")
             scope.setContext(value: context, key: "cli_socket")
@@ -230,7 +227,7 @@ private final class CLISocketSentryTelemetry {
         if CLISocketPathResolver.isImplicitDefaultPath(socketPath),
            (envSocketPath?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
            !taggedSockets.isEmpty {
-            context["possible_root_cause"] = "GMUX_SOCKET_PATH missing while tagged sockets exist"
+            context["possible_root_cause"] = "CMUX_SOCKET_PATH/CMUX_SOCKET missing while tagged sockets exist"
         }
 
         return context
@@ -257,7 +254,7 @@ private final class CLISocketSentryTelemetry {
         }
         var sockets: [String] = []
         for name in entries.sorted() {
-            guard (name.hasPrefix("gmux") || name.hasPrefix("cmux")), name.hasSuffix(".sock") else { continue }
+            guard name.hasPrefix("cmux"), name.hasSuffix(".sock") else { continue }
             let fullPath = URL(fileURLWithPath: directory)
                 .appendingPathComponent(name, isDirectory: false)
                 .path
@@ -351,7 +348,7 @@ private final class ClaudeHookSessionStore {
         processEnv: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default
     ) {
-        if let overridePath = (processEnv["GMUX_CLAUDE_HOOK_STATE_PATH"] ?? processEnv["CMUX_CLAUDE_HOOK_STATE_PATH"])?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let overridePath = processEnv["CMUX_CLAUDE_HOOK_STATE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !overridePath.isEmpty {
             self.statePath = NSString(string: overridePath).expandingTildeInPath
         } else {
@@ -548,8 +545,7 @@ enum SocketPasswordResolver {
         if let explicit = normalized(explicit) {
             return explicit
         }
-        if let env = normalized(ProcessInfo.processInfo.environment["GMUX_SOCKET_PASSWORD"])
-            ?? normalized(ProcessInfo.processInfo.environment["CMUX_SOCKET_PASSWORD"]) {
+        if let env = normalized(ProcessInfo.processInfo.environment["CMUX_SOCKET_PASSWORD"]) {
             return env
         }
         if let filePassword = loadFromFile() {
@@ -594,7 +590,7 @@ enum SocketPasswordResolver {
         socketPath: String,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> String? {
-        if let tag = normalized(environment["GMUX_TAG"]) ?? normalized(environment["CMUX_TAG"]) {
+        if let tag = normalized(environment["CMUX_TAG"]) {
             let scoped = sanitizeScope(tag)
             if !scoped.isEmpty {
                 return scoped
@@ -868,7 +864,7 @@ final class SocketClient {
     private static let maxSocketTimeoutSeconds: TimeInterval = 9_007_199_254_740_991
     private static let responseTimeoutSeconds: TimeInterval = {
         let env = ProcessInfo.processInfo.environment
-        if let raw = env["GMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"] ?? env["CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"],
+        if let raw = env["CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"],
            let seconds = Double(raw),
            seconds.isFinite,
            seconds > 0 {
@@ -1059,8 +1055,8 @@ final class SocketClient {
 
     private static func relayCredentials(for endpoint: RelayEndpoint) throws -> RelayCredentials {
         let environment = ProcessInfo.processInfo.environment
-        if let relayID = trimmedEnvValue(environment["GMUX_RELAY_ID"]) ?? trimmedEnvValue(environment["CMUX_RELAY_ID"]),
-           let relayTokenHex = trimmedEnvValue(environment["GMUX_RELAY_TOKEN"]) ?? trimmedEnvValue(environment["CMUX_RELAY_TOKEN"]),
+        if let relayID = trimmedEnvValue(environment["CMUX_RELAY_ID"]),
+           let relayTokenHex = trimmedEnvValue(environment["CMUX_RELAY_TOKEN"]),
            let relayToken = hexData(from: relayTokenHex) {
             return RelayCredentials(relayID: relayID, relayToken: relayToken)
         }
@@ -1156,7 +1152,7 @@ final class SocketClient {
         let challengeLine = try readLine()
         guard let challengeData = challengeLine.data(using: .utf8),
               let challenge = try JSONSerialization.jsonObject(with: challengeData) as? [String: Any],
-              ((challenge["protocol"] as? String) == "gmux-relay-auth" || (challenge["protocol"] as? String) == "cmux-relay-auth"),
+              (challenge["protocol"] as? String) == "cmux-relay-auth",
               let version = challenge["version"] as? Int,
               let relayID = challenge["relay_id"] as? String,
               relayID == credentials.relayID,
@@ -1314,14 +1310,14 @@ final class SocketClient {
         }
 
         guard let watchDirectory = existingWatchDirectory(forPath: path) else {
-            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
         }
         let watchFD = open(watchDirectory, O_EVTONLY)
         guard watchFD >= 0 else {
-            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
         }
 
-        let queue = DispatchQueue(label: "com.gmux.cli.socket-watch.\(UUID().uuidString)")
+        let queue = DispatchQueue(label: "com.cmux.cli.socket-watch.\(UUID().uuidString)")
         let semaphore = DispatchSemaphore(value: 0)
         var connected = false
         let source = DispatchSource.makeFileSystemObjectSource(
@@ -1352,7 +1348,7 @@ final class SocketClient {
         guard semaphore.wait(timeout: .now() + timeout) == .success else {
             source.cancel()
             client.close()
-            throw CLIError(message: "gmux app did not start in time (socket not found at \(path))")
+            throw CLIError(message: "cmux app did not start in time (socket not found at \(path))")
         }
 
         source.cancel()
@@ -1372,7 +1368,7 @@ final class SocketClient {
             throw CLIError(message: "Timed out waiting for \(path)")
         }
 
-        let queue = DispatchQueue(label: "com.gmux.cli.path-watch.\(UUID().uuidString)")
+        let queue = DispatchQueue(label: "com.cmux.cli.path-watch.\(UUID().uuidString)")
         let semaphore = DispatchSemaphore(value: 0)
         var found = false
         let source = DispatchSource.makeFileSystemObjectSource(
@@ -1567,7 +1563,7 @@ enum CLIProcessRunner {
     }
 }
 
-struct GmuxCLI {
+struct CMUXCLI {
     let args: [String]
 
     private static let debugLastSocketHintPath = "/tmp/gmux-last-socket-path"
@@ -1604,8 +1600,7 @@ struct GmuxCLI {
     }
 
     private static func defaultSocketPath(environment: [String: String]) -> String {
-        if let explicit = normalizedEnvValue(environment["GMUX_SOCKET_PATH"])
-            ?? normalizedEnvValue(environment["CMUX_SOCKET_PATH"]) {
+        if let explicit = normalizedEnvValue(environment["CMUX_SOCKET_PATH"]) {
             return explicit
         }
 #if DEBUG
@@ -1621,7 +1616,7 @@ struct GmuxCLI {
     func run() throws {
         let processEnv = ProcessInfo.processInfo.environment
         let envSocketPath: String? = {
-            for key in ["GMUX_SOCKET_PATH", "CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
+            for key in ["CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
                 guard let raw = processEnv[key] else { continue }
                 let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
@@ -2542,33 +2537,6 @@ struct GmuxCLI {
             let response = try sendV1Command(socketCmd, client: client)
             print(response)
 
-        case "send-mail":
-            var socketCmd = "send_mail"
-            if let type = optionValue(commandArgs, name: "--type") { socketCmd += " --type=\(type)" }
-            if let subject = optionValue(commandArgs, name: "--subject") { socketCmd += " --subject=\(subject)" }
-            if let body = optionValue(commandArgs, name: "--body") { socketCmd += " --body=\(body)" }
-            if let sender = optionValue(commandArgs, name: "--sender") { socketCmd += " --sender=\(sender)" }
-            if let bead = optionValue(commandArgs, name: "--bead") { socketCmd += " --bead=\(bead)" }
-            if let convoy = optionValue(commandArgs, name: "--convoy") { socketCmd += " --convoy=\(convoy)" }
-            if let polecat = optionValue(commandArgs, name: "--polecat") { socketCmd += " --polecat=\(polecat)" }
-            if let branch = optionValue(commandArgs, name: "--branch") { socketCmd += " --branch=\(branch)" }
-            if let workspace = optionValue(commandArgs, name: "--workspace") {
-                let wsId = try resolveWorkspaceId(workspace, client: client)
-                socketCmd += " --workspace=\(wsId)"
-            }
-            let response = try sendV1Command(socketCmd, client: client)
-            print(response)
-
-        case "list-mail":
-            let response = try sendV1Command("list_mail", client: client)
-            print(response)
-
-        case "clear-mail":
-            var socketCmd = "clear_mail"
-            if let type = optionValue(commandArgs, name: "--type") { socketCmd += " --type=\(type)" }
-            let response = try sendV1Command(socketCmd, client: client)
-            print(response)
-
         case "set-status":
             let response = try forwardSidebarMetadataCommand(
                 "set_status",
@@ -2765,41 +2733,78 @@ struct GmuxCLI {
         case "markdown":
             try runMarkdownCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput, idFormat: idFormat)
 
-        // Gastown commands
-        case "gastown":
-            try runGastownCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput)
-
-        // Beads commands
-        case "beads":
-            try runBeadsCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput)
-
-        // Open-by-identity commands
-        case "open-by-agent":
-            guard let address = commandArgs.first else {
-                throw CLIError(message: "open-by-agent requires an agent address")
+        // Session commands
+        case "save-session":
+            let (nameArg, remaining) = parseOption(commandArgs, name: "--name")
+            let name = nameArg ?? remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else {
+                throw CLIError(message: "save-session requires --name <name>")
             }
-            var params: [String: Any] = ["address": address]
-            if hasFlag(commandArgs, name: "--no-focus") { params["focus"] = false }
-            let response = try client.sendV2(method: "gmux.open.by_agent", params: params)
-            print(jsonString(response))
-
-        case "open-by-bead":
-            guard let beadID = commandArgs.first else {
-                throw CLIError(message: "open-by-bead requires a bead ID")
+            let payload = try client.sendV2(method: "session.save", params: ["name": name])
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                let wsCount = (payload["workspace_count"] as? Int) ?? 0
+                let winCount = (payload["window_count"] as? Int) ?? 0
+                print("Saved session '\(name)' (\(winCount) window\(winCount == 1 ? "" : "s"), \(wsCount) workspace\(wsCount == 1 ? "" : "s"))")
             }
-            var params: [String: Any] = ["bead_id": beadID]
-            if hasFlag(commandArgs, name: "--no-focus") { params["focus"] = false }
-            let response = try client.sendV2(method: "gmux.open.by_bead", params: params)
-            print(jsonString(response))
 
-        case "open-by-convoy":
-            guard let convoyID = commandArgs.first else {
-                throw CLIError(message: "open-by-convoy requires a convoy ID")
+        case "restore-session":
+            let (nameArg, remaining) = parseOption(commandArgs, name: "--name")
+            let name = nameArg ?? remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            var params: [String: Any] = [:]
+            if !name.isEmpty { params["name"] = name }
+            let payload = try client.sendV2(method: "session.restore", params: params)
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                let restoredWindows = (payload["restored_windows"] as? Int) ?? 0
+                let restoredWorkspaces = (payload["restored_workspaces"] as? Int) ?? 0
+                let sessionName = (payload["name"] as? String) ?? "last session"
+                print("Restored '\(sessionName)' (\(restoredWindows) window\(restoredWindows == 1 ? "" : "s"), \(restoredWorkspaces) workspace\(restoredWorkspaces == 1 ? "" : "s"))")
+                if let warnings = payload["warnings"] as? [String], !warnings.isEmpty {
+                    for warning in warnings {
+                        print("  warning: \(warning)")
+                    }
+                }
             }
-            var params: [String: Any] = ["convoy_id": convoyID]
-            if hasFlag(commandArgs, name: "--no-focus") { params["focus"] = false }
-            let response = try client.sendV2(method: "gmux.open.by_convoy", params: params)
-            print(jsonString(response))
+
+        case "list-sessions":
+            let payload = try client.sendV2(method: "session.list", params: [:])
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                let sessions = payload["sessions"] as? [[String: Any]] ?? []
+                if sessions.isEmpty {
+                    print("No saved sessions")
+                } else {
+                    for session in sessions {
+                        let name = (session["name"] as? String) ?? ""
+                        let winCount = (session["window_count"] as? Int) ?? 0
+                        let wsCount = (session["workspace_count"] as? Int) ?? 0
+                        let createdAt = (session["created_at"] as? TimeInterval) ?? 0
+                        let date = Date(timeIntervalSince1970: createdAt)
+                        let formatter = DateFormatter()
+                        formatter.dateStyle = .short
+                        formatter.timeStyle = .short
+                        let dateStr = formatter.string(from: date)
+                        print("  \(name)  (\(winCount) win, \(wsCount) ws)  \(dateStr)")
+                    }
+                }
+            }
+
+        case "delete-session":
+            let (nameArg, remaining) = parseOption(commandArgs, name: "--name")
+            let name = nameArg ?? remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else {
+                throw CLIError(message: "delete-session requires --name <name>")
+            }
+            let payload = try client.sendV2(method: "session.delete", params: ["name": name])
+            if jsonOutput {
+                print(jsonString(payload))
+            } else {
+                print("Deleted session '\(name)'")
+            }
 
         default:
             print(usage())
@@ -3024,7 +3029,7 @@ struct GmuxCLI {
         if emailOpt == nil && bodyOpt == nil && imagePaths.isEmpty {
             var params: [String: Any] = [:]
             let env = ProcessInfo.processInfo.environment
-            if let workspaceId = (env["GMUX_WORKSPACE_ID"] ?? env["CMUX_WORKSPACE_ID"])?.trimmingCharacters(in: .whitespacesAndNewlines),
+            if let workspaceId = env["CMUX_WORKSPACE_ID"]?.trimmingCharacters(in: .whitespacesAndNewlines),
                !workspaceId.isEmpty {
                 params["workspace_id"] = workspaceId
                 params["activate"] = false
@@ -3137,7 +3142,7 @@ struct GmuxCLI {
     private func launchApp() throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = ["-a", "Gmux"]
+        process.arguments = ["-a", "cmux"]
         try process.run()
         process.waitUntilExit()
     }
@@ -3145,7 +3150,7 @@ struct GmuxCLI {
     private func activateApp() throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = ["-a", "Gmux"]
+        process.arguments = ["-a", "cmux"]
         try process.run()
         process.waitUntilExit()
     }
@@ -7711,46 +7716,6 @@ struct GmuxCLI {
 
             Clear all queued notifications.
             """
-        case "send-mail":
-            return """
-            Usage: gmux send-mail --type <TYPE> --subject <text> [flags]
-
-            Send a mail message to the inbox.
-
-            Types: POLECAT_DONE, MERGE_READY, MERGED, INFO
-
-            Flags:
-              --type <TYPE>          Message type (required)
-              --subject <text>       Message subject
-              --body <text>          Message body
-              --sender <text>        Sender name
-              --bead <id>            Associated bead ID
-              --convoy <id>          Associated convoy ID
-              --polecat <name>       Associated polecat name
-              --branch <name>        Associated branch name
-              --workspace <id|ref>   Associated workspace
-
-            Example:
-              gmux send-mail --type POLECAT_DONE --subject "fury complete" --sender fury --bead gm-0yp --branch polecat/fury-abc
-              gmux send-mail --type MERGE_READY --subject "PR #42 ready" --convoy hq-cv-123
-              gmux send-mail --type MERGED --subject "gm-0yp landed" --bead gm-0yp
-            """
-        case "list-mail":
-            return """
-            Usage: gmux list-mail
-
-            List all inbox messages as JSON.
-            """
-        case "clear-mail":
-            return """
-            Usage: gmux clear-mail [--type <TYPE>]
-
-            Clear inbox messages. Without flags, clears all. With --type, clears only that type.
-
-            Example:
-              gmux clear-mail
-              gmux clear-mail --type MERGED
-            """
         case "set-status":
             return """
             Usage: gmux set-status <key> <value> [flags]
@@ -8041,87 +8006,53 @@ struct GmuxCLI {
               gmux markdown open ./docs/design.md --workspace 0
               gmux markdown open plan.md --direction down
             """
-        case "gastown":
+        case "save-session":
             return """
-            Usage: gmux gastown <subcommand> ...
+            Usage: gmux save-session --name <name>
 
-            Gas Town multi-agent orchestration commands.
-
-            Subcommands:
-              hooks list                          List hook targets and sync status
-              hooks sync [target]                 Sync hooks configuration
-              convoy list                         List active convoys
-              convoy show <convoy-id>             Show convoy detail with tracked issues
-              convoy add <convoy-id> <issue-id...>  Add tracked work to a convoy
-              peek <agent>                        Health-check an agent
-              vitals                              Unified health dashboard
-
-            Examples:
-              gmux gastown hooks list
-              gmux gastown convoy show hq-cv-abc
-              gmux gastown peek gmux/polecats/chrome
-              gmux gastown vitals
-            """
-        case "beads":
-            return """
-            Usage: gmux beads <subcommand> ...
-
-            Beads issue tracking commands.
-
-            Subcommands:
-              show <bead-id>                          Show bead detail
-              ready [--rig <name>]                    List ready work (no unresolved blockers)
-              list [--status <status>] [--rig <name>] List beads with optional filters
-              update <bead-id> [--status <s>] [--notes <n>]  Update bead status or notes
-              close <bead-id> [--reason <reason>]     Close a bead
-
-            Examples:
-              gmux beads show gm-3rs
-              gmux beads ready
-              gmux beads list --status open
-              gmux beads update gm-3rs --status in_progress
-              gmux beads close gm-3rs --reason "Fixed in PR #42"
-            """
-        case "open-by-agent":
-            return """
-            Usage: gmux open-by-agent <address> [--no-focus]
-
-            Open a workspace by Gas Town agent address. Resolves the agent
-            identity to a worktree and opens or focuses the workspace.
+            Save the current window/workspace layout as a named session.
 
             Flags:
-              --no-focus   Open without stealing focus
+              --name <name>   Session name (required)
 
             Examples:
-              gmux open-by-agent gmux/polecats/chrome
-              gmux open-by-agent spectralChat/refinery --no-focus
+              gmux save-session --name "development"
+              gmux save-session "project setup"
             """
-        case "open-by-bead":
+        case "restore-session":
             return """
-            Usage: gmux open-by-bead <bead-id> [--no-focus]
+            Usage: gmux restore-session [--name <name>]
 
-            Open a workspace by bead ID. Resolves the bead's assignee to
-            an agent address, then opens or focuses the workspace.
+            Restore a saved session. If no name is given, restores the last auto-saved session.
+            Restored workspaces open in new windows.
 
             Flags:
-              --no-focus   Open without stealing focus
+              --name <name>   Named session to restore (omit for last session)
 
             Examples:
-              gmux open-by-bead gm-3rs
-              gmux open-by-bead sc-1ab --no-focus
+              gmux restore-session --name "development"
+              gmux restore-session
             """
-        case "open-by-convoy":
+        case "list-sessions":
             return """
-            Usage: gmux open-by-convoy <convoy-id> [--no-focus]
+            Usage: gmux list-sessions
 
-            Open a workspace by convoy ID. Finds the convoy's first
-            actionable bead and opens the associated workspace.
+            List all saved named sessions.
+
+            Examples:
+              gmux list-sessions
+            """
+        case "delete-session":
+            return """
+            Usage: gmux delete-session --name <name>
+
+            Delete a saved named session.
 
             Flags:
-              --no-focus   Open without stealing focus
+              --name <name>   Session name to delete (required)
 
             Examples:
-              gmux open-by-convoy hq-cv-abc
+              gmux delete-session --name "old-project"
             """
         default:
             return nil
@@ -8139,8 +8070,8 @@ struct GmuxCLI {
     }
 
     private static let cmuxThemeOverrideBundleIdentifier = "com.gmuxterm.app"
-    private static let cmuxThemesBlockStart = "# gmux themes start"
-    private static let cmuxThemesBlockEnd = "# gmux themes end"
+    private static let cmuxThemesBlockStart = "# cmux themes start"
+    private static let cmuxThemesBlockEnd = "# cmux themes end"
     private static let cmuxThemesReloadNotificationName = "com.gmuxterm.themes.reload-config"
 
     private struct ThemeSelection {
@@ -8173,15 +8104,15 @@ struct GmuxCLI {
 
         let selection = currentThemeSelection()
         var environment = ProcessInfo.processInfo.environment
-        environment["GMUX_THEME_PICKER_CONFIG"] = try cmuxThemeOverrideConfigURL().path
-        environment["GMUX_THEME_PICKER_BUNDLE_ID"] = currentCmuxAppBundleIdentifier() ?? Self.cmuxThemeOverrideBundleIdentifier
-        environment["GMUX_THEME_PICKER_TARGET"] = defaultThemePickerTargetMode(current: selection).rawValue
-        environment["GMUX_THEME_PICKER_COLOR_SCHEME"] = defaultAppearancePrefersDarkThemes() ? "dark" : "light"
+        environment["CMUX_THEME_PICKER_CONFIG"] = try cmuxThemeOverrideConfigURL().path
+        environment["CMUX_THEME_PICKER_BUNDLE_ID"] = currentCmuxAppBundleIdentifier() ?? Self.cmuxThemeOverrideBundleIdentifier
+        environment["CMUX_THEME_PICKER_TARGET"] = defaultThemePickerTargetMode(current: selection).rawValue
+        environment["CMUX_THEME_PICKER_COLOR_SCHEME"] = defaultAppearancePrefersDarkThemes() ? "dark" : "light"
         if let light = selection.light {
-            environment["GMUX_THEME_PICKER_INITIAL_LIGHT"] = light
+            environment["CMUX_THEME_PICKER_INITIAL_LIGHT"] = light
         }
         if let dark = selection.dark {
-            environment["GMUX_THEME_PICKER_INITIAL_DARK"] = dark
+            environment["CMUX_THEME_PICKER_INITIAL_DARK"] = dark
         }
         if let resourcesURL = bundledGhosttyResourcesURL() {
             environment["GHOSTTY_RESOURCES_DIR"] = resourcesURL.path
@@ -8814,8 +8745,7 @@ struct GmuxCLI {
     }
 
     private func currentCmuxAppBundleIdentifier() -> String? {
-        if let bundleIdentifier = (ProcessInfo.processInfo.environment["GMUX_BUNDLE_ID"]
-            ?? ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"])?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let bundleIdentifier = ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !bundleIdentifier.isEmpty {
             return bundleIdentifier
         }
@@ -10255,7 +10185,7 @@ struct GmuxCLI {
 
     private func tmuxCompatResolvedSocketPath(processEnvironment: [String: String]) -> String {
         let envSocketPath: String? = {
-            for key in ["GMUX_SOCKET_PATH", "CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
+            for key in ["CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
                 guard let raw = processEnvironment[key] else { continue }
                 let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
@@ -14202,165 +14132,6 @@ struct GmuxCLI {
         return URL(fileURLWithPath: expanded).standardizedFileURL
     }
 
-    // MARK: - Gastown CLI
-
-    private func runGastownCommand(
-        commandArgs: [String],
-        client: SocketClient,
-        jsonOutput: Bool
-    ) throws {
-        guard let sub = commandArgs.first else {
-            throw CLIError(message: "Usage: gmux gastown <hooks|convoy|peek|vitals> ...")
-        }
-
-        let subArgs = Array(commandArgs.dropFirst())
-
-        switch sub {
-        case "hooks":
-            guard let hooksSub = subArgs.first else {
-                throw CLIError(message: "Usage: gmux gastown hooks <list|sync> ...")
-            }
-            switch hooksSub {
-            case "list":
-                let response = try client.sendV2(method: "gastown.hooks.list")
-                print(jsonString(response))
-            case "sync":
-                var params: [String: Any] = [:]
-                if let target = subArgs.dropFirst().first {
-                    params["target"] = target
-                }
-                let response = try client.sendV2(method: "gastown.hooks.sync", params: params)
-                print(jsonString(response))
-            default:
-                throw CLIError(message: "Unknown gastown hooks subcommand: \(hooksSub). Use list or sync.")
-            }
-
-        case "convoy":
-            guard let convoySub = subArgs.first else {
-                throw CLIError(message: "Usage: gmux gastown convoy <list|show|add> ...")
-            }
-            switch convoySub {
-            case "list":
-                let response = try client.sendV2(method: "gastown.convoy.list")
-                print(jsonString(response))
-            case "show":
-                guard let convoyID = subArgs.dropFirst().first else {
-                    throw CLIError(message: "gastown convoy show requires a convoy ID")
-                }
-                let response = try client.sendV2(
-                    method: "gastown.convoy.show",
-                    params: ["convoy_id": convoyID]
-                )
-                print(jsonString(response))
-            case "add":
-                let addArgs = Array(subArgs.dropFirst())
-                guard addArgs.count >= 2 else {
-                    throw CLIError(message: "gastown convoy add requires <convoy-id> <issue-id...>")
-                }
-                let convoyID = addArgs[0]
-                let issueIDs = Array(addArgs.dropFirst())
-                let response = try client.sendV2(
-                    method: "gastown.convoy.add",
-                    params: ["convoy_id": convoyID, "issue_ids": issueIDs]
-                )
-                print(jsonString(response))
-            default:
-                throw CLIError(message: "Unknown gastown convoy subcommand: \(convoySub). Use list, show, or add.")
-            }
-
-        case "peek":
-            guard let agent = subArgs.first else {
-                throw CLIError(message: "gastown peek requires an agent name")
-            }
-            let response = try client.sendV2(
-                method: "gastown.peek",
-                params: ["agent": agent]
-            )
-            print(jsonString(response))
-
-        case "vitals":
-            let response = try client.sendV2(method: "gastown.vitals")
-            print(jsonString(response))
-
-        default:
-            throw CLIError(message: "Unknown gastown subcommand: \(sub). Use hooks, convoy, peek, or vitals.")
-        }
-    }
-
-    // MARK: - Beads CLI
-
-    private func runBeadsCommand(
-        commandArgs: [String],
-        client: SocketClient,
-        jsonOutput: Bool
-    ) throws {
-        guard let sub = commandArgs.first else {
-            throw CLIError(message: "Usage: gmux beads <show|ready|list|update|close> ...")
-        }
-
-        let subArgs = Array(commandArgs.dropFirst())
-
-        switch sub {
-        case "show":
-            guard let beadID = subArgs.first else {
-                throw CLIError(message: "beads show requires a bead ID")
-            }
-            let response = try client.sendV2(
-                method: "beads.show",
-                params: ["bead_id": beadID]
-            )
-            print(jsonString(response))
-
-        case "ready":
-            var params: [String: Any] = [:]
-            if let rig = optionValue(subArgs, name: "--rig") {
-                params["rig"] = rig
-            }
-            let response = try client.sendV2(method: "beads.ready", params: params)
-            print(jsonString(response))
-
-        case "list":
-            var params: [String: Any] = [:]
-            if let status = optionValue(subArgs, name: "--status") {
-                params["status"] = status
-            }
-            if let rig = optionValue(subArgs, name: "--rig") {
-                params["rig"] = rig
-            }
-            let response = try client.sendV2(method: "beads.list", params: params)
-            print(jsonString(response))
-
-        case "update":
-            guard let beadID = subArgs.first else {
-                throw CLIError(message: "beads update requires a bead ID")
-            }
-            let updateArgs = Array(subArgs.dropFirst())
-            var params: [String: Any] = ["bead_id": beadID]
-            if let status = optionValue(updateArgs, name: "--status") {
-                params["status"] = status
-            }
-            if let notes = optionValue(updateArgs, name: "--notes") {
-                params["notes"] = notes
-            }
-            let response = try client.sendV2(method: "beads.update", params: params)
-            print(jsonString(response))
-
-        case "close":
-            guard let beadID = subArgs.first else {
-                throw CLIError(message: "beads close requires a bead ID")
-            }
-            var params: [String: Any] = ["bead_id": beadID]
-            if let reason = optionValue(Array(subArgs.dropFirst()), name: "--reason") {
-                params["reason"] = reason
-            }
-            let response = try client.sendV2(method: "beads.close", params: params)
-            print(jsonString(response))
-
-        default:
-            throw CLIError(message: "Unknown beads subcommand: \(sub). Use show, ready, list, update, or close.")
-        }
-    }
-
     private func usage() -> String {
         return """
         gmux - control cmux via Unix socket
@@ -14459,28 +14230,12 @@ struct GmuxCLI {
           respawn-pane [--workspace <id|ref>] [--surface <id|ref>] [--command <cmd>]
           display-message [-p|--print] <text>
 
+          save-session --name <name>           (save current layout as a named session)
+          restore-session [--name <name>]       (restore a named session, or last session if no name)
+          list-sessions                         (list saved sessions)
+          delete-session --name <name>          (delete a saved session)
+
           markdown [open] <path>             (open markdown file in formatted viewer panel with live reload)
-
-          # Gastown commands (Gas Town multi-agent orchestration)
-          gastown hooks list                                (list hook targets and sync status)
-          gastown hooks sync [target]                       (sync hooks configuration)
-          gastown convoy list                               (list active convoys)
-          gastown convoy show <convoy-id>                   (show convoy detail)
-          gastown convoy add <convoy-id> <issue-id...>      (add tracked work to convoy)
-          gastown peek <agent>                              (health-check an agent)
-          gastown vitals                                    (unified health dashboard)
-
-          # Beads commands (issue tracking)
-          beads show <bead-id>                              (show bead detail)
-          beads ready [--rig <name>]                        (list ready work)
-          beads list [--status <status>] [--rig <name>]     (list beads)
-          beads update <bead-id> [--status <s>] [--notes <n>]  (update bead)
-          beads close <bead-id> [--reason <reason>]         (close bead)
-
-          # Identity-based workspace routing
-          open-by-agent <address> [--no-focus]              (open workspace by agent address)
-          open-by-bead <bead-id> [--no-focus]               (open workspace by bead ID)
-          open-by-convoy <convoy-id> [--no-focus]           (open workspace by convoy ID)
 
           browser [--surface <id|ref|index> | <surface>] <subcommand> ...
           browser open [url]                   (create browser split in caller's workspace; if surface supplied, behaves like navigate)
@@ -14546,7 +14301,7 @@ struct CMUXTermMain {
     static func main() {
         // CLI tools should ignore SIGPIPE so closed stdout pipes do not terminate the process.
         _ = signal(SIGPIPE, SIG_IGN)
-        let cli = GmuxCLI(args: CommandLine.arguments)
+        let cli = CMUXCLI(args: CommandLine.arguments)
         do {
             try cli.run()
         } catch {

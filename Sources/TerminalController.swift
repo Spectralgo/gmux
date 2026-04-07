@@ -2392,6 +2392,16 @@ class TerminalController {
         case "browser.input_touch":
             return v2Result(id: id, self.v2BrowserInputTouch(params: params))
 
+        // Sessions
+        case "session.save":
+            return v2Result(id: id, self.v2SessionSave(params: params))
+        case "session.restore":
+            return v2Result(id: id, self.v2SessionRestore(params: params))
+        case "session.list":
+            return v2Result(id: id, self.v2SessionList(params: params))
+        case "session.delete":
+            return v2Result(id: id, self.v2SessionDelete(params: params))
+
         // Markdown
         case "markdown.open":
             return v2Result(id: id, self.v2MarkdownOpen(params: params))
@@ -7676,6 +7686,126 @@ class TerminalController {
     }
 
     // MARK: - Markdown
+
+    // MARK: - Sessions
+
+    private func v2SessionSave(params: [String: Any]) -> V2CallResult {
+        guard let name = v2String(params, "name") else {
+            return .err(code: "invalid_params", message: "Missing 'name' parameter", data: nil)
+        }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            return .err(code: "invalid_params", message: "Session name must not be empty", data: nil)
+        }
+
+        var snapshot: AppSessionSnapshot?
+        v2MainSync {
+            snapshot = AppDelegate.shared?.buildNamedSessionSnapshot(includeScrollback: false)
+        }
+
+        guard let snapshot else {
+            return .err(code: "internal_error", message: "Failed to capture session snapshot", data: nil)
+        }
+
+        let result = NamedSessionStore.save(snapshot, name: trimmedName)
+        switch result {
+        case .success(let url):
+            return .ok([
+                "name": trimmedName,
+                "path": url.path,
+                "window_count": snapshot.windows.count,
+                "workspace_count": snapshot.windows.reduce(0) { $0 + $1.tabManager.workspaces.count },
+            ])
+        case .failure(let error):
+            return .err(code: "save_failed", message: error.description, data: nil)
+        }
+    }
+
+    private func v2SessionRestore(params: [String: Any]) -> V2CallResult {
+        let name = v2String(params, "name")
+        let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let snapshot: AppSessionSnapshot
+        if let trimmedName, !trimmedName.isEmpty {
+            let result = NamedSessionStore.load(name: trimmedName)
+            switch result {
+            case .success(let loaded):
+                snapshot = loaded
+            case .failure(let error):
+                return .err(code: "restore_failed", message: error.description, data: nil)
+            }
+        } else {
+            guard let loaded = SessionPersistenceStore.load() else {
+                return .err(code: "restore_failed", message: "No last session found", data: nil)
+            }
+            snapshot = loaded
+        }
+
+        var restoredWorkspaceCount = 0
+        var restoredWindowCount = 0
+        var errors: [String] = []
+
+        v2MainSync {
+            guard let appDelegate = AppDelegate.shared else {
+                errors.append("AppDelegate not available")
+                return
+            }
+            for windowSnapshot in snapshot.windows {
+                let workspacesInWindow = windowSnapshot.tabManager.workspaces.count
+                if workspacesInWindow == 0 { continue }
+                appDelegate.restoreNamedSessionWindow(windowSnapshot)
+                restoredWindowCount += 1
+                restoredWorkspaceCount += workspacesInWindow
+            }
+        }
+
+        if restoredWindowCount == 0 && !errors.isEmpty {
+            return .err(code: "restore_failed", message: errors.joined(separator: "; "), data: nil)
+        }
+
+        var result: [String: Any] = [
+            "restored_windows": restoredWindowCount,
+            "restored_workspaces": restoredWorkspaceCount,
+        ]
+        if let trimmedName {
+            result["name"] = trimmedName
+        }
+        if !errors.isEmpty {
+            result["warnings"] = errors
+        }
+        return .ok(result)
+    }
+
+    private func v2SessionList(params: [String: Any]) -> V2CallResult {
+        let entries = NamedSessionStore.list()
+        let sessions: [[String: Any]] = entries.map { entry in
+            [
+                "name": entry.name,
+                "created_at": entry.createdAt,
+                "window_count": entry.windowCount,
+                "workspace_count": entry.workspaceCount,
+            ]
+        }
+        return .ok(["sessions": sessions])
+    }
+
+    private func v2SessionDelete(params: [String: Any]) -> V2CallResult {
+        guard let name = v2String(params, "name") else {
+            return .err(code: "invalid_params", message: "Missing 'name' parameter", data: nil)
+        }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            return .err(code: "invalid_params", message: "Session name must not be empty", data: nil)
+        }
+
+        let result = NamedSessionStore.delete(name: trimmedName)
+        switch result {
+        case .success:
+            return .ok(["name": trimmedName, "deleted": true])
+        case .failure(let error):
+            return .err(code: "delete_failed", message: error.description, data: nil)
+        }
+    }
 
     private func v2MarkdownOpen(params: [String: Any]) -> V2CallResult {
         guard let tabManager = v2ResolveTabManager(params: params) else {
