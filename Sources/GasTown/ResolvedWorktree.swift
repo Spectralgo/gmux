@@ -1,16 +1,17 @@
 import Foundation
 
-/// The result of successfully resolving an agent identity to a worktree.
+/// The result of resolving an agent identity to a concrete worktree.
 ///
-/// Contains everything needed to open, label, and contextualize the workspace.
+/// Carries the filesystem path, git topology classification, and enough
+/// metadata for downstream routing by bead, convoy, or notification flows.
 struct ResolvedWorktree: Equatable {
-    /// The identity that was resolved.
+    /// The agent identity that was resolved.
     let identity: AgentIdentity
 
     /// Absolute path to the worktree root (the directory containing `.git`).
     let path: URL
 
-    /// The classified workspace type.
+    /// Classification of this workspace's git topology.
     let kind: WorktreeKind
 
     /// The rig this worktree belongs to.

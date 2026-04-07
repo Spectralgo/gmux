@@ -3,7 +3,7 @@ import Foundation
 /// Resolves ``AgentIdentity`` values into concrete ``ResolvedWorktree`` results
 /// using a pre-built ``RigInventorySnapshot``.
 ///
-/// The resolver never re-traverses the filesystem for rig structure -- it reads
+/// The resolver never re-traverses the filesystem for rig structure — it reads
 /// the snapshot produced by ``RigInventoryAdapter``. Git metadata inspection
 /// (`.git` file vs. directory) is the only filesystem access performed, and only
 /// on the specific worktree path being resolved.
@@ -75,12 +75,16 @@ enum AgentIdentityResolver {
         // 3. Compute the worktree path.
         let worktreePath: URL
         if identity.role.isSingular {
+            // Singular roles: workspace at <role>/rig/
             worktreePath = roleDir.path.appendingPathComponent("rig")
         } else {
+            // Multi-member roles: workspace at <role>/<name>/ for crew,
+            // or <role>/<name>/rig/ for polecats.
             guard let memberName = identity.name else {
                 throw ResolutionError.roleNotAvailable(rig: identity.rig, role: identity.role)
             }
 
+            // Verify the member exists in the inventory.
             guard roleDir.members.contains(memberName) else {
                 throw ResolutionError.memberNotFound(
                     rig: identity.rig,
@@ -92,10 +96,12 @@ enum AgentIdentityResolver {
 
             switch identity.role {
             case .polecats:
+                // Polecat worktrees live at <rig>/polecats/<name>/rig/
                 worktreePath = roleDir.path
                     .appendingPathComponent(memberName)
                     .appendingPathComponent("rig")
             case .crew:
+                // Crew clones (and cross-rig worktrees) live at <rig>/crew/<name>/
                 worktreePath = roleDir.path.appendingPathComponent(memberName)
             default:
                 worktreePath = roleDir.path.appendingPathComponent(memberName)

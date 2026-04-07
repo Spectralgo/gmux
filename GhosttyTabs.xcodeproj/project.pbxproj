@@ -7,6 +7,19 @@
 	objects = {
 
 		/* Begin PBXBuildFile section */
+		GT080001 /* GasTownRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080011 /* GasTownRoot.swift */; };
+		GT080002 /* Rig.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080012 /* Rig.swift */; };
+		GT080003 /* RigConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080013 /* RigConfig.swift */; };
+		GT080004 /* RigHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080014 /* RigHealth.swift */; };
+		GT080005 /* RigInventorySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080015 /* RigInventorySnapshot.swift */; };
+		GT080006 /* RigsManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080016 /* RigsManifest.swift */; };
+		GT080007 /* RoleDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080017 /* RoleDirectory.swift */; };
+		GT080008 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT080018 /* RigInventoryAdapter.swift */; };
+		GT090001 /* AgentIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090011 /* AgentIdentity.swift */; };
+		GT090002 /* AgentIdentityResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090012 /* AgentIdentityResolver.swift */; };
+		GT090003 /* ResolvedWorktree.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090013 /* ResolvedWorktree.swift */; };
+		GT090004 /* WorktreeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090014 /* WorktreeClassifier.swift */; };
+		GT090005 /* WorktreeKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = GT090015 /* WorktreeKind.swift */; };
 			A5001001 /* cmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* cmuxApp.swift */; };
 			A5001002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001012 /* ContentView.swift */; };
 			E62155868BB29FEB5DAAAF25 /* SidebarSelectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */; };
@@ -27,7 +40,6 @@
 		A5001601 /* SentryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001600 /* SentryHelper.swift */; };
 		A5001621 /* AppleScriptSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001620 /* AppleScriptSupport.swift */; };
 		A5001660 /* GasTownDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001661 /* GasTownDiscovery.swift */; };
-		A5001670 /* BeadsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001671 /* BeadsAdapter.swift */; };
 		D1320AA0D1320AA0D1320AA1 /* AppIconDockTilePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */; };
 		D1320AA0D1320AA0D1320AA2 /* CmuxDockTilePlugin.plugin in Copy Dock Tile Plugin */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA5 /* CmuxDockTilePlugin.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A5001400 /* Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001410 /* Panel.swift */; };
@@ -39,8 +51,6 @@
 		A5007420 /* BrowserPopupWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5007421 /* BrowserPopupWindowController.swift */; };
 		A5001420 /* MarkdownPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001418 /* MarkdownPanel.swift */; };
 		A5001421 /* MarkdownPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001419 /* MarkdownPanelView.swift */; };
-		A5001680 /* ReadyWorkPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001681 /* ReadyWorkPanel.swift */; };
-		A5001682 /* ReadyWorkPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001683 /* ReadyWorkPanelView.swift */; };
 		A5001290 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A5001291 /* MarkdownUI */; };
 		A5001405 /* PanelContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001415 /* PanelContentView.swift */; };
 		A5001406 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001416 /* Workspace.swift */; };
@@ -208,6 +218,19 @@
 /* End PBXContainerItemProxy section */
 
 		/* Begin PBXFileReference section */
+		GT080011 /* GasTownRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasTownRoot.swift; sourceTree = "<group>"; };
+		GT080012 /* Rig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rig.swift; sourceTree = "<group>"; };
+		GT080013 /* RigConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigConfig.swift; sourceTree = "<group>"; };
+		GT080014 /* RigHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigHealth.swift; sourceTree = "<group>"; };
+		GT080015 /* RigInventorySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventorySnapshot.swift; sourceTree = "<group>"; };
+		GT080016 /* RigsManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigsManifest.swift; sourceTree = "<group>"; };
+		GT080017 /* RoleDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDirectory.swift; sourceTree = "<group>"; };
+		GT080018 /* RigInventoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RigInventoryAdapter.swift; sourceTree = "<group>"; };
+		GT090011 /* AgentIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentIdentity.swift; sourceTree = "<group>"; };
+		GT090012 /* AgentIdentityResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentIdentityResolver.swift; sourceTree = "<group>"; };
+		GT090013 /* ResolvedWorktree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedWorktree.swift; sourceTree = "<group>"; };
+		GT090014 /* WorktreeClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorktreeClassifier.swift; sourceTree = "<group>"; };
+		GT090015 /* WorktreeKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorktreeKind.swift; sourceTree = "<group>"; };
 			A5001000 /* Gmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 			F1000002A1B2C3D4E5F60718 /* cmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 			7E7E6EF344A568AC7FEE3715 /* cmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -230,7 +253,6 @@
 		A5001600 /* SentryHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentryHelper.swift; sourceTree = "<group>"; };
 		A5001620 /* AppleScriptSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptSupport.swift; sourceTree = "<group>"; };
 		A5001661 /* GasTownDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasTownDiscovery.swift; sourceTree = "<group>"; };
-		A5001671 /* BeadsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeadsAdapter.swift; sourceTree = "<group>"; };
 		D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconDockTilePlugin.swift; sourceTree = "<group>"; };
 		A5001510 /* CmuxWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CmuxWebView.swift; sourceTree = "<group>"; };
 			A5001511 /* UITestRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestRecorder.swift; sourceTree = "<group>"; };
@@ -246,8 +268,6 @@
 		A5001415 /* PanelContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/PanelContentView.swift; sourceTree = "<group>"; };
 		A5001418 /* MarkdownPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanel.swift; sourceTree = "<group>"; };
 		A5001419 /* MarkdownPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelView.swift; sourceTree = "<group>"; };
-		A5001681 /* ReadyWorkPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ReadyWorkPanel.swift; sourceTree = "<group>"; };
-		A5001683 /* ReadyWorkPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ReadyWorkPanelView.swift; sourceTree = "<group>"; };
 		A5001416 /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		A5001417 /* WorkspaceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceContentView.swift; sourceTree = "<group>"; };
 		A5001090 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -462,6 +482,7 @@
 			A5001041 /* Sources */ = {
 				isa = PBXGroup;
 				children = (
+					GT080020 /* GasTown */,
 					A5001011 /* cmuxApp.swift */,
 					A5001012 /* ContentView.swift */,
 					9AD52285508B1D6A9875E7B3 /* SidebarSelectionState.swift */,
@@ -487,7 +508,6 @@
 				A5001600 /* SentryHelper.swift */,
 				A5001620 /* AppleScriptSupport.swift */,
 				A5001661 /* GasTownDiscovery.swift */,
-				A5001671 /* BeadsAdapter.swift */,
 				D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */,
 				A5001090 /* AppDelegate.swift */,
 				A5001091 /* NotificationsPage.swift */,
@@ -504,8 +524,6 @@
 				A5007421 /* BrowserPopupWindowController.swift */,
 				A5001418 /* MarkdownPanel.swift */,
 				A5001419 /* MarkdownPanelView.swift */,
-				A5001681 /* ReadyWorkPanel.swift */,
-				A5001683 /* ReadyWorkPanelView.swift */,
 				A5001510 /* CmuxWebView.swift */,
 				A5001415 /* PanelContentView.swift */,
 				A5001211 /* UpdateController.swift */,
@@ -625,6 +643,26 @@
 				path = cmuxTests;
 				sourceTree = "<group>";
 			};
+		GT080020 /* GasTown */ = {
+			isa = PBXGroup;
+			children = (
+				GT080011 /* GasTownRoot.swift */,
+				GT080012 /* Rig.swift */,
+				GT080013 /* RigConfig.swift */,
+				GT080014 /* RigHealth.swift */,
+				GT080015 /* RigInventorySnapshot.swift */,
+				GT080016 /* RigsManifest.swift */,
+				GT080017 /* RoleDirectory.swift */,
+				GT080018 /* RigInventoryAdapter.swift */,
+				GT090011 /* AgentIdentity.swift */,
+				GT090012 /* AgentIdentityResolver.swift */,
+				GT090013 /* ResolvedWorktree.swift */,
+				GT090014 /* WorktreeClassifier.swift */,
+				GT090015 /* WorktreeKind.swift */,
+			);
+			path = GasTown;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -816,7 +854,6 @@
 				A5001601 /* SentryHelper.swift in Sources */,
 				A5001621 /* AppleScriptSupport.swift in Sources */,
 				A5001660 /* GasTownDiscovery.swift in Sources */,
-				A5001670 /* BeadsAdapter.swift in Sources */,
 				A5001093 /* AppDelegate.swift in Sources */,
 				A5001094 /* NotificationsPage.swift in Sources */,
 				A5001095 /* TerminalNotificationStore.swift in Sources */,
@@ -832,8 +869,6 @@
 				A5007420 /* BrowserPopupWindowController.swift in Sources */,
 				A5001420 /* MarkdownPanel.swift in Sources */,
 				A5001421 /* MarkdownPanelView.swift in Sources */,
-				A5001680 /* ReadyWorkPanel.swift in Sources */,
-				A5001682 /* ReadyWorkPanelView.swift in Sources */,
 				A5001500 /* CmuxWebView.swift in Sources */,
 				A5001405 /* PanelContentView.swift in Sources */,
 				A5001201 /* UpdateController.swift in Sources */,
@@ -856,6 +891,19 @@
 				A5001650 /* CmuxConfig.swift in Sources */,
 			A5001652 /* CmuxConfigExecutor.swift in Sources */,
 			A5001654 /* CmuxDirectoryTrust.swift in Sources */,
+			GT080001 /* GasTownRoot.swift in Sources */,
+			GT080002 /* Rig.swift in Sources */,
+			GT080003 /* RigConfig.swift in Sources */,
+			GT080004 /* RigHealth.swift in Sources */,
+			GT080005 /* RigInventorySnapshot.swift in Sources */,
+			GT080006 /* RigsManifest.swift in Sources */,
+			GT080007 /* RoleDirectory.swift in Sources */,
+			GT080008 /* RigInventoryAdapter.swift in Sources */,
+			GT090001 /* AgentIdentity.swift in Sources */,
+			GT090002 /* AgentIdentityResolver.swift in Sources */,
+			GT090003 /* ResolvedWorktree.swift in Sources */,
+			GT090004 /* WorktreeClassifier.swift in Sources */,
+			GT090005 /* WorktreeKind.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
