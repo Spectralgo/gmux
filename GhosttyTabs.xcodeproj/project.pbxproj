@@ -20,6 +20,7 @@
 		40B35468B942BDEF9AAE9173 /* NotificationJumpTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41834C5148A83E5B8DE3D664 /* NotificationJumpTarget.swift */; };
 		4378399A7C0245EF8186F306 /* OmnibarAndToolsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09C007F42697761B5F1A2AB /* OmnibarAndToolsTests.swift */; };
 		43F8DD5334A4887128D940E6 /* ConvoyAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38005F2FE18948D6631EE491 /* ConvoyAdapter.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* ConvoyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB93B7BDBD72E556BB8B7AA /* ConvoyModel.swift */; };
 		46F6AC15863EC84DCD3770A2 /* TerminalAndGhosttyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02FC74F2C27127CC565B3E8C /* TerminalAndGhosttyTests.swift */; };
 		4B3B091FFD942E7E2E9563FF /* NotificationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235FE1B9C14D938F9E6B2760 /* NotificationContext.swift */; };
 		507206778D916A5A519532BE /* RigsManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611B17096E2800091A0F4C44 /* RigsManifest.swift */; };
@@ -34,6 +35,8 @@
 		834636C4A214EF8F0A7B8BF8 /* RigInventorySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A559F308A30EEEDAAB3C25C5 /* RigInventorySnapshot.swift */; };
 		84E00D47E4584162AE53BC8D /* xterm-ghostty in Resources */ = {isa = PBXBuildFile; fileRef = B2E7294509CC42FE9191870E /* xterm-ghostty */; };
 		8A17A1515D36D6B72C805001 /* BeadInspectorPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C14CD11C2FC796BC01FE84F /* BeadInspectorPanelView.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* BeadInspectorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* BeadInspectorPanel.swift */; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* BeadsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E0350B316193AD01285983 /* BeadsAdapter.swift */; };
 		8C4BBF2DEF6DF93F395A9EE7 /* TerminalControllerSocketSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491751CE2321474474F27DCF /* TerminalControllerSocketSecurityTests.swift */; };
 		9B62A308C90704FA5248800F /* RigHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D40203D73CCB5C848CEF33A /* RigHealth.swift */; };
 		A35E26EF1E9FE90D16B435AC /* ReadyWorkPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B989ED27CD4D2D36AD5E66B5 /* ReadyWorkPanelView.swift */; };
@@ -249,7 +252,7 @@
 		02FC74F2C27127CC565B3E8C /* TerminalAndGhosttyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalAndGhosttyTests.swift; sourceTree = "<group>"; };
 		10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSessionSnapshotTests.swift; sourceTree = "<group>"; };
 		14A7DC53B9CA33BE2A421711 /* WorkspacePullRequestSidebarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePullRequestSidebarTests.swift; sourceTree = "<group>"; };
-		14E0350B316193AD01285983 /* BeadsAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BeadsAdapter.swift; sourceTree = "<group>"; };
+		14E0350B316193AD01285983 /* BeadsAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Beads/BeadsAdapter.swift"; sourceTree = "<group>"; };
 		15205CACFAC7A030AD1829DE /* GasTownRoot.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GasTownRoot.swift; sourceTree = "<group>"; };
 		1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceManualUnreadTests.swift; sourceTree = "<group>"; };
 		235FE1B9C14D938F9E6B2760 /* NotificationContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationContext.swift; sourceTree = "<group>"; };
@@ -273,6 +276,7 @@
 		5725C2BAABE9FE0A18FEECB0 /* InboxPage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InboxPage.swift; sourceTree = "<group>"; };
 		58C7B1B978620BE162CC057E /* BrowserPanelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPanelTests.swift; sourceTree = "<group>"; };
 		595C06F1053C93777CB8B5F8 /* BeadModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BeadModel.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* BeadInspectorPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BeadInspectorPanel.swift; sourceTree = "<group>"; };
 		5C14CD11C2FC796BC01FE84F /* BeadInspectorPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BeadInspectorPanelView.swift; sourceTree = "<group>"; };
 		6083A7DAD962E287FC2FFE94 /* ShortcutAndCommandPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutAndCommandPaletteTests.swift; sourceTree = "<group>"; };
 		611B17096E2800091A0F4C44 /* RigsManifest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigsManifest.swift; sourceTree = "<group>"; };
@@ -659,6 +663,7 @@
 			children = (
 				43340D54006ED08C17960370 /* DiffPanel.swift */,
 				40E21FEE4831CEBBED6E88A1 /* DiffPanelView.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* BeadInspectorPanel.swift */,
 				5C14CD11C2FC796BC01FE84F /* BeadInspectorPanelView.swift */,
 				381AF7F8A9B526B8522D222B /* ReadyWorkPanel.swift */,
 				B989ED27CD4D2D36AD5E66B5 /* ReadyWorkPanelView.swift */,
@@ -995,6 +1000,8 @@
 				0D433DCC03263E4C565547C2 /* GmuxProfile.swift in Sources */,
 				DC4F3DC24F4BFB139610E03F /* DiffPanel.swift in Sources */,
 				BD427E2AAC61E750A3621250 /* DiffPanelView.swift in Sources */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* BeadsAdapter.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* BeadInspectorPanel.swift in Sources */,
 				8A17A1515D36D6B72C805001 /* BeadInspectorPanelView.swift in Sources */,
 				5D2913CA73F897F95F0AAC87 /* ReadyWorkPanel.swift in Sources */,
 				A35E26EF1E9FE90D16B435AC /* ReadyWorkPanelView.swift in Sources */,
@@ -1018,6 +1025,7 @@
 				A4000DE1637D21E784235F1B /* GastownSocketHandlers.swift in Sources */,
 				A7BC717CADDBB186AA525A77 /* NotificationRouter.swift in Sources */,
 				43F8DD5334A4887128D940E6 /* ConvoyAdapter.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* ConvoyModel.swift in Sources */,
 				ABC0C42EB6C0EFBCF01D3FD1 /* RigConfig.swift in Sources */,
 				AE5563928BF7C6C771C0DCFD /* OpenRouter.swift in Sources */,
 				C0902140A938A755ECA91216 /* ResolvedWorktree.swift in Sources */,

@@ -4,8 +4,16 @@ import SwiftUI
 /// Full implementation on polecat/scavenger-mnnkvb1b branch
 struct DiffPanelView: View {
     let panel: DiffPanel
+    let isFocused: Bool
+    let isVisibleInUI: Bool
+    let portalPriority: Int
+    let onRequestPanelFocus: () -> Void
+
     var body: some View {
-        Text("Diff Review (coming soon)")
+        Text(String(
+            localized: "panel.diff.placeholder",
+            defaultValue: "Diff Review (coming soon)"
+        ))
             .foregroundColor(.secondary)
     }
 }

@@ -669,6 +669,14 @@ struct TerminalNotification: Identifiable, Hashable {
     /// When present, notification actions can use ``NotificationContext/openIntent``
     /// to route to the correct workspace preset instead of bare tab/surface focus.
     var notificationContext: NotificationContext?
+
+    static func == (lhs: TerminalNotification, rhs: TerminalNotification) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 @MainActor

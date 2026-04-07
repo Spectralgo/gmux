@@ -158,19 +158,17 @@ enum GastownSocketHandlers {
 
         var result: [String: Any] = [
             "convoy_id": convoyID,
-            "name": detail.name ?? NSNull(),
-            "status": detail.status ?? NSNull(),
+            "name": detail.title,
+            "status": detail.status,
             "focus": focus,
-            "tracked_issue_count": detail.trackedIssues?.count ?? 0,
+            "tracked_issue_count": detail.trackedIssues.count,
         ]
 
-        if let tracked = detail.trackedIssues {
-            result["tracked_issues"] = tracked.map { issue -> [String: Any] in
-                var d: [String: Any] = ["id": issue.id]
-                d["title"] = issue.title ?? NSNull()
-                d["status"] = issue.status ?? NSNull()
-                return d
-            }
+        result["tracked_issues"] = detail.trackedIssues.map { issue -> [String: Any] in
+            var d: [String: Any] = ["id": issue.id]
+            d["title"] = issue.title
+            d["status"] = issue.status
+            return d
         }
 
         return .ok(result)
@@ -539,22 +537,18 @@ enum GastownSocketHandlers {
         var dict: [String: Any] = [
             "convoy_id": detail.id,
         ]
-        dict["name"] = detail.name ?? NSNull()
-        dict["status"] = detail.status ?? NSNull()
-        dict["subscriber_count"] = detail.subscriberCount ?? NSNull()
+        dict["name"] = detail.title
+        dict["status"] = detail.status
+        dict["subscriber_count"] = detail.trackedIssues.count
         dict["created_at"] = detail.createdAt ?? NSNull()
         dict["updated_at"] = detail.updatedAt ?? NSNull()
 
-        if let tracked = detail.trackedIssues {
-            dict["tracked_issues"] = tracked.map { issue -> [String: Any] in
-                var d: [String: Any] = ["id": issue.id]
-                d["title"] = issue.title ?? NSNull()
-                d["status"] = issue.status ?? NSNull()
-                d["prefix"] = issue.prefix ?? NSNull()
-                return d
-            }
-        } else {
-            dict["tracked_issues"] = [] as [Any]
+        dict["tracked_issues"] = detail.trackedIssues.map { issue -> [String: Any] in
+            var d: [String: Any] = ["id": issue.id]
+            d["title"] = issue.title
+            d["status"] = issue.status
+            d["prefix"] = issue.rigId ?? NSNull()
+            return d
         }
 
         return dict

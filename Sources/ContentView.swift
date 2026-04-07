@@ -14865,6 +14865,7 @@ private final class MiddleClickCaptureView: NSView {
 enum SidebarSelection {
     case tabs
     case notifications
+    case inbox
 }
 
 private struct ClearScrollBackground: ViewModifier {

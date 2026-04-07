@@ -496,14 +496,20 @@ extension Workspace {
             markdownSnapshot = SessionMarkdownPanelSnapshot(filePath: markdownPanel.filePath)
             diffSnapshot = nil
         case .diff:
-            guard let diffPanel = panel as? DiffPanel else { return nil }
+            guard let diffPanel = panel as? DiffPanel,
+                  let repoPath = diffPanel.repositoryPath else { return nil }
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
             diffSnapshot = SessionDiffPanelSnapshot(
-                repositoryPath: diffPanel.repositoryPath,
+                repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
+        case .beadInspector, .readyWork:
+            terminalSnapshot = nil
+            browserSnapshot = nil
+            markdownSnapshot = nil
+            diffSnapshot = nil
         }
 
         return SessionPanelSnapshot(
@@ -707,6 +713,8 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
+        case .beadInspector, .readyWork:
+            return nil
         }
     }
 
@@ -7289,6 +7297,10 @@ final class Workspace: Identifiable, ObservableObject {
             return SurfaceKind.markdown
         case .diff:
             return SurfaceKind.diff
+        case .beadInspector:
+            return "beadInspector"
+        case .readyWork:
+            return "readyWork"
         }
     }
 

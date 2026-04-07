@@ -3,55 +3,8 @@ import Combine
 
 // MARK: - Domain Model
 
-/// Status of a bead in the Beads tracking system.
-enum BeadStatus: String, Codable, Sendable {
-    case open
-    case inProgress = "in_progress"
-    case blocked
-    case deferred
-    case closed
-    case pinned
-    case hooked
-
-    var displayLabel: String {
-        switch self {
-        case .open: return String(localized: "beadStatus.open", defaultValue: "Open")
-        case .inProgress: return String(localized: "beadStatus.inProgress", defaultValue: "In Progress")
-        case .blocked: return String(localized: "beadStatus.blocked", defaultValue: "Blocked")
-        case .deferred: return String(localized: "beadStatus.deferred", defaultValue: "Deferred")
-        case .closed: return String(localized: "beadStatus.closed", defaultValue: "Closed")
-        case .pinned: return String(localized: "beadStatus.pinned", defaultValue: "Pinned")
-        case .hooked: return String(localized: "beadStatus.hooked", defaultValue: "Hooked")
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case .open: return "circle"
-        case .inProgress: return "circle.dotted.circle"
-        case .blocked: return "exclamationmark.circle"
-        case .deferred: return "clock"
-        case .closed: return "checkmark.circle"
-        case .pinned: return "pin.circle"
-        case .hooked: return "arrow.right.circle"
-        }
-    }
-
-    var accentColorName: String {
-        switch self {
-        case .open: return "systemGray"
-        case .inProgress: return "systemBlue"
-        case .blocked: return "systemRed"
-        case .deferred: return "systemOrange"
-        case .closed: return "systemGreen"
-        case .pinned: return "systemPurple"
-        case .hooked: return "systemTeal"
-        }
-    }
-}
-
 /// A dependency reference on a bead.
-struct BeadDependency: Identifiable, Sendable {
+struct BeadDependency: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
     let status: BeadStatus?
@@ -59,7 +12,7 @@ struct BeadDependency: Identifiable, Sendable {
 
 /// Detailed bead information suitable for the inspector view.
 /// This single model is reused across convoy, ready-work, and workspace-driven entry points.
-struct BeadDetail: Identifiable, Sendable {
+struct BeadDetail: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
     let status: BeadStatus
@@ -75,6 +28,67 @@ struct BeadDetail: Identifiable, Sendable {
     let externalRef: String?
 }
 
+/// Summary of a bead as returned by `bd ready` or `bd list`.
+struct BeadSummary: Equatable, Sendable, Identifiable {
+    let id: String
+    let title: String
+    let status: String
+    let priority: Int
+    let issueType: String
+    let assignee: String?
+    let owner: String?
+    let createdAt: String?
+    let labels: [String]
+    let dependencyCount: Int
+    let dependentCount: Int
+}
+
+// MARK: - Error Types
+
+/// Structured error describing why a Beads adapter operation failed.
+enum BeadsAdapterError: Error, Equatable, Sendable {
+    /// The `bd` CLI binary could not be found on PATH.
+    case bdCLINotFound
+    /// The `bd` CLI exited with a non-zero status.
+    case cliFailure(command: String, exitCode: Int32, stderr: String)
+    /// The CLI produced output that could not be parsed as JSON.
+    case parseFailure(command: String, detail: String)
+    /// The routes file could not be read or parsed.
+    case routesFileUnreadable(path: String, detail: String)
+    /// The requested bead was not found.
+    case beadNotFound(id: String)
+    /// A command failed with output.
+    case commandFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .bdCLINotFound:
+            return String(localized: "beadsAdapter.error.cliNotFound", defaultValue: "The 'bd' CLI was not found on PATH.")
+        case .cliFailure(let cmd, let code, let stderr):
+            return "\(cmd) exited \(code): \(stderr)"
+        case .parseFailure(_, let detail):
+            return detail
+        case .routesFileUnreadable(_, let detail):
+            return detail
+        case .beadNotFound(let id):
+            return String(localized: "beadsAdapter.error.beadNotFound", defaultValue: "Bead '\(id)' not found.")
+        case .commandFailed(let output):
+            return String(localized: "beadsAdapter.error.commandFailed", defaultValue: "Beads command failed: \(output)")
+        }
+    }
+}
+
+// MARK: - Load State
+
+/// Wraps a beads adapter result with explicit status so views can
+/// distinguish between "no data yet", "data loaded", and "failed with reason".
+enum BeadsLoadState<T: Equatable & Sendable>: Equatable, Sendable {
+    case idle
+    case loading
+    case loaded(T)
+    case failed(BeadsAdapterError)
+}
+
 // MARK: - Adapter
 
 /// Fetches bead data via the `bd` CLI tool.
@@ -86,7 +100,7 @@ final class BeadsAdapter: ObservableObject {
 
     private let bdPath: String
 
-    init() {
+    nonisolated init() {
         // Resolve bd from common locations
         if FileManager.default.fileExists(atPath: "/usr/local/bin/bd") {
             bdPath = "/usr/local/bin/bd"
@@ -102,14 +116,14 @@ final class BeadsAdapter: ObservableObject {
         }
     }
 
-    /// Fetch full bead detail by ID.
+    /// Fetch full bead detail by ID (async).
     func fetchBeadDetail(beadId: String) async -> BeadDetail? {
         isLoading = true
         lastError = nil
         defer { isLoading = false }
 
         do {
-            let output = try await runBd(arguments: ["show", beadId])
+            let output = try await runBdAsync(arguments: ["show", beadId])
             return parseBeadShowOutput(output, beadId: beadId)
         } catch {
             lastError = error.localizedDescription
@@ -117,16 +131,46 @@ final class BeadsAdapter: ObservableObject {
         }
     }
 
-    // MARK: - CLI execution
+    // MARK: - Synchronous Result-based API (for ReadyWorkPanel)
 
-    private func runBd(arguments: [String]) async throws -> String {
+    /// Load ready-work beads synchronously. Runs `bd ready --json`.
+    /// Must be called from a background queue.
+    nonisolated func loadReadyWork() -> Result<[BeadSummary], BeadsAdapterError> {
+        let result = runBdSync(arguments: ["ready", "--json"])
+        switch result {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let output):
+            let summaries = parseReadyWorkOutput(output)
+            return .success(summaries)
+        }
+    }
+
+    /// Load a bead detail synchronously. Runs `bd show <id>`.
+    /// Must be called from a background queue.
+    nonisolated func loadBeadDetail(id: String) -> Result<BeadDetail, BeadsAdapterError> {
+        let result = runBdSync(arguments: ["show", id])
+        switch result {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let output):
+            if let detail = parseBeadShowOutput(output, beadId: id) {
+                return .success(detail)
+            } else {
+                return .failure(.beadNotFound(id: id))
+            }
+        }
+    }
+
+    // MARK: - CLI execution (async)
+
+    private func runBdAsync(arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async { [bdPath] in
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: bdPath)
                 process.arguments = arguments
 
-                // Inherit PATH so bd can find dolt
                 var env = ProcessInfo.processInfo.environment
                 if let path = env["PATH"] {
                     env["PATH"] = path
@@ -156,11 +200,78 @@ final class BeadsAdapter: ObservableObject {
         }
     }
 
+    // MARK: - CLI execution (sync)
+
+    private nonisolated func runBdSync(arguments: [String]) -> Result<String, BeadsAdapterError> {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: bdPath)
+        process.arguments = arguments
+
+        var env = ProcessInfo.processInfo.environment
+        if let path = env["PATH"] {
+            env["PATH"] = path
+        }
+        process.environment = env
+
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+            let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
+
+            if process.terminationStatus != 0 {
+                let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                let stderr = String(data: stderrData, encoding: .utf8) ?? ""
+                return .failure(.cliFailure(
+                    command: "bd \(arguments.joined(separator: " "))",
+                    exitCode: process.terminationStatus,
+                    stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                ))
+            }
+            return .success(stdout)
+        } catch {
+            return .failure(.bdCLINotFound)
+        }
+    }
+
     // MARK: - Parsing
+
+    /// Parse `bd ready --json` output into an array of BeadSummary.
+    private nonisolated func parseReadyWorkOutput(_ output: String) -> [BeadSummary] {
+        guard let data = output.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return []
+        }
+
+        return array.compactMap { json -> BeadSummary? in
+            guard let id = json["id"] as? String,
+                  let title = json["title"] as? String else { return nil }
+
+            return BeadSummary(
+                id: id,
+                title: title,
+                status: json["status"] as? String ?? "open",
+                priority: json["priority"] as? Int ?? 0,
+                issueType: json["type"] as? String ?? "task",
+                assignee: json["assignee"] as? String,
+                owner: json["owner"] as? String,
+                createdAt: json["created_at"] as? String,
+                labels: json["labels"] as? [String] ?? [],
+                dependencyCount: json["dependency_count"] as? Int ?? 0,
+                dependentCount: json["dependent_count"] as? Int ?? 0
+            )
+        }
+    }
 
     /// Parse the output of `bd show <id>` into a BeadDetail.
     /// The output format is a human-readable block with labeled fields.
-    private func parseBeadShowOutput(_ output: String, beadId: String) -> BeadDetail? {
+    private nonisolated func parseBeadShowOutput(_ output: String, beadId: String) -> BeadDetail? {
         let lines = output.components(separatedBy: "\n")
         guard !lines.isEmpty else { return nil }
 
@@ -186,9 +297,7 @@ final class BeadsAdapter: ObservableObject {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
             // First line often contains title with status badge
-            // e.g. "◇ gm-0j7 · TASK-016: Build bead inspector...   [● P2 · HOOKED]"
             if trimmed.contains("◇") || trimmed.contains("◆") {
-                // Extract title between "· " markers
                 if let firstDot = trimmed.range(of: " · ") {
                     let afterFirstDot = trimmed[firstDot.upperBound...]
                     if let bracketRange = afterFirstDot.range(of: "   [") {
@@ -197,7 +306,6 @@ final class BeadsAdapter: ObservableObject {
                         title = String(afterFirstDot)
                     }
                 }
-                // Extract status from bracket
                 if let bracketStart = trimmed.range(of: "["),
                    let bracketEnd = trimmed.range(of: "]") {
                     let badge = String(trimmed[bracketStart.upperBound..<bracketEnd.lowerBound])
@@ -209,7 +317,6 @@ final class BeadsAdapter: ObservableObject {
                     else if badgeUpper.contains("DEFERRED") { status = .deferred }
                     else if badgeUpper.contains("PINNED") { status = .pinned }
                     else if badgeUpper.contains("OPEN") { status = .open }
-                    // Extract priority
                     if let pRange = badge.range(of: "P", options: .caseInsensitive) {
                         let afterP = badge[pRange.upperBound...]
                         if let digit = afterP.first, digit.isNumber {
@@ -220,7 +327,7 @@ final class BeadsAdapter: ObservableObject {
                 continue
             }
 
-            // Field lines: "Key: Value"
+            // Field lines
             if trimmed.hasPrefix("Owner:") {
                 owner = trimmed.replacingOccurrences(of: "Owner:", with: "").trimmingCharacters(in: .whitespaces)
                 currentSection = .none
@@ -278,7 +385,6 @@ final class BeadsAdapter: ObservableObject {
                     acceptanceCriteria.append(trimmed)
                 }
             case .dependsOn:
-                // Lines like "  → ○ gm-wisp-0jr0: (EPIC) mol-polecat-work ● P2"
                 if trimmed.hasPrefix("→") || trimmed.hasPrefix("->") {
                     let cleaned = trimmed
                         .replacingOccurrences(of: "→", with: "")
@@ -286,7 +392,6 @@ final class BeadsAdapter: ObservableObject {
                         .replacingOccurrences(of: "○", with: "")
                         .replacingOccurrences(of: "●", with: "")
                         .trimmingCharacters(in: .whitespaces)
-                    // Extract ID and title
                     if let colonRange = cleaned.range(of: ":") {
                         let depId = String(cleaned[..<colonRange.lowerBound]).trimmingCharacters(in: .whitespaces)
                         let depTitle = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespaces)
@@ -298,7 +403,6 @@ final class BeadsAdapter: ObservableObject {
             }
         }
 
-        // If we couldn't parse a title, use the bead ID
         if title.isEmpty {
             title = beadId
         }
@@ -318,19 +422,5 @@ final class BeadsAdapter: ObservableObject {
             updatedDate: updatedDate,
             externalRef: externalRef
         )
-    }
-}
-
-enum BeadsAdapterError: LocalizedError {
-    case commandFailed(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .commandFailed(let output):
-            return String(
-                localized: "beadsAdapter.error.commandFailed",
-                defaultValue: "Beads command failed: \(output)"
-            )
-        }
     }
 }

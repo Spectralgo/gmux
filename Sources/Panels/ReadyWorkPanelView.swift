@@ -264,14 +264,14 @@ struct ReadyWorkPanelView: View {
 
     private func detailView(_ detail: BeadDetail) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let desc = detail.description, !desc.isEmpty {
-                Text(desc)
+            if !detail.description.isEmpty {
+                Text(detail.description)
                     .font(.system(size: 12))
                     .foregroundColor(.primary)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if let ac = detail.acceptanceCriteria, !ac.isEmpty {
+            if !detail.acceptanceCriteria.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(
                         localized: "readyWork.detail.acceptanceCriteria",
@@ -279,7 +279,7 @@ struct ReadyWorkPanelView: View {
                     ))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.secondary)
-                    Text(ac)
+                    Text(detail.acceptanceCriteria.joined(separator: "\n"))
                         .font(.system(size: 12))
                         .foregroundColor(.primary)
                         .textSelection(.enabled)
@@ -297,7 +297,7 @@ struct ReadyWorkPanelView: View {
                     ForEach(detail.dependencies, id: \.id) { dep in
                         HStack(spacing: 6) {
                             Circle()
-                                .fill(dep.status == "closed" ? Color.green : Color.orange)
+                                .fill(dep.status == .closed ? Color.green : Color.orange)
                                 .frame(width: 6, height: 6)
                             Text(dep.id)
                                 .font(.system(size: 11, design: .monospaced))
@@ -323,7 +323,7 @@ struct ReadyWorkPanelView: View {
                         value: extRef
                     )
                 }
-                if let created = detail.createdAt {
+                if let created = detail.createdDate {
                     metaLabel(
                         String(localized: "readyWork.detail.created", defaultValue: "Created"),
                         value: created
@@ -452,6 +452,8 @@ struct ReadyWorkPanelView: View {
                 localized: "readyWork.error.beadNotFound",
                 defaultValue: "Bead '\(id)' not found."
             )
+        case .commandFailed(let output):
+            return output
         }
     }
 
