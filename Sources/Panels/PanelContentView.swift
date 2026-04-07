@@ -55,10 +55,10 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
-        case .convoy:
-            if let convoyPanel = panel as? ConvoyDetailPanel {
-                ConvoyDetailPanelView(
-                    panel: convoyPanel,
+        case .readyWork:
+            if let readyWorkPanel = panel as? ReadyWorkPanel {
+                ReadyWorkPanelView(
+                    panel: readyWorkPanel,
                     isFocused: isFocused,
                     isVisibleInUI: isVisibleInUI,
                     portalPriority: portalPriority,
