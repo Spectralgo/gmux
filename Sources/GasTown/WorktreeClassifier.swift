@@ -15,10 +15,10 @@ enum WorktreeClassifier {
 
     /// The git topology detected at a path.
     enum GitTopology: Equatable {
-        /// `.git` is a regular directory — this is a full clone.
+        /// `.git` is a regular directory -- this is a full clone.
         case clone
 
-        /// `.git` is a file pointing to a shared gitdir — this is a worktree.
+        /// `.git` is a file pointing to a shared gitdir -- this is a worktree.
         case worktree
 
         /// No `.git` entry found at the path.
@@ -87,16 +87,9 @@ enum WorktreeClassifier {
             return .refineryWorktree
 
         case .crew:
-            // Crew directories are normally full clones. However, cross-rig
-            // worktrees created by `gt worktree` land under `crew/` as git
-            // worktrees (`.git` file). The git topology is the discriminator.
             return topology == .worktree ? .crossRigWorktree : .crewClone
 
         case .mayor, .witness:
-            // Mayor and witness workspaces are not targeted by the identity
-            // resolver in this task — they are singular and not opened by
-            // "agent identity" in the same way. If reached, classify by
-            // topology for forward compatibility.
             return topology == .worktree ? .polecatWorktree : .crewClone
         }
     }
