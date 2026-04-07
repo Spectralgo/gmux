@@ -3915,6 +3915,8 @@ struct SettingsView: View {
     @AppStorage(AppIconSettings.modeKey) private var appIconMode = AppIconSettings.defaultMode.rawValue
     @AppStorage(WorkspacePresentationModeSettings.modeKey)
     private var workspacePresentationMode = WorkspacePresentationModeSettings.defaultMode.rawValue
+    @AppStorage(PersistentTerminalModeSettings.modeKey)
+    private var persistentTerminalMode = PersistentTerminalModeSettings.defaultMode.rawValue
     @AppStorage(SocketControlSettings.appStorageKey) private var socketControlMode = SocketControlSettings.defaultMode.rawValue
     @AppStorage(ClaudeCodeIntegrationSettings.hooksEnabledKey)
     private var claudeCodeHooksEnabled = ClaudeCodeIntegrationSettings.defaultHooksEnabled
@@ -4012,6 +4014,11 @@ struct SettingsView: View {
     @State private var isResettingSettings = false
     @State private var workspaceTabPaletteEntries = WorkspaceTabColorSettings.palette()
     @State private var trustedDirectoriesDraft: String = CmuxDirectoryTrust.shared.allTrustedPaths.joined(separator: "\n")
+    @State private var persistentTerminalBackendStatuses: [PersistentTerminalBackendStatus] = []
+
+    private var selectedPersistentTerminalMode: PersistentTerminalMode {
+        PersistentTerminalMode(rawValue: persistentTerminalMode) ?? PersistentTerminalModeSettings.defaultMode
+    }
 
     private var selectedWorkspacePlacement: NewWorkspacePlacement {
         NewWorkspacePlacement(rawValue: newWorkspacePlacement) ?? WorkspacePlacementSettings.defaultPlacement
@@ -5214,6 +5221,66 @@ struct SettingsView: View {
                         }
                     }
 
+                    SettingsSectionHeader(title: String(localized: "settings.section.sessionPersistence", defaultValue: "Session Persistence"))
+                    SettingsCard {
+                        SettingsPickerRow(
+                            String(localized: "settings.sessionPersistence.mode", defaultValue: "Persistent Terminal Mode"),
+                            subtitle: selectedPersistentTerminalMode.description,
+                            controlWidth: pickerColumnWidth,
+                            selection: $persistentTerminalMode,
+                            accessibilityId: "PersistentTerminalModePicker"
+                        ) {
+                            ForEach(PersistentTerminalMode.allCases) { mode in
+                                Text(mode.displayName).tag(mode.rawValue)
+                            }
+                        }
+
+                        SettingsCardDivider()
+
+                        SettingsCardNote(
+                            String(
+                                localized: "settings.sessionPersistence.mode.note",
+                                defaultValue: "Controls how terminal sessions survive app restarts. Metadata-only restores layout and working directories. Other modes use external tools to keep live processes running."
+                            )
+                        )
+
+                        if selectedPersistentTerminalMode != .metadataOnly {
+                            SettingsCardDivider()
+
+                            let status = persistentTerminalBackendStatuses.first { $0.mode == selectedPersistentTerminalMode }
+                            SettingsCardRow(
+                                String(localized: "settings.sessionPersistence.backendStatus", defaultValue: "Backend Status"),
+                                subtitle: status?.statusDescription ?? String(localized: "settings.sessionPersistence.backendStatus.checking", defaultValue: "Checking…"),
+                                controlWidth: pickerColumnWidth
+                            ) {
+                                EmptyView()
+                            }
+
+                            SettingsCardDivider()
+
+                            SettingsCardNote(selectedPersistentTerminalMode.limitations)
+                        }
+
+                        if selectedPersistentTerminalMode == .tmuxResurrect {
+                            let tmuxStatus = persistentTerminalBackendStatuses.first { $0.mode == .tmuxResurrect }
+                            if tmuxStatus?.binaryFound == true && !tmuxStatus!.pluginAvailable {
+                                SettingsCardDivider()
+                                SettingsCardNote(
+                                    String(
+                                        localized: "settings.sessionPersistence.tmuxResurrect.pluginMissing",
+                                        defaultValue: "tmux-resurrect plugin not detected. Without it, tmux sessions survive app quit but not tmux server restarts. Install via TPM or manually to ~/.tmux/plugins/tmux-resurrect."
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    .onAppear {
+                        persistentTerminalBackendStatuses = PersistentTerminalBackendDetector.detectAll()
+                    }
+                    .onChange(of: persistentTerminalMode) { _ in
+                        persistentTerminalBackendStatuses = PersistentTerminalBackendDetector.detectAll()
+                    }
+
                     SettingsSectionHeader(title: String(localized: "settings.section.automation", defaultValue: "Automation"))
                     SettingsCard {
                         SettingsPickerRow(
@@ -5897,6 +5964,7 @@ struct SettingsView: View {
         appearanceMode = AppearanceSettings.defaultMode.rawValue
         appIconMode = AppIconSettings.defaultMode.rawValue
         AppIconSettings.applyIcon(.automatic)
+        persistentTerminalMode = PersistentTerminalModeSettings.defaultMode.rawValue
         socketControlMode = SocketControlSettings.defaultMode.rawValue
         claudeCodeHooksEnabled = ClaudeCodeIntegrationSettings.defaultHooksEnabled
         customClaudePath = ""

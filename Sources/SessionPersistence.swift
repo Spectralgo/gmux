@@ -365,6 +365,9 @@ struct AppSessionSnapshot: Codable, Sendable {
     var version: Int
     var createdAt: TimeInterval
     var windows: [SessionWindowSnapshot]
+    /// The persistent terminal mode active when this snapshot was taken.
+    /// Used during restore to decide whether to attempt backend reattach.
+    var persistentTerminalMode: String?
 }
 
 enum SessionPersistenceStore {
