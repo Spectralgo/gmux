@@ -6027,6 +6027,10 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.markdown", defaultValue: "Markdown")
         case .diff:
             return String(localized: "commandPalette.kind.diff", defaultValue: "Diff")
+        case .beadInspector:
+            return String(localized: "commandPalette.kind.beadInspector", defaultValue: "Bead Inspector")
+        case .readyWork:
+            return String(localized: "commandPalette.kind.readyWork", defaultValue: "Ready Work")
         }
     }
 
@@ -6040,6 +6044,10 @@ struct ContentView: View {
             return ["markdown", "note", "preview"]
         case .diff:
             return ["diff", "review", "changes", "git"]
+        case .beadInspector:
+            return ["bead", "inspector", "issue", "detail"]
+        case .readyWork:
+            return ["ready", "work", "beads", "queue"]
         }
     }
 

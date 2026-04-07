@@ -9,6 +9,42 @@ enum BeadStatus: String, Codable, Sendable, CaseIterable {
     case closed
     case pinned
     case hooked
+
+    var displayLabel: String {
+        switch self {
+        case .open: return String(localized: "beadStatus.open", defaultValue: "Open")
+        case .inProgress: return String(localized: "beadStatus.inProgress", defaultValue: "In Progress")
+        case .blocked: return String(localized: "beadStatus.blocked", defaultValue: "Blocked")
+        case .deferred: return String(localized: "beadStatus.deferred", defaultValue: "Deferred")
+        case .closed: return String(localized: "beadStatus.closed", defaultValue: "Closed")
+        case .pinned: return String(localized: "beadStatus.pinned", defaultValue: "Pinned")
+        case .hooked: return String(localized: "beadStatus.hooked", defaultValue: "Hooked")
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .open: return "circle"
+        case .inProgress: return "circle.dotted.circle"
+        case .blocked: return "exclamationmark.circle"
+        case .deferred: return "clock"
+        case .closed: return "checkmark.circle"
+        case .pinned: return "pin.circle"
+        case .hooked: return "arrow.right.circle"
+        }
+    }
+
+    var accentColorName: String {
+        switch self {
+        case .open: return "systemGray"
+        case .inProgress: return "systemBlue"
+        case .blocked: return "systemRed"
+        case .deferred: return "systemOrange"
+        case .closed: return "systemGreen"
+        case .pinned: return "systemPurple"
+        case .hooked: return "systemTeal"
+        }
+    }
 }
 
 /// Valid bead types.
