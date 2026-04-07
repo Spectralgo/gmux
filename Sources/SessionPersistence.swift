@@ -240,8 +240,8 @@ struct SessionMarkdownPanelSnapshot: Codable, Sendable {
     var filePath: String
 }
 
-struct SessionConvoyPanelSnapshot: Codable, Sendable {
-    var convoyId: String
+struct SessionBeadInspectorPanelSnapshot: Codable, Sendable {
+    var beadId: String
 }
 
 struct SessionPanelSnapshot: Codable, Sendable {
@@ -258,7 +258,7 @@ struct SessionPanelSnapshot: Codable, Sendable {
     var terminal: SessionTerminalPanelSnapshot?
     var browser: SessionBrowserPanelSnapshot?
     var markdown: SessionMarkdownPanelSnapshot?
-    var convoy: SessionConvoyPanelSnapshot?
+    var beadInspector: SessionBeadInspectorPanelSnapshot?
 }
 
 enum SessionSplitOrientation: String, Codable, Sendable {

@@ -6025,8 +6025,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.browser", defaultValue: "Browser")
         case .markdown:
             return String(localized: "commandPalette.kind.markdown", defaultValue: "Markdown")
-        case .readyWork:
-            return String(localized: "commandPalette.kind.readyWork", defaultValue: "Ready Work")
+        case .beadInspector:
+            return String(localized: "commandPalette.kind.beadInspector", defaultValue: "Bead Inspector")
         }
     }
 
@@ -6038,8 +6038,8 @@ struct ContentView: View {
             return ["browser", "web", "page"]
         case .markdown:
             return ["markdown", "note", "preview"]
-        case .readyWork:
-            return ["ready", "work", "beads", "triage"]
+        case .beadInspector:
+            return ["bead", "inspector", "issue", "beads"]
         }
     }
 

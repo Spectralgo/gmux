@@ -449,6 +449,7 @@ extension Workspace {
         let terminalSnapshot: SessionTerminalPanelSnapshot?
         let browserSnapshot: SessionBrowserPanelSnapshot?
         let markdownSnapshot: SessionMarkdownPanelSnapshot?
+        let beadInspectorSnapshot: SessionBeadInspectorPanelSnapshot?
         switch panel.panelType {
         case .terminal:
             guard let terminalPanel = panel as? TerminalPanel else { return nil }
@@ -472,6 +473,7 @@ extension Workspace {
             )
             browserSnapshot = nil
             markdownSnapshot = nil
+            beadInspectorSnapshot = nil
         case .browser:
             guard let browserPanel = panel as? BrowserPanel else { return nil }
             terminalSnapshot = nil
@@ -486,15 +488,19 @@ extension Workspace {
                 forwardHistoryURLStrings: historySnapshot.forwardHistoryURLStrings
             )
             markdownSnapshot = nil
+            beadInspectorSnapshot = nil
         case .markdown:
             guard let markdownPanel = panel as? MarkdownPanel else { return nil }
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = SessionMarkdownPanelSnapshot(filePath: markdownPanel.filePath)
-        case .readyWork:
+            beadInspectorSnapshot = nil
+        case .beadInspector:
+            guard let inspectorPanel = panel as? BeadInspectorPanel else { return nil }
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
+            beadInspectorSnapshot = SessionBeadInspectorPanelSnapshot(beadId: inspectorPanel.beadId)
         }
 
         return SessionPanelSnapshot(
@@ -510,7 +516,8 @@ extension Workspace {
             ttyName: ttyName,
             terminal: terminalSnapshot,
             browser: browserSnapshot,
-            markdown: markdownSnapshot
+            markdown: markdownSnapshot,
+            beadInspector: beadInspectorSnapshot
         )
     }
 
@@ -685,15 +692,17 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: markdownPanel.id)
             return markdownPanel.id
-        case .readyWork:
-            guard let readyWorkPanel = newReadyWorkSurface(
-                inPane: paneId,
-                focus: false
-            ) else {
+        case .beadInspector:
+            guard let beadId = snapshot.beadInspector?.beadId,
+                  let inspectorPanel = newBeadInspectorSurface(
+                    inPane: paneId,
+                    beadId: beadId,
+                    focus: false
+                  ) else {
                 return nil
             }
-            applySessionPanelMetadata(snapshot, toPanelId: readyWorkPanel.id)
-            return readyWorkPanel.id
+            applySessionPanelMetadata(snapshot, toPanelId: inspectorPanel.id)
+            return inspectorPanel.id
         }
     }
 
@@ -6732,7 +6741,7 @@ final class Workspace: Identifiable, ObservableObject {
         static let terminal = "terminal"
         static let browser = "browser"
         static let markdown = "markdown"
-        static let readyWork = "readyWork"
+        static let beadInspector = "beadInspector"
     }
 
     enum PanelShellActivityState: String {
@@ -7201,6 +7210,30 @@ final class Workspace: Identifiable, ObservableObject {
         panelSubscriptions[markdownPanel.id] = subscription
     }
 
+    private func installBeadInspectorPanelSubscription(_ inspectorPanel: BeadInspectorPanel) {
+        let subscription = inspectorPanel.$displayTitle
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self, weak inspectorPanel] newTitle in
+                guard let self,
+                      let inspectorPanel,
+                      let tabId = self.surfaceIdFromPanelId(inspectorPanel.id) else { return }
+                guard let existing = self.bonsplitController.tab(tabId) else { return }
+
+                if self.panelTitles[inspectorPanel.id] != newTitle {
+                    self.panelTitles[inspectorPanel.id] = newTitle
+                }
+                let resolvedTitle = self.resolvedPanelTitle(panelId: inspectorPanel.id, fallback: newTitle)
+                guard existing.title != resolvedTitle else { return }
+                self.bonsplitController.updateTab(
+                    tabId,
+                    title: resolvedTitle,
+                    hasCustomTitle: self.panelCustomTitles[inspectorPanel.id] != nil
+                )
+            }
+        panelSubscriptions[inspectorPanel.id] = subscription
+    }
+
     private func browserRemoteWorkspaceStatusSnapshot() -> BrowserRemoteWorkspaceStatus? {
         guard let target = remoteDisplayTarget else { return nil }
         return BrowserRemoteWorkspaceStatus(
@@ -7246,8 +7279,8 @@ final class Workspace: Identifiable, ObservableObject {
             return SurfaceKind.browser
         case .markdown:
             return SurfaceKind.markdown
-        case .readyWork:
-            return SurfaceKind.readyWork
+        case .beadInspector:
+            return SurfaceKind.beadInspector
         }
     }
 
@@ -9226,6 +9259,68 @@ final class Workspace: Identifiable, ObservableObject {
         return markdownPanel
     }
 
+    func newBeadInspectorSplit(
+        from panelId: UUID,
+        orientation: SplitOrientation,
+        insertFirst: Bool = false,
+        beadId: String,
+        focus: Bool = true
+    ) -> BeadInspectorPanel? {
+        guard let sourceTabId = surfaceIdFromPanelId(panelId) else { return nil }
+        var sourcePaneId: PaneID?
+        for paneId in bonsplitController.allPaneIds {
+            let tabs = bonsplitController.tabs(inPane: paneId)
+            if tabs.contains(where: { $0.id == sourceTabId }) {
+                sourcePaneId = paneId
+                break
+            }
+        }
+
+        guard let paneId = sourcePaneId else { return nil }
+
+        let inspectorPanel = BeadInspectorPanel(workspaceId: id, beadId: beadId)
+        panels[inspectorPanel.id] = inspectorPanel
+        panelTitles[inspectorPanel.id] = inspectorPanel.displayTitle
+
+        let newTab = Bonsplit.Tab(
+            title: inspectorPanel.displayTitle,
+            icon: inspectorPanel.displayIcon,
+            kind: SurfaceKind.beadInspector,
+            isDirty: inspectorPanel.isDirty,
+            isLoading: false,
+            isPinned: false
+        )
+        surfaceIdToPanelId[newTab.id] = inspectorPanel.id
+        let previousFocusedPanelId = focusedPanelId
+
+        isProgrammaticSplit = true
+        defer { isProgrammaticSplit = false }
+        guard bonsplitController.splitPane(paneId, orientation: orientation, withTab: newTab, insertFirst: insertFirst) != nil else {
+            surfaceIdToPanelId.removeValue(forKey: newTab.id)
+            panels.removeValue(forKey: inspectorPanel.id)
+            panelTitles.removeValue(forKey: inspectorPanel.id)
+            return nil
+        }
+
+        let previousHostedView = focusedTerminalPanel?.hostedView
+        if focus {
+            previousHostedView?.suppressReparentFocus()
+            focusPanel(inspectorPanel.id)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                previousHostedView?.clearSuppressReparentFocus()
+            }
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: inspectorPanel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        installBeadInspectorPanelSubscription(inspectorPanel)
+        return inspectorPanel
+    }
+
     @discardableResult
     func newMarkdownSurface(
         inPane paneId: PaneID,
@@ -9271,34 +9366,34 @@ final class Workspace: Identifiable, ObservableObject {
         return markdownPanel
     }
 
-    @discardableResult
-    func newReadyWorkSurface(
+    func newBeadInspectorSurface(
         inPane paneId: PaneID,
+        beadId: String,
         focus: Bool? = nil
-    ) -> ReadyWorkPanel? {
+    ) -> BeadInspectorPanel? {
         let shouldFocusNewTab = focus ?? (bonsplitController.focusedPaneId == paneId)
         let previousFocusedPanelId = focusedPanelId
         let previousHostedView = focusedTerminalPanel?.hostedView
 
-        let readyWorkPanel = ReadyWorkPanel(workspaceId: id)
-        panels[readyWorkPanel.id] = readyWorkPanel
-        panelTitles[readyWorkPanel.id] = readyWorkPanel.displayTitle
+        let inspectorPanel = BeadInspectorPanel(workspaceId: id, beadId: beadId)
+        panels[inspectorPanel.id] = inspectorPanel
+        panelTitles[inspectorPanel.id] = inspectorPanel.displayTitle
 
         guard let newTabId = bonsplitController.createTab(
-            title: readyWorkPanel.displayTitle,
-            icon: readyWorkPanel.displayIcon,
-            kind: SurfaceKind.readyWork,
-            isDirty: readyWorkPanel.isDirty,
+            title: inspectorPanel.displayTitle,
+            icon: inspectorPanel.displayIcon,
+            kind: SurfaceKind.beadInspector,
+            isDirty: inspectorPanel.isDirty,
             isLoading: false,
             isPinned: false,
             inPane: paneId
         ) else {
-            panels.removeValue(forKey: readyWorkPanel.id)
-            panelTitles.removeValue(forKey: readyWorkPanel.id)
+            panels.removeValue(forKey: inspectorPanel.id)
+            panelTitles.removeValue(forKey: inspectorPanel.id)
             return nil
         }
 
-        surfaceIdToPanelId[newTabId] = readyWorkPanel.id
+        surfaceIdToPanelId[newTabId] = inspectorPanel.id
         if shouldFocusNewTab {
             bonsplitController.focusPane(paneId)
             bonsplitController.selectTab(newTabId)
@@ -9306,39 +9401,13 @@ final class Workspace: Identifiable, ObservableObject {
         } else {
             preserveFocusAfterNonFocusSplit(
                 preferredPanelId: previousFocusedPanelId,
-                splitPanelId: readyWorkPanel.id,
+                splitPanelId: inspectorPanel.id,
                 previousHostedView: previousHostedView
             )
         }
 
-        installReadyWorkPanelSubscription(readyWorkPanel)
-        return readyWorkPanel
-    }
-
-    private func installReadyWorkPanelSubscription(_ readyWorkPanel: ReadyWorkPanel) {
-        let subscription = readyWorkPanel.$displayTitle
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self, weak readyWorkPanel] newTitle in
-                guard let self,
-                      let readyWorkPanel,
-                      let tabId = self.surfaceIdFromPanelId(readyWorkPanel.id) else { return }
-                guard let existing = self.bonsplitController.tab(tabId) else { return }
-
-                if self.panelTitles[readyWorkPanel.id] != newTitle {
-                    self.panelTitles[readyWorkPanel.id] = newTitle
-                }
-                let resolvedTitle = self.resolvedPanelTitle(panelId: readyWorkPanel.id, fallback: newTitle)
-                guard existing.title != resolvedTitle else { return }
-                self.bonsplitController.updateTab(
-                    tabId,
-                    title: resolvedTitle,
-                    icon: readyWorkPanel.displayIcon,
-                    isDirty: readyWorkPanel.isDirty,
-                    isLoading: false
-                )
-            }
-        panelSubscriptions[readyWorkPanel.id] = subscription
+        installBeadInspectorPanelSubscription(inspectorPanel)
+        return inspectorPanel
     }
 
     /// Tear down all panels in this workspace, freeing their Ghostty surfaces.
