@@ -3698,6 +3698,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 hasher.combine(0)
             case .notifications:
                 hasher.combine(1)
+            case .inbox:
+                hasher.combine(2)
             }
 
             if let window = context.window ?? windowForMainWindowId(context.windowId) {
@@ -9081,6 +9083,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             switch sidebarSelection {
             case .tabs: return "tabs"
             case .notifications: return "notifications"
+            case .inbox: return "inbox"
             }
         }()
         writeMultiWindowNotificationTestData([

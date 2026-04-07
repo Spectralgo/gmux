@@ -1756,6 +1756,15 @@ class TerminalController {
         case "clear_notifications":
             return clearNotifications(args)
 
+        case "send_mail":
+            return sendMail(args)
+
+        case "list_mail":
+            return listMail()
+
+        case "clear_mail":
+            return clearMail(args)
+
         case "set_app_focus":
             return setAppFocusOverride(args)
 
@@ -11492,6 +11501,9 @@ class TerminalController {
           notify_target <workspace_id> <surface_id> <payload> - Notify by workspace+surface
           list_notifications              - List all notifications
           clear_notifications [--tab=X]    - Clear notifications (all or per-tab)
+          send_mail --type <TYPE> --subject <text> [--body <text>] [--sender <text>] [--bead <id>] [--convoy <id>] [--polecat <name>] [--branch <name>] [--workspace <id>] - Send mail message
+          list_mail                        - List all inbox messages (JSON)
+          clear_mail [--type <TYPE>]       - Clear inbox messages (all or by type)
           set_app_focus <active|inactive|clear> - Override app focus state
           simulate_app_active             - Trigger app active handler
           set_status <key> <value> [--icon=X] [--color=#hex] [--url=X] [--priority=N] [--format=plain|markdown] [--tab=X] - Set a status entry
@@ -12841,6 +12853,70 @@ class TerminalController {
             TerminalNotificationStore.shared.clearNotifications(forTabId: tab.id)
         }
         return "OK"
+    }
+
+    private func sendMail(_ args: String) -> String {
+        let parsed = parseOptions(args)
+        guard let typeRaw = parsed.options["type"] else {
+            return "ERROR: --type is required (POLECAT_DONE, MERGE_READY, MERGED, INFO)"
+        }
+        let workspaceId = parsed.options["workspace"].flatMap { UUID(uuidString: $0) }
+        guard let message = MailInboxStore.createFromOptions(
+            type: typeRaw,
+            subject: parsed.options["subject"],
+            body: parsed.options["body"],
+            sender: parsed.options["sender"],
+            beadId: parsed.options["bead"],
+            convoyId: parsed.options["convoy"],
+            polecatName: parsed.options["polecat"],
+            branch: parsed.options["branch"],
+            workspaceId: workspaceId
+        ) else {
+            return "ERROR: Invalid --type. Must be one of: POLECAT_DONE, MERGE_READY, MERGED, INFO"
+        }
+        DispatchQueue.main.async {
+            MailInboxStore.shared.add(message)
+        }
+        return "OK \(message.id.uuidString)"
+    }
+
+    private func listMail() -> String {
+        var result = ""
+        DispatchQueue.main.sync {
+            let messages = MailInboxStore.shared.serializeMessages()
+            if messages.isEmpty {
+                result = "No mail"
+            } else {
+                if let data = try? JSONSerialization.data(withJSONObject: messages, options: [.prettyPrinted, .sortedKeys]),
+                   let json = String(data: data, encoding: .utf8) {
+                    result = json
+                } else {
+                    result = "ERROR: Failed to serialize mail"
+                }
+            }
+        }
+        return result
+    }
+
+    private func clearMail(_ args: String) -> String {
+        let trimmed = args.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            DispatchQueue.main.async {
+                MailInboxStore.shared.clearAll()
+            }
+            return "OK"
+        }
+        let parsed = parseOptions(trimmed)
+        if let typeRaw = parsed.options["type"] {
+            guard let type = MailMessageType(rawValue: typeRaw.uppercased()) else {
+                return "ERROR: Invalid --type. Must be one of: POLECAT_DONE, MERGE_READY, MERGED, INFO"
+            }
+            DispatchQueue.main.async {
+                MailInboxStore.shared.clearByType(type)
+            }
+            return "OK"
+        }
+        return "ERROR: Usage: clear_mail [--type <TYPE>]"
     }
 
     private func setAppFocusOverride(_ arg: String) -> String {

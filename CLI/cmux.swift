@@ -2542,6 +2542,33 @@ struct GmuxCLI {
             let response = try sendV1Command(socketCmd, client: client)
             print(response)
 
+        case "send-mail":
+            var socketCmd = "send_mail"
+            if let type = optionValue(commandArgs, name: "--type") { socketCmd += " --type=\(type)" }
+            if let subject = optionValue(commandArgs, name: "--subject") { socketCmd += " --subject=\(subject)" }
+            if let body = optionValue(commandArgs, name: "--body") { socketCmd += " --body=\(body)" }
+            if let sender = optionValue(commandArgs, name: "--sender") { socketCmd += " --sender=\(sender)" }
+            if let bead = optionValue(commandArgs, name: "--bead") { socketCmd += " --bead=\(bead)" }
+            if let convoy = optionValue(commandArgs, name: "--convoy") { socketCmd += " --convoy=\(convoy)" }
+            if let polecat = optionValue(commandArgs, name: "--polecat") { socketCmd += " --polecat=\(polecat)" }
+            if let branch = optionValue(commandArgs, name: "--branch") { socketCmd += " --branch=\(branch)" }
+            if let workspace = optionValue(commandArgs, name: "--workspace") {
+                let wsId = try resolveWorkspaceId(workspace, client: client)
+                socketCmd += " --workspace=\(wsId)"
+            }
+            let response = try sendV1Command(socketCmd, client: client)
+            print(response)
+
+        case "list-mail":
+            let response = try sendV1Command("list_mail", client: client)
+            print(response)
+
+        case "clear-mail":
+            var socketCmd = "clear_mail"
+            if let type = optionValue(commandArgs, name: "--type") { socketCmd += " --type=\(type)" }
+            let response = try sendV1Command(socketCmd, client: client)
+            print(response)
+
         case "set-status":
             let response = try forwardSidebarMetadataCommand(
                 "set_status",
@@ -7683,6 +7710,46 @@ struct GmuxCLI {
             Usage: gmux clear-notifications
 
             Clear all queued notifications.
+            """
+        case "send-mail":
+            return """
+            Usage: gmux send-mail --type <TYPE> --subject <text> [flags]
+
+            Send a mail message to the inbox.
+
+            Types: POLECAT_DONE, MERGE_READY, MERGED, INFO
+
+            Flags:
+              --type <TYPE>          Message type (required)
+              --subject <text>       Message subject
+              --body <text>          Message body
+              --sender <text>        Sender name
+              --bead <id>            Associated bead ID
+              --convoy <id>          Associated convoy ID
+              --polecat <name>       Associated polecat name
+              --branch <name>        Associated branch name
+              --workspace <id|ref>   Associated workspace
+
+            Example:
+              gmux send-mail --type POLECAT_DONE --subject "fury complete" --sender fury --bead gm-0yp --branch polecat/fury-abc
+              gmux send-mail --type MERGE_READY --subject "PR #42 ready" --convoy hq-cv-123
+              gmux send-mail --type MERGED --subject "gm-0yp landed" --bead gm-0yp
+            """
+        case "list-mail":
+            return """
+            Usage: gmux list-mail
+
+            List all inbox messages as JSON.
+            """
+        case "clear-mail":
+            return """
+            Usage: gmux clear-mail [--type <TYPE>]
+
+            Clear inbox messages. Without flags, clears all. With --type, clears only that type.
+
+            Example:
+              gmux clear-mail
+              gmux clear-mail --type MERGED
             """
         case "set-status":
             return """

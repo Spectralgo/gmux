@@ -2675,6 +2675,12 @@ struct ContentView: View {
                 .opacity(sidebarSelectionState.selection == .notifications ? 1 : 0)
                 .allowsHitTesting(sidebarSelectionState.selection == .notifications)
                 .accessibilityHidden(sidebarSelectionState.selection != .notifications)
+
+            InboxPage(selection: $sidebarSelectionState.selection)
+                .environmentObject(MailInboxStore.shared)
+                .opacity(sidebarSelectionState.selection == .inbox ? 1 : 0)
+                .allowsHitTesting(sidebarSelectionState.selection == .inbox)
+                .accessibilityHidden(sidebarSelectionState.selection != .inbox)
         }
         .padding(.top, effectiveTitlebarPadding)
         .overlay(alignment: .top) {
@@ -6496,6 +6502,14 @@ struct ContentView: View {
         )
         contributions.append(
             CommandPaletteCommandContribution(
+                commandId: "palette.showInbox",
+                title: constant(String(localized: "command.showInbox.title", defaultValue: "Show Inbox")),
+                subtitle: constant(String(localized: "command.showInbox.subtitle", defaultValue: "Mail")),
+                keywords: ["inbox", "mail", "messages", "polecat", "merge"]
+            )
+        )
+        contributions.append(
+            CommandPaletteCommandContribution(
                 commandId: "palette.openSettings",
                 title: constant(String(localized: "command.openSettings.title", defaultValue: "Open Settings")),
                 subtitle: constant(String(localized: "command.openSettings.subtitle", defaultValue: "Global")),
@@ -7167,6 +7181,12 @@ struct ContentView: View {
         }
         registry.register(commandId: "palette.jumpUnread") {
             AppDelegate.shared?.jumpToLatestUnread()
+        }
+        registry.register(commandId: "palette.showInbox") {
+            sidebarSelectionState.selection = .inbox
+            if !sidebarState.isVisible {
+                sidebarState.toggle()
+            }
         }
         registry.register(commandId: "palette.openSettings") {
 #if DEBUG
@@ -14865,6 +14885,7 @@ private final class MiddleClickCaptureView: NSView {
 enum SidebarSelection {
     case tabs
     case notifications
+    case inbox
 }
 
 private struct ClearScrollBackground: ViewModifier {
