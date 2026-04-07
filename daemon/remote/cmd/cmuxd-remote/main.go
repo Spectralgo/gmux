@@ -102,7 +102,7 @@ func shouldRunCLIForInvocation(argv0 string, args []string) bool {
 
 func isDaemonEntryCommand(arg string) bool {
 	switch arg {
-	case "version", "serve", "cli":
+	case "version", "serve", "cli", "mcp":
 		return true
 	default:
 		return false
@@ -137,6 +137,8 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 0
 	case "cli":
 		return runCLI(args[1:])
+	case "mcp":
+		return runMCPServer(args[1:])
 	default:
 		usage(stderr)
 		return 2
@@ -148,6 +150,7 @@ func usage(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "  cmuxd-remote version")
 	_, _ = fmt.Fprintln(w, "  cmuxd-remote serve --stdio")
 	_, _ = fmt.Fprintln(w, "  cmuxd-remote cli <command> [args...]")
+	_, _ = fmt.Fprintln(w, "  cmuxd-remote mcp --stdio [--socket <path>]")
 }
 
 func runStdioServer(stdin io.Reader, stdout io.Writer) error {
