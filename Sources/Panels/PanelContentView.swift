@@ -55,10 +55,10 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
-        case .beadInspector:
-            if let beadInspectorPanel = panel as? BeadInspectorPanel {
-                BeadInspectorPanelView(
-                    panel: beadInspectorPanel,
+        case .diff:
+            if let diffPanel = panel as? DiffPanel {
+                DiffPanelView(
+                    panel: diffPanel,
                     isFocused: isFocused,
                     isVisibleInUI: isVisibleInUI,
                     portalPriority: portalPriority,

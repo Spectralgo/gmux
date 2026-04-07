@@ -2675,12 +2675,6 @@ struct ContentView: View {
                 .opacity(sidebarSelectionState.selection == .notifications ? 1 : 0)
                 .allowsHitTesting(sidebarSelectionState.selection == .notifications)
                 .accessibilityHidden(sidebarSelectionState.selection != .notifications)
-
-            InboxPage(selection: $sidebarSelectionState.selection)
-                .environmentObject(MailInboxStore.shared)
-                .opacity(sidebarSelectionState.selection == .inbox ? 1 : 0)
-                .allowsHitTesting(sidebarSelectionState.selection == .inbox)
-                .accessibilityHidden(sidebarSelectionState.selection != .inbox)
         }
         .padding(.top, effectiveTitlebarPadding)
         .overlay(alignment: .top) {
@@ -6031,8 +6025,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.browser", defaultValue: "Browser")
         case .markdown:
             return String(localized: "commandPalette.kind.markdown", defaultValue: "Markdown")
-        case .beadInspector:
-            return String(localized: "commandPalette.kind.beadInspector", defaultValue: "Bead Inspector")
+        case .diff:
+            return String(localized: "commandPalette.kind.diff", defaultValue: "Diff")
         }
     }
 
@@ -6044,8 +6038,8 @@ struct ContentView: View {
             return ["browser", "web", "page"]
         case .markdown:
             return ["markdown", "note", "preview"]
-        case .beadInspector:
-            return ["bead", "inspector", "issue", "beads"]
+        case .diff:
+            return ["diff", "review", "changes", "git"]
         }
     }
 
@@ -6498,14 +6492,6 @@ struct ContentView: View {
                 title: constant(String(localized: "command.jumpUnread.title", defaultValue: "Jump to Latest Unread")),
                 subtitle: constant(String(localized: "command.jumpUnread.subtitle", defaultValue: "Notifications")),
                 keywords: ["jump", "unread", "notification"]
-            )
-        )
-        contributions.append(
-            CommandPaletteCommandContribution(
-                commandId: "palette.showInbox",
-                title: constant(String(localized: "command.showInbox.title", defaultValue: "Show Inbox")),
-                subtitle: constant(String(localized: "command.showInbox.subtitle", defaultValue: "Mail")),
-                keywords: ["inbox", "mail", "messages", "polecat", "merge"]
             )
         )
         contributions.append(
@@ -7181,12 +7167,6 @@ struct ContentView: View {
         }
         registry.register(commandId: "palette.jumpUnread") {
             AppDelegate.shared?.jumpToLatestUnread()
-        }
-        registry.register(commandId: "palette.showInbox") {
-            sidebarSelectionState.selection = .inbox
-            if !sidebarState.isVisible {
-                sidebarState.toggle()
-            }
         }
         registry.register(commandId: "palette.openSettings") {
 #if DEBUG
@@ -14885,7 +14865,6 @@ private final class MiddleClickCaptureView: NSView {
 enum SidebarSelection {
     case tabs
     case notifications
-    case inbox
 }
 
 private struct ClearScrollBackground: ViewModifier {
