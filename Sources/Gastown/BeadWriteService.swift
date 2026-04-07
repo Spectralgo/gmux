@@ -13,7 +13,7 @@ final class BeadWriteService: ObservableObject {
     @Published private(set) var outcome: BeadWriteOutcome = .idle
 
     /// The most recently refreshed bead detail after a successful write.
-    @Published private(set) var lastRefreshedBead: BeadDetail?
+    @Published private(set) var lastRefreshedBead: WritableBeadDetail?
 
     // MARK: - Update Status
 
@@ -63,10 +63,10 @@ final class BeadWriteService: ObservableObject {
     /// Refresh a single bead's detail from the Beads system.
     ///
     /// Runs `bd show <id> --json` and parses the result.
-    func refreshBead(id: String) async -> BeadDetail? {
+    func refreshBead(id: String) async -> WritableBeadDetail? {
         let result = await GastownCommandRunner.bd(["show", id, "--json"])
         guard result.succeeded else { return nil }
-        let detail = BeadModelParser.parseDetail(from: result.stdout)
+        let detail = BeadModelParser.parseWritableDetail(from: result.stdout)
         if let detail {
             lastRefreshedBead = detail
         }

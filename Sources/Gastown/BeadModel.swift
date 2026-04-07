@@ -25,7 +25,7 @@ enum BeadType: String, Codable, Sendable {
 ///
 /// Parsed from the JSON array output. Only the fields relevant to
 /// display and write flows are decoded; unknown keys are ignored.
-struct BeadDetail: Codable, Sendable, Identifiable {
+struct WritableBeadDetail: Codable, Sendable, Identifiable {
     let id: String
     let title: String
     let description: String?
@@ -60,22 +60,22 @@ struct BeadDetail: Codable, Sendable, Identifiable {
 enum BeadWriteOutcome: Sendable {
     case idle
     case inFlight
-    case succeeded(BeadDetail?)
+    case succeeded(WritableBeadDetail?)
     case failed(String)
 }
 
-/// Parse a `bd show <id> --json` response into a `BeadDetail`.
+/// Parse a `bd show <id> --json` response into a `WritableBeadDetail`.
 enum BeadModelParser {
 
-    static func parseDetail(from json: String) -> BeadDetail? {
+    static func parseWritableDetail(from json: String) -> WritableBeadDetail? {
         guard let data = json.data(using: .utf8) else { return nil }
         let decoder = JSONDecoder()
         // bd show --json returns an array; take the first element.
-        if let array = try? decoder.decode([BeadDetail].self, from: data),
+        if let array = try? decoder.decode([WritableBeadDetail].self, from: data),
            let first = array.first {
             return first
         }
         // Fall back to single-object parse.
-        return try? decoder.decode(BeadDetail.self, from: data)
+        return try? decoder.decode(WritableBeadDetail.self, from: data)
     }
 }

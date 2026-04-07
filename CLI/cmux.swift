@@ -2738,6 +2738,42 @@ struct GmuxCLI {
         case "markdown":
             try runMarkdownCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput, idFormat: idFormat)
 
+        // Gastown commands
+        case "gastown":
+            try runGastownCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput)
+
+        // Beads commands
+        case "beads":
+            try runBeadsCommand(commandArgs: commandArgs, client: client, jsonOutput: jsonOutput)
+
+        // Open-by-identity commands
+        case "open-by-agent":
+            guard let address = commandArgs.first else {
+                throw CLIError(message: "open-by-agent requires an agent address")
+            }
+            var params: [String: Any] = ["address": address]
+            if hasFlag(commandArgs, name: "--no-focus") { params["focus"] = false }
+            let response = try client.sendV2(method: "gmux.open.by_agent", params: params)
+            print(jsonString(response))
+
+        case "open-by-bead":
+            guard let beadID = commandArgs.first else {
+                throw CLIError(message: "open-by-bead requires a bead ID")
+            }
+            var params: [String: Any] = ["bead_id": beadID]
+            if hasFlag(commandArgs, name: "--no-focus") { params["focus"] = false }
+            let response = try client.sendV2(method: "gmux.open.by_bead", params: params)
+            print(jsonString(response))
+
+        case "open-by-convoy":
+            guard let convoyID = commandArgs.first else {
+                throw CLIError(message: "open-by-convoy requires a convoy ID")
+            }
+            var params: [String: Any] = ["convoy_id": convoyID]
+            if hasFlag(commandArgs, name: "--no-focus") { params["focus"] = false }
+            let response = try client.sendV2(method: "gmux.open.by_convoy", params: params)
+            print(jsonString(response))
+
         default:
             print(usage())
             throw CLIError(message: "Unknown command: \(command)")
@@ -7937,6 +7973,88 @@ struct GmuxCLI {
               gmux markdown ~/project/CHANGELOG.md
               gmux markdown open ./docs/design.md --workspace 0
               gmux markdown open plan.md --direction down
+            """
+        case "gastown":
+            return """
+            Usage: gmux gastown <subcommand> ...
+
+            Gas Town multi-agent orchestration commands.
+
+            Subcommands:
+              hooks list                          List hook targets and sync status
+              hooks sync [target]                 Sync hooks configuration
+              convoy list                         List active convoys
+              convoy show <convoy-id>             Show convoy detail with tracked issues
+              convoy add <convoy-id> <issue-id...>  Add tracked work to a convoy
+              peek <agent>                        Health-check an agent
+              vitals                              Unified health dashboard
+
+            Examples:
+              gmux gastown hooks list
+              gmux gastown convoy show hq-cv-abc
+              gmux gastown peek gmux/polecats/chrome
+              gmux gastown vitals
+            """
+        case "beads":
+            return """
+            Usage: gmux beads <subcommand> ...
+
+            Beads issue tracking commands.
+
+            Subcommands:
+              show <bead-id>                          Show bead detail
+              ready [--rig <name>]                    List ready work (no unresolved blockers)
+              list [--status <status>] [--rig <name>] List beads with optional filters
+              update <bead-id> [--status <s>] [--notes <n>]  Update bead status or notes
+              close <bead-id> [--reason <reason>]     Close a bead
+
+            Examples:
+              gmux beads show gm-3rs
+              gmux beads ready
+              gmux beads list --status open
+              gmux beads update gm-3rs --status in_progress
+              gmux beads close gm-3rs --reason "Fixed in PR #42"
+            """
+        case "open-by-agent":
+            return """
+            Usage: gmux open-by-agent <address> [--no-focus]
+
+            Open a workspace by Gas Town agent address. Resolves the agent
+            identity to a worktree and opens or focuses the workspace.
+
+            Flags:
+              --no-focus   Open without stealing focus
+
+            Examples:
+              gmux open-by-agent gmux/polecats/chrome
+              gmux open-by-agent spectralChat/refinery --no-focus
+            """
+        case "open-by-bead":
+            return """
+            Usage: gmux open-by-bead <bead-id> [--no-focus]
+
+            Open a workspace by bead ID. Resolves the bead's assignee to
+            an agent address, then opens or focuses the workspace.
+
+            Flags:
+              --no-focus   Open without stealing focus
+
+            Examples:
+              gmux open-by-bead gm-3rs
+              gmux open-by-bead sc-1ab --no-focus
+            """
+        case "open-by-convoy":
+            return """
+            Usage: gmux open-by-convoy <convoy-id> [--no-focus]
+
+            Open a workspace by convoy ID. Finds the convoy's first
+            actionable bead and opens the associated workspace.
+
+            Flags:
+              --no-focus   Open without stealing focus
+
+            Examples:
+              gmux open-by-convoy hq-cv-abc
             """
         default:
             return nil
@@ -14017,6 +14135,165 @@ struct GmuxCLI {
         return URL(fileURLWithPath: expanded).standardizedFileURL
     }
 
+    // MARK: - Gastown CLI
+
+    private func runGastownCommand(
+        commandArgs: [String],
+        client: SocketClient,
+        jsonOutput: Bool
+    ) throws {
+        guard let sub = commandArgs.first else {
+            throw CLIError(message: "Usage: gmux gastown <hooks|convoy|peek|vitals> ...")
+        }
+
+        let subArgs = Array(commandArgs.dropFirst())
+
+        switch sub {
+        case "hooks":
+            guard let hooksSub = subArgs.first else {
+                throw CLIError(message: "Usage: gmux gastown hooks <list|sync> ...")
+            }
+            switch hooksSub {
+            case "list":
+                let response = try client.sendV2(method: "gastown.hooks.list")
+                print(jsonString(response))
+            case "sync":
+                var params: [String: Any] = [:]
+                if let target = subArgs.dropFirst().first {
+                    params["target"] = target
+                }
+                let response = try client.sendV2(method: "gastown.hooks.sync", params: params)
+                print(jsonString(response))
+            default:
+                throw CLIError(message: "Unknown gastown hooks subcommand: \(hooksSub). Use list or sync.")
+            }
+
+        case "convoy":
+            guard let convoySub = subArgs.first else {
+                throw CLIError(message: "Usage: gmux gastown convoy <list|show|add> ...")
+            }
+            switch convoySub {
+            case "list":
+                let response = try client.sendV2(method: "gastown.convoy.list")
+                print(jsonString(response))
+            case "show":
+                guard let convoyID = subArgs.dropFirst().first else {
+                    throw CLIError(message: "gastown convoy show requires a convoy ID")
+                }
+                let response = try client.sendV2(
+                    method: "gastown.convoy.show",
+                    params: ["convoy_id": convoyID]
+                )
+                print(jsonString(response))
+            case "add":
+                let addArgs = Array(subArgs.dropFirst())
+                guard addArgs.count >= 2 else {
+                    throw CLIError(message: "gastown convoy add requires <convoy-id> <issue-id...>")
+                }
+                let convoyID = addArgs[0]
+                let issueIDs = Array(addArgs.dropFirst())
+                let response = try client.sendV2(
+                    method: "gastown.convoy.add",
+                    params: ["convoy_id": convoyID, "issue_ids": issueIDs]
+                )
+                print(jsonString(response))
+            default:
+                throw CLIError(message: "Unknown gastown convoy subcommand: \(convoySub). Use list, show, or add.")
+            }
+
+        case "peek":
+            guard let agent = subArgs.first else {
+                throw CLIError(message: "gastown peek requires an agent name")
+            }
+            let response = try client.sendV2(
+                method: "gastown.peek",
+                params: ["agent": agent]
+            )
+            print(jsonString(response))
+
+        case "vitals":
+            let response = try client.sendV2(method: "gastown.vitals")
+            print(jsonString(response))
+
+        default:
+            throw CLIError(message: "Unknown gastown subcommand: \(sub). Use hooks, convoy, peek, or vitals.")
+        }
+    }
+
+    // MARK: - Beads CLI
+
+    private func runBeadsCommand(
+        commandArgs: [String],
+        client: SocketClient,
+        jsonOutput: Bool
+    ) throws {
+        guard let sub = commandArgs.first else {
+            throw CLIError(message: "Usage: gmux beads <show|ready|list|update|close> ...")
+        }
+
+        let subArgs = Array(commandArgs.dropFirst())
+
+        switch sub {
+        case "show":
+            guard let beadID = subArgs.first else {
+                throw CLIError(message: "beads show requires a bead ID")
+            }
+            let response = try client.sendV2(
+                method: "beads.show",
+                params: ["bead_id": beadID]
+            )
+            print(jsonString(response))
+
+        case "ready":
+            var params: [String: Any] = [:]
+            if let rig = optionValue(subArgs, name: "--rig") {
+                params["rig"] = rig
+            }
+            let response = try client.sendV2(method: "beads.ready", params: params)
+            print(jsonString(response))
+
+        case "list":
+            var params: [String: Any] = [:]
+            if let status = optionValue(subArgs, name: "--status") {
+                params["status"] = status
+            }
+            if let rig = optionValue(subArgs, name: "--rig") {
+                params["rig"] = rig
+            }
+            let response = try client.sendV2(method: "beads.list", params: params)
+            print(jsonString(response))
+
+        case "update":
+            guard let beadID = subArgs.first else {
+                throw CLIError(message: "beads update requires a bead ID")
+            }
+            let updateArgs = Array(subArgs.dropFirst())
+            var params: [String: Any] = ["bead_id": beadID]
+            if let status = optionValue(updateArgs, name: "--status") {
+                params["status"] = status
+            }
+            if let notes = optionValue(updateArgs, name: "--notes") {
+                params["notes"] = notes
+            }
+            let response = try client.sendV2(method: "beads.update", params: params)
+            print(jsonString(response))
+
+        case "close":
+            guard let beadID = subArgs.first else {
+                throw CLIError(message: "beads close requires a bead ID")
+            }
+            var params: [String: Any] = ["bead_id": beadID]
+            if let reason = optionValue(Array(subArgs.dropFirst()), name: "--reason") {
+                params["reason"] = reason
+            }
+            let response = try client.sendV2(method: "beads.close", params: params)
+            print(jsonString(response))
+
+        default:
+            throw CLIError(message: "Unknown beads subcommand: \(sub). Use show, ready, list, update, or close.")
+        }
+    }
+
     private func usage() -> String {
         return """
         gmux - control cmux via Unix socket
@@ -14116,6 +14393,27 @@ struct GmuxCLI {
           display-message [-p|--print] <text>
 
           markdown [open] <path>             (open markdown file in formatted viewer panel with live reload)
+
+          # Gastown commands (Gas Town multi-agent orchestration)
+          gastown hooks list                                (list hook targets and sync status)
+          gastown hooks sync [target]                       (sync hooks configuration)
+          gastown convoy list                               (list active convoys)
+          gastown convoy show <convoy-id>                   (show convoy detail)
+          gastown convoy add <convoy-id> <issue-id...>      (add tracked work to convoy)
+          gastown peek <agent>                              (health-check an agent)
+          gastown vitals                                    (unified health dashboard)
+
+          # Beads commands (issue tracking)
+          beads show <bead-id>                              (show bead detail)
+          beads ready [--rig <name>]                        (list ready work)
+          beads list [--status <status>] [--rig <name>]     (list beads)
+          beads update <bead-id> [--status <s>] [--notes <n>]  (update bead)
+          beads close <bead-id> [--reason <reason>]         (close bead)
+
+          # Identity-based workspace routing
+          open-by-agent <address> [--no-focus]              (open workspace by agent address)
+          open-by-bead <bead-id> [--no-focus]               (open workspace by bead ID)
+          open-by-convoy <convoy-id> [--no-focus]           (open workspace by convoy ID)
 
           browser [--surface <id|ref|index> | <surface>] <subcommand> ...
           browser open [url]                   (create browser split in caller's workspace; if surface supplied, behaves like navigate)

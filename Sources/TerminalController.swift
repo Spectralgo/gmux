@@ -5,11 +5,11 @@ import Bonsplit
 import WebKit
 
 extension Notification.Name {
-    static let socketListenerDidStart = Notification.Name("gmux.socketListenerDidStart")
-    static let terminalSurfaceDidBecomeReady = Notification.Name("gmux.terminalSurfaceDidBecomeReady")
-    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("gmux.terminalSurfaceHostedViewDidMoveToWindow")
-    static let mainWindowContextsDidChange = Notification.Name("gmux.mainWindowContextsDidChange")
-    static let browserDownloadEventDidArrive = Notification.Name("gmux.browserDownloadEventDidArrive")
+    static let socketListenerDidStart = Notification.Name("cmux.socketListenerDidStart")
+    static let terminalSurfaceDidBecomeReady = Notification.Name("cmux.terminalSurfaceDidBecomeReady")
+    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("cmux.terminalSurfaceHostedViewDidMoveToWindow")
+    static let mainWindowContextsDidChange = Notification.Name("cmux.mainWindowContextsDidChange")
+    static let browserDownloadEventDidArrive = Notification.Name("cmux.browserDownloadEventDidArrive")
 }
 
 /// Unix socket-based controller for programmatic terminal control
@@ -50,7 +50,7 @@ class TerminalController {
     private nonisolated let listenerStateLock = NSLock()
     private var clientHandlers: [Int32: Thread] = [:]
     private var tabManager: TabManager?
-    private var accessMode: SocketControlMode = .gmuxOnly
+    private var accessMode: SocketControlMode = .cmuxOnly
     private let myPid = getpid()
     private nonisolated(unsafe) static var socketCommandPolicyDepth: Int = 0
     private nonisolated(unsafe) static var socketCommandFocusAllowanceStack: [Bool] = []
@@ -138,7 +138,9 @@ class TerminalController {
         "browser.focus_webview",
         "browser.focus",
         "browser.tab.switch",
-        "open.context",
+        "gmux.open.by_agent",
+        "gmux.open.by_bead",
+        "gmux.open.by_convoy",
         "debug.command_palette.toggle",
         "debug.notification.focus",
         "debug.app.activate"
@@ -1605,9 +1607,9 @@ class TerminalController {
     private func handleClient(_ socket: Int32, peerPid: pid_t? = nil) {
         defer { close(socket) }
 
-        // In gmuxOnly mode, verify the connecting process is a descendant of gmux.
+        // In cmuxOnly mode, verify the connecting process is a descendant of cmux.
         // In allowAll mode (env-var only), skip the ancestry check.
-        if accessMode == .gmuxOnly {
+        if accessMode == .cmuxOnly {
             // Use pre-captured peer PID if available (captured in accept loop before
             // the peer can disconnect), falling back to live lookup.
             let pid = peerPid ?? getPeerPid(socket)
@@ -2120,10 +2122,6 @@ class TerminalController {
         case "workspace.remote.terminal_session_end":
             return v2Result(id: id, self.v2WorkspaceRemoteTerminalSessionEnd(params: params))
 
-        // Contextual open
-        case "open.context":
-            return v2Result(id: id, self.v2OpenContext(params: params))
-
         // Settings
         case "settings.open":
             return v2Result(id: id, self.v2SettingsOpen(params: params))
@@ -2389,13 +2387,44 @@ class TerminalController {
         case "markdown.open":
             return v2Result(id: id, self.v2MarkdownOpen(params: params))
 
-        // Bead Inspector
-        case "bead.inspect":
-            return v2Result(id: id, self.v2BeadInspect(params: params))
-
         case "surface.read_text":
             return v2Result(id: id, self.v2SurfaceReadText(params: params))
 
+        // Gmux Open (identity-based workspace routing)
+        case "gmux.open.by_agent":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.openByAgent(params: params) })
+        case "gmux.open.by_bead":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.openByBead(params: params) })
+        case "gmux.open.by_convoy":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.openByConvoy(params: params) })
+
+        // Beads (issue tracking read/write)
+        case "beads.show":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsShow(params: params) })
+        case "beads.ready":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsReady(params: params) })
+        case "beads.list":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsList(params: params) })
+        case "beads.update":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsUpdate(params: params) })
+        case "beads.close":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.beadsClose(params: params) })
+
+        // Gastown (hooks, convoy, health)
+        case "gastown.hooks.list":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownHooksList(params: params) })
+        case "gastown.hooks.sync":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownHooksSync(params: params) })
+        case "gastown.convoy.list":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownConvoyList(params: params) })
+        case "gastown.convoy.show":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownConvoyShow(params: params) })
+        case "gastown.convoy.add":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownConvoyAdd(params: params) })
+        case "gastown.peek":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownPeek(params: params) })
+        case "gastown.vitals":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownVitals(params: params) })
 
 #if DEBUG
         // Debug / test-only
@@ -2541,7 +2570,6 @@ class TerminalController {
             "app.focus_override.set",
             "app.simulate_active",
             "markdown.open",
-            "bead.inspect",
             "browser.open_split",
             "browser.navigate",
             "browser.back",
@@ -2626,6 +2654,21 @@ class TerminalController {
             "browser.input_mouse",
             "browser.input_keyboard",
             "browser.input_touch",
+            "gmux.open.by_agent",
+            "gmux.open.by_bead",
+            "gmux.open.by_convoy",
+            "beads.show",
+            "beads.ready",
+            "beads.list",
+            "beads.update",
+            "beads.close",
+            "gastown.hooks.list",
+            "gastown.hooks.sync",
+            "gastown.convoy.list",
+            "gastown.convoy.show",
+            "gastown.convoy.add",
+            "gastown.peek",
+            "gastown.vitals",
         ]
 #if DEBUG
         methods.append(contentsOf: [
@@ -3082,6 +3125,35 @@ class TerminalController {
         }
     }
 
+    // MARK: - V2 Gastown Async Bridge
+
+    /// Bridge async GastownSocketHandlers into synchronous V2CallResult.
+    ///
+    /// Uses the same DispatchSemaphore + Task pattern as v2FeedbackSubmit.
+    /// All Gastown commands run off-main via GastownCommandRunner — no
+    /// main-thread work happens inside this bridge.
+    private func v2GastownAsync(_ body: @escaping @Sendable () async -> GastownSocketHandlers.Result) -> V2CallResult {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: V2CallResult = .err(code: "internal_error", message: "Gastown command failed", data: nil)
+
+        Task {
+            let handlerResult = await body()
+            switch handlerResult {
+            case .ok(let payload):
+                result = .ok(payload)
+            case .err(let code, let message):
+                result = .err(code: code, message: message, data: nil)
+            }
+            semaphore.signal()
+        }
+
+        if semaphore.wait(timeout: .now() + 35) == .timedOut {
+            return .err(code: "timeout", message: "Gastown command timed out", data: nil)
+        }
+
+        return result
+    }
+
     // MARK: - V2 Param Parsing
 
     private func v2String(_ params: [String: Any], _ key: String) -> String? {
@@ -3438,78 +3510,6 @@ class TerminalController {
             "workspace_ref": v2Ref(kind: .workspace, uuid: newId)
         ])
     }
-
-    // MARK: - Contextual Open
-
-    private func v2OpenContext(params: [String: Any]) -> V2CallResult {
-        guard let contextType = v2RawString(params, "type") else {
-            return .err(code: "invalid_params", message: "Missing 'type' (directory|convoy|bead|agent)", data: nil)
-        }
-
-        let workingDirectory = v2RawString(params, "working_directory")
-        let contextId = v2RawString(params, "id")
-        let presetRaw = v2RawString(params, "preset")
-        let preset = presetRaw.flatMap { WorkspacePreset(rawValue: $0) }
-        let title = v2RawString(params, "title")
-        let description = v2RawString(params, "description")
-        let focusRequested = (params["focus"] as? Bool) ?? true
-        let placementRaw = v2RawString(params, "placement") ?? "tab"
-
-        let intent: OpenIntent
-        switch contextType {
-        case "directory":
-            guard let path = workingDirectory ?? contextId else {
-                return .err(code: "invalid_params", message: "directory type requires 'working_directory' or 'id'", data: nil)
-            }
-            intent = .directory(path: path, preset: preset)
-        case "convoy":
-            guard let id = contextId else {
-                return .err(code: "invalid_params", message: "convoy type requires 'id'", data: nil)
-            }
-            intent = .convoy(id: id, workingDirectory: workingDirectory, preset: preset)
-        case "bead":
-            guard let id = contextId else {
-                return .err(code: "invalid_params", message: "bead type requires 'id'", data: nil)
-            }
-            intent = .bead(id: id, workingDirectory: workingDirectory, preset: preset)
-        case "agent":
-            guard let id = contextId else {
-                return .err(code: "invalid_params", message: "agent type requires 'id' (rig or rig/name)", data: nil)
-            }
-            let parts = id.split(separator: "/", maxSplits: 1)
-            let rig = String(parts.first ?? "")
-            let name = parts.count > 1 ? String(parts[1]) : nil
-            intent = .agent(rig: rig, name: name, workingDirectory: workingDirectory, preset: preset)
-        default:
-            return .err(code: "invalid_params", message: "Unknown context type '\(contextType)'", data: nil)
-        }
-
-        let options = OpenIntentOptions(
-            allowFocus: v2FocusAllowed(requested: focusRequested),
-            flash: false,
-            placement: placementRaw == "window" ? .window : .tab,
-            title: title,
-            description: description
-        )
-
-        var result: OpenIntentResult?
-        v2MainSync {
-            let router = OpenRouter()
-            result = router.open(intent, options: options)
-        }
-
-        guard let result else {
-            return .err(code: "open_failed", message: "Failed to open context", data: nil)
-        }
-
-        return .ok([
-            "workspace_id": result.workspaceId.uuidString,
-            "window_id": v2OrNull(result.windowId?.uuidString),
-            "created": result.createdWorkspace,
-            "preset": v2OrNull(result.appliedPreset?.rawValue)
-        ])
-    }
-
     private func v2WorkspaceSelect(params: [String: Any]) -> V2CallResult {
         guard let tabManager = v2ResolveTabManager(params: params) else {
             return .err(code: "unavailable", message: "TabManager not available", data: nil)
@@ -5567,7 +5567,7 @@ class TerminalController {
                 }
 
                 guard let raw = window.identifier?.rawValue else { return (nil, nil) }
-                let prefix = "gmux.main."
+                let prefix = "cmux.main."
                 guard raw.hasPrefix(prefix),
                       let parsedWindowId = UUID(uuidString: String(raw.dropFirst(prefix.count))) else {
                     return (nil, nil)
@@ -7757,81 +7757,6 @@ class TerminalController {
                 "target_pane_id": v2OrNull(targetPaneUUID?.uuidString),
                 "target_pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
                 "path": filePath
-            ])
-        }
-        return result
-    }
-
-    // MARK: - Bead Inspector
-
-    private func v2BeadInspect(params: [String: Any]) -> V2CallResult {
-        guard let tabManager = v2ResolveTabManager(params: params) else {
-            return .err(code: "unavailable", message: "TabManager not available", data: nil)
-        }
-        guard let beadId = v2String(params, "bead_id") else {
-            return .err(code: "invalid_params", message: "Missing 'bead_id' parameter", data: nil)
-        }
-
-        var result: V2CallResult = .err(code: "internal_error", message: "Failed to create bead inspector panel", data: nil)
-        v2MainSync {
-            guard let ws = v2ResolveWorkspace(params: params, tabManager: tabManager) else {
-                result = .err(code: "not_found", message: "Workspace not found", data: nil)
-                return
-            }
-            v2MaybeFocusWindow(for: tabManager)
-            v2MaybeSelectWorkspace(tabManager, workspace: ws)
-
-            let sourceSurfaceId = v2UUID(params, "surface_id") ?? ws.focusedPanelId
-            guard let sourceSurfaceId else {
-                result = .err(code: "not_found", message: "No focused surface to split", data: nil)
-                return
-            }
-            guard ws.panels[sourceSurfaceId] != nil else {
-                result = .err(code: "not_found", message: "Source surface not found", data: ["surface_id": sourceSurfaceId.uuidString])
-                return
-            }
-
-            let sourcePaneUUID = ws.paneId(forPanelId: sourceSurfaceId)?.id
-
-            let directionStr = v2String(params, "direction") ?? "right"
-            guard let direction = parseSplitDirection(directionStr) else {
-                result = .err(code: "invalid_params", message: "Invalid direction '\(directionStr)' (left|right|up|down)", data: nil)
-                return
-            }
-            let orientation: SplitOrientation = direction.isHorizontal ? .horizontal : .vertical
-            let insertFirst = (direction == .left || direction == .up)
-
-            let createdPanel = ws.newBeadInspectorSplit(
-                from: sourceSurfaceId,
-                orientation: orientation,
-                insertFirst: insertFirst,
-                beadId: beadId,
-                focus: v2FocusAllowed()
-            )
-
-            guard let inspectorPanelId = createdPanel?.id else {
-                result = .err(code: "internal_error", message: "Failed to create bead inspector panel", data: nil)
-                return
-            }
-
-            let targetPaneUUID = ws.paneId(forPanelId: inspectorPanelId)?.id
-            let windowId = v2ResolveWindowId(tabManager: tabManager)
-            result = .ok([
-                "window_id": v2OrNull(windowId?.uuidString),
-                "window_ref": v2Ref(kind: .window, uuid: windowId),
-                "workspace_id": ws.id.uuidString,
-                "workspace_ref": v2Ref(kind: .workspace, uuid: ws.id),
-                "pane_id": v2OrNull(targetPaneUUID?.uuidString),
-                "pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
-                "surface_id": inspectorPanelId.uuidString,
-                "surface_ref": v2Ref(kind: .surface, uuid: inspectorPanelId),
-                "source_surface_id": sourceSurfaceId.uuidString,
-                "source_surface_ref": v2Ref(kind: .surface, uuid: sourceSurfaceId),
-                "source_pane_id": v2OrNull(sourcePaneUUID?.uuidString),
-                "source_pane_ref": v2Ref(kind: .pane, uuid: sourcePaneUUID),
-                "target_pane_id": v2OrNull(targetPaneUUID?.uuidString),
-                "target_pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
-                "bead_id": beadId
             ])
         }
         return result
@@ -11798,7 +11723,7 @@ class TerminalController {
             NSApp.unhide(nil)
             let hasMainTerminalWindow = NSApp.windows.contains { window in
                 guard let raw = window.identifier?.rawValue else { return false }
-                return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
+                return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
             }
 
             if !hasMainTerminalWindow {
@@ -11809,7 +11734,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
+                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
                 })
                 ?? NSApp.windows.first {
                 window.makeKeyAndOrderFront(nil)
@@ -12151,7 +12076,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
+                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -12192,7 +12117,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "gmux.main" || raw.hasPrefix("gmux.main.")
+                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
