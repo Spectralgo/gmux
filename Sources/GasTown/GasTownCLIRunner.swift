@@ -2,13 +2,18 @@ import Foundation
 
 // MARK: - Gas Town CLI Runner
 //
-// Shared synchronous process runner and `gt` CLI resolution used by
+// Shared synchronous process runner and CLI resolution used by
 // adapters that need blocking CLI execution (AgentHealthAdapter,
-// ConvoyAdapter, HooksAdapter).
+// ConvoyAdapter, HooksAdapter) and async runners (GastownCommandRunner,
+// BeadsAdapter).
 //
-// GastownCommandRunner.swift is the *async* runner with timeouts.
-// This file is the *sync* counterpart — no async, no timeout, just
-// Process + Pipe + waitUntilExit.
+// GUI apps on macOS inherit a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin)
+// that does not include Homebrew or user-local bin directories. This
+// module provides:
+//   - resolveExecutable(_:)  — finds gt/bd/etc. across common install paths
+//   - cliEnvironment()       — builds an augmented environment with PATH,
+//                               GT_TOWN_ROOT, and BEADS_DIR set correctly
+//   - runProcess(...)        — launches a subprocess with the augmented env
 
 enum GasTownCLIRunner {
 
@@ -19,7 +24,75 @@ enum GasTownCLIRunner {
         let stderr: Data
     }
 
+    // MARK: - Executable Resolution
+
+    /// Directories to search when resolving CLI tool paths.
+    /// Ordered by likelihood — Homebrew ARM, Homebrew Intel, user-local, system.
+    static let cliSearchPaths: [String] = {
+        var paths = [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+        ]
+        if let home = ProcessInfo.processInfo.environment["HOME"] {
+            paths.append("\(home)/.local/bin")
+            paths.append("\(home)/go/bin")
+        }
+        paths.append(contentsOf: ["/usr/bin", "/bin", "/usr/sbin", "/sbin"])
+        return paths
+    }()
+
+    /// Resolve a CLI executable by name, searching common install directories.
+    ///
+    /// Returns the absolute path to the executable, or nil if not found.
+    static func resolveExecutable(_ name: String) -> String? {
+        let fm = FileManager.default
+        for dir in cliSearchPaths {
+            let candidate = (dir as NSString).appendingPathComponent(name)
+            if fm.isExecutableFile(atPath: candidate) {
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Environment
+
+    /// Build an augmented process environment suitable for running gt/bd.
+    ///
+    /// Starts from the current process environment, then:
+    /// 1. Ensures PATH includes all `cliSearchPaths` directories.
+    /// 2. Sets GT_TOWN_ROOT if a town root is known (from GasTownService or discovery).
+    /// 3. Sets BEADS_DIR to the town's .beads directory.
+    static func cliEnvironment(townRootPath: String? = nil) -> [String: String] {
+        var env = ProcessInfo.processInfo.environment
+
+        // Augment PATH with CLI search directories.
+        let currentPath = env["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"
+        let currentDirs = Set(currentPath.split(separator: ":").map { String($0) })
+        var augmented = currentPath
+        for dir in cliSearchPaths {
+            if !currentDirs.contains(dir) {
+                augmented = "\(dir):\(augmented)"
+            }
+        }
+        env["PATH"] = augmented
+
+        // Set GT_TOWN_ROOT and BEADS_DIR if a town root is available.
+        let effectiveTownRoot = townRootPath ?? detectTownRoot()
+        if let root = effectiveTownRoot {
+            env["GT_TOWN_ROOT"] = root
+            env["BEADS_DIR"] = (root as NSString).appendingPathComponent(".beads")
+        }
+
+        return env
+    }
+
+    // MARK: - Process Execution
+
     /// Run a process synchronously and capture stdout + stderr.
+    ///
+    /// Uses the augmented CLI environment so child processes can find
+    /// their own dependencies (e.g. gt invoking bd, or bd connecting to Dolt).
     static func runProcess(executablePath: String, arguments: [String]) -> CLIResult {
         let process = Process()
         let stdoutPipe = Pipe()
@@ -28,6 +101,7 @@ enum GasTownCLIRunner {
         process.arguments = arguments
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
+        process.environment = cliEnvironment()
 
         do {
             try process.run()
@@ -50,27 +124,35 @@ enum GasTownCLIRunner {
         )
     }
 
-    /// Attempt to find the `gt` binary on PATH.
+    /// Attempt to find the `gt` binary.
     static func resolveGTCLI() -> String? {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        task.arguments = ["gt"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = FileHandle.nullDevice
-        do {
-            try task.run()
-            task.waitUntilExit()
-            if task.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let path = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if let path, !path.isEmpty {
-                    return path
-                }
+        resolveExecutable("gt")
+    }
+
+    // MARK: - Town Root Detection
+
+    /// Best-effort town root detection for environment setup.
+    /// Checks GT_TOWN_ROOT env var, then common paths.
+    private static func detectTownRoot() -> String? {
+        let env = ProcessInfo.processInfo.environment
+        if let root = env["GT_TOWN_ROOT"], !root.isEmpty {
+            return root
+        }
+        if let root = env["GT_ROOT"], !root.isEmpty {
+            return root
+        }
+        // Check common convention paths.
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser.path
+        let candidates = [
+            (home as NSString).appendingPathComponent("gt"),
+            (home as NSString).appendingPathComponent("code/spectralGasTown"),
+        ]
+        for candidate in candidates {
+            let routesPath = (candidate as NSString).appendingPathComponent(".beads/routes.jsonl")
+            if fm.fileExists(atPath: routesPath) {
+                return candidate
             }
-        } catch {
-            // which not available or failed — gt not on PATH.
         }
         return nil
     }

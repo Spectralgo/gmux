@@ -30,21 +30,8 @@ enum GastownCommandRunner {
 
     // MARK: - Executable Resolution
 
-    private static let bdPath: String = resolveExecutable("bd")
-    private static let gtPath: String = resolveExecutable("gt")
-
-    private static func resolveExecutable(_ name: String) -> String {
-        let knownPaths = [
-            "/opt/homebrew/bin/\(name)",
-            "/usr/local/bin/\(name)",
-        ]
-        for path in knownPaths {
-            if FileManager.default.isExecutableFile(atPath: path) {
-                return path
-            }
-        }
-        return name
-    }
+    private static let bdPath: String = GasTownCLIRunner.resolveExecutable("bd") ?? "bd"
+    private static let gtPath: String = GasTownCLIRunner.resolveExecutable("gt") ?? "gt"
 
     // MARK: - Subprocess Execution
 
@@ -62,6 +49,7 @@ enum GastownCommandRunner {
             process.arguments = arguments
             process.standardOutput = stdoutPipe
             process.standardError = stderrPipe
+            process.environment = GasTownCLIRunner.cliEnvironment()
 
             var timedOut = false
             let timeoutWorkItem = DispatchWorkItem {

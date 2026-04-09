@@ -101,19 +101,7 @@ final class BeadsAdapter: ObservableObject {
     private let bdPath: String
 
     nonisolated init() {
-        // Resolve bd from common locations
-        if FileManager.default.fileExists(atPath: "/usr/local/bin/bd") {
-            bdPath = "/usr/local/bin/bd"
-        } else if let home = ProcessInfo.processInfo.environment["HOME"] {
-            let localBd = "\(home)/.local/bin/bd"
-            if FileManager.default.fileExists(atPath: localBd) {
-                bdPath = localBd
-            } else {
-                bdPath = "bd"
-            }
-        } else {
-            bdPath = "bd"
-        }
+        bdPath = GasTownCLIRunner.resolveExecutable("bd") ?? "bd"
     }
 
     /// Fetch full bead detail by ID (async).
@@ -170,12 +158,7 @@ final class BeadsAdapter: ObservableObject {
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: bdPath)
                 process.arguments = arguments
-
-                var env = ProcessInfo.processInfo.environment
-                if let path = env["PATH"] {
-                    env["PATH"] = path
-                }
-                process.environment = env
+                process.environment = GasTownCLIRunner.cliEnvironment()
 
                 let pipe = Pipe()
                 process.standardOutput = pipe
@@ -206,12 +189,7 @@ final class BeadsAdapter: ObservableObject {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: bdPath)
         process.arguments = arguments
-
-        var env = ProcessInfo.processInfo.environment
-        if let path = env["PATH"] {
-            env["PATH"] = path
-        }
-        process.environment = env
+        process.environment = GasTownCLIRunner.cliEnvironment()
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
