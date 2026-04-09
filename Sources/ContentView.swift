@@ -10983,6 +10983,58 @@ private final class SidebarShortcutHintModifierMonitor: ObservableObject {
     }
 }
 
+private struct GasTownStatusIndicator: View {
+    @ObservedObject private var service = GasTownService.shared
+
+    var body: some View {
+        if service.hasDiscovered {
+            Button(action: { showRigOverview() }) {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(service.isConnected ? Color.green : Color.gray)
+                        .frame(width: 6, height: 6)
+                    Text(service.statusSummary)
+                        .font(.system(size: 10))
+                        .foregroundColor(service.isConnected ? .secondary : .secondary.opacity(0.6))
+                        .lineLimit(1)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func showRigOverview() {
+        let alert = NSAlert()
+        alert.messageText = String(
+            localized: "gastown.rigOverview.title",
+            defaultValue: "Gas Town Rig Overview"
+        )
+
+        var info = ""
+        if let town = service.townRoot {
+            info += "Town: \(town.path)\n"
+        }
+        info += "Rigs (\(service.rigs.count)):\n"
+        for rig in service.rigs {
+            info += "  • \(rig.name)"
+            if let prefix = rig.beadsPrefix {
+                info += " [\(prefix)]"
+            }
+            info += "\n"
+        }
+        if let gtPath = service.gtCLIPath {
+            info += "\ngt CLI: \(gtPath)"
+        }
+
+        alert.informativeText = info
+        alert.addButton(withTitle: String(
+            localized: "gastown.rigOverview.ok",
+            defaultValue: "OK"
+        ))
+        alert.runModal()
+    }
+}
+
 private struct SidebarFooter: View {
     @ObservedObject var updateViewModel: UpdateViewModel
     let onSendFeedback: () -> Void
@@ -10991,7 +11043,10 @@ private struct SidebarFooter: View {
 #if DEBUG
         SidebarDevFooter(updateViewModel: updateViewModel, onSendFeedback: onSendFeedback)
 #else
-        SidebarFooterButtons(updateViewModel: updateViewModel, onSendFeedback: onSendFeedback)
+        VStack(alignment: .leading, spacing: 6) {
+            SidebarFooterButtons(updateViewModel: updateViewModel, onSendFeedback: onSendFeedback)
+            GasTownStatusIndicator()
+        }
             .padding(.leading, 6)
             .padding(.trailing, 10)
             .padding(.bottom, 6)
@@ -12131,6 +12186,7 @@ private struct SidebarDevFooter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             SidebarFooterButtons(updateViewModel: updateViewModel, onSendFeedback: onSendFeedback)
+            GasTownStatusIndicator()
             if showSidebarDevBuildBanner {
                 Text(String(localized: "debug.devBuildBanner.title", defaultValue: "THIS IS A DEV BUILD"))
                     .font(.system(size: 11, weight: .semibold))
