@@ -24,6 +24,12 @@ final class GasTownService: ObservableObject {
     /// Whether discovery has completed (regardless of success/failure).
     @Published private(set) var hasDiscovered: Bool = false
 
+    /// Incremented on each refresh tick — panels observe this to auto-refresh.
+    @Published private(set) var refreshTick: Int = 0
+
+    /// Interval between auto-refresh ticks (seconds).
+    let refreshInterval: TimeInterval = 8.0
+
     /// Human-readable status summary for the status bar.
     var statusSummary: String {
         guard hasDiscovered else {
@@ -43,6 +49,8 @@ final class GasTownService: ObservableObject {
     /// Whether a Gas Town workspace was detected.
     var isConnected: Bool { townRoot != nil }
 
+    private var refreshTimer: Timer?
+
     private init() {}
 
     /// Run discovery on a background thread and publish results on main.
@@ -57,6 +65,7 @@ final class GasTownService: ObservableObject {
                     self.townRoot = discoveryResult.town
                     self.rigs = discoveryResult.rigs
                     self.gtCLIPath = discoveryResult.gtCLIPath
+                    self.startRefreshTimer()
                     #if DEBUG
                     dlog("GasTownService: detected \(discoveryResult.town.path) with \(discoveryResult.rigs.count) rigs")
                     #endif
@@ -64,6 +73,7 @@ final class GasTownService: ObservableObject {
                     self.townRoot = nil
                     self.rigs = []
                     self.gtCLIPath = nil
+                    self.stopRefreshTimer()
                     #if DEBUG
                     dlog("GasTownService: discovery failed — \(error)")
                     #endif
@@ -71,5 +81,24 @@ final class GasTownService: ObservableObject {
                 self.hasDiscovered = true
             }
         }
+    }
+
+    // MARK: - Refresh Timer
+
+    private func startRefreshTimer() {
+        stopRefreshTimer()
+        refreshTimer = Timer.scheduledTimer(
+            withTimeInterval: refreshInterval,
+            repeats: true
+        ) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.refreshTick += 1
+            }
+        }
+    }
+
+    private func stopRefreshTimer() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
     }
 }

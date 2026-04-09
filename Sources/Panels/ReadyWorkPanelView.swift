@@ -52,6 +52,14 @@ struct ReadyWorkPanelView: View {
                 panel.refresh()
             }
         }
+        .onReceive(GasTownService.shared.$refreshTick) { _ in
+            switch panel.loadState {
+            case .loaded, .failed:
+                panel.refresh()
+            default:
+                break
+            }
+        }
     }
 
     // MARK: - Idle

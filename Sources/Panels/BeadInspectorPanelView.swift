@@ -40,6 +40,12 @@ struct BeadInspectorPanelView: View {
         .onChange(of: panel.focusFlashToken) { _ in
             triggerFocusFlashAnimation()
         }
+        .onReceive(GasTownService.shared.$refreshTick) { _ in
+            guard panel.beadDetail != nil, !panel.isLoading else { return }
+            Task {
+                await panel.refresh()
+            }
+        }
     }
 
     // MARK: - Detail Content
