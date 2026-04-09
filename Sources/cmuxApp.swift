@@ -137,6 +137,7 @@ enum UITestLaunchManifest {
 struct cmuxApp: App {
     @StateObject private var tabManager: TabManager
     @StateObject private var notificationStore = TerminalNotificationStore.shared
+    @StateObject private var gasTownService = GasTownService.shared
     @StateObject private var sidebarState = SidebarState()
     @StateObject private var sidebarSelectionState = SidebarSelectionState()
     @StateObject private var cmuxConfigStore = CmuxConfigStore()
@@ -398,7 +399,34 @@ struct cmuxApp: App {
             }
 #endif
 
-            CommandMenu(String(localized: "menu.notifications.title", defaultValue: "Notifications")) {
+            Group {
+                CommandMenu(String(localized: "menu.gastown.title", defaultValue: "Gas Town")) {
+                    let isConnected = gasTownService.isConnected
+
+                    Button(String(localized: "menu.gastown.readyWork", defaultValue: "Ready Work")) {
+                        activeTabManager.selectedWorkspace?.newReadyWorkSurface()
+                    }
+                    .disabled(!isConnected)
+
+                    Button(String(localized: "menu.gastown.beadInspector", defaultValue: "Bead Inspector…")) {
+                        openBeadInspectorPrompt()
+                    }
+                    .disabled(!isConnected)
+
+                    Divider()
+
+                    Button(String(localized: "menu.gastown.rigOverview", defaultValue: "Rig Overview")) {
+                        showGasTownRigOverview()
+                    }
+                    .disabled(!isConnected)
+
+                    Divider()
+
+                    Text(gasTownService.statusSummary)
+                        .font(.caption)
+                }
+
+                CommandMenu(String(localized: "menu.notifications.title", defaultValue: "Notifications")) {
                 let snapshot = notificationMenuSnapshot
 
                 Button(snapshot.stateHintTitle) {}
@@ -435,6 +463,7 @@ struct cmuxApp: App {
                 }
                 .disabled(!snapshot.hasNotifications)
             }
+            } // Group (Gas Town + Notifications)
 
 #if DEBUG
             CommandMenu("Debug") {
@@ -1134,6 +1163,71 @@ struct cmuxApp: App {
 
     private func showNotificationsPopover() {
         AppDelegate.shared?.toggleNotificationsPopover(animated: false)
+    }
+
+    // MARK: - Gas Town Menu Actions
+
+    private func openBeadInspectorPrompt() {
+        let alert = NSAlert()
+        alert.messageText = String(
+            localized: "gastown.beadInspector.prompt.title",
+            defaultValue: "Open Bead Inspector"
+        )
+        alert.informativeText = String(
+            localized: "gastown.beadInspector.prompt.message",
+            defaultValue: "Enter a bead ID to inspect:"
+        )
+        alert.addButton(withTitle: String(
+            localized: "gastown.beadInspector.prompt.open",
+            defaultValue: "Open"
+        ))
+        alert.addButton(withTitle: String(
+            localized: "gastown.beadInspector.prompt.cancel",
+            defaultValue: "Cancel"
+        ))
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        textField.placeholderString = "gm-abc"
+        alert.accessoryView = textField
+        alert.window.initialFirstResponder = textField
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let beadId = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !beadId.isEmpty else { return }
+
+        activeTabManager.selectedWorkspace?.newBeadInspectorSurface(beadId: beadId)
+    }
+
+    private func showGasTownRigOverview() {
+        let service = GasTownService.shared
+        let alert = NSAlert()
+        alert.messageText = String(
+            localized: "gastown.rigOverview.title",
+            defaultValue: "Gas Town Rig Overview"
+        )
+
+        var info = ""
+        if let town = service.townRoot {
+            info += "Town: \(town.path)\n"
+        }
+        info += "Rigs (\(service.rigs.count)):\n"
+        for rig in service.rigs {
+            info += "  • \(rig.name)"
+            if let prefix = rig.beadsPrefix {
+                info += " [\(prefix)]"
+            }
+            info += "\n"
+        }
+        if let gtPath = service.gtCLIPath {
+            info += "\ngt CLI: \(gtPath)"
+        }
+
+        alert.informativeText = info
+        alert.addButton(withTitle: String(
+            localized: "gastown.rigOverview.ok",
+            defaultValue: "OK"
+        ))
+        alert.runModal()
     }
 
     private func openAllDebugWindows() {
