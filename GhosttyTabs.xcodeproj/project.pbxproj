@@ -153,6 +153,7 @@
 		D6452FF06B49A1ACFD25820A /* OpenIntentExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00338A09D048B3CA6C1E5FF /* OpenIntentExecutor.swift */; };
 		D6D5228A3183B6C8FA9E3149 /* MailInboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963D510E51DB354D15DD9ECD /* MailInboxStore.swift */; };
 		D71A4E160F9888166BC541A8 /* GasTownDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000BF9907CEFA4C51E4070 /* GasTownDiscovery.swift */; };
+		D71A4E160F9888166BC54200 /* GasTownService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000BF9907CEFA4C51E4200 /* GasTownService.swift */; };
 		DA7A10CA710E000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000001 /* Localizable.xcstrings */; };
 		DA7A10CA710E000000000004 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000002 /* InfoPlist.xcstrings */; };
 		DC4F3DC24F4BFB139610E03F /* DiffPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43340D54006ED08C17960370 /* DiffPanel.swift */; };
@@ -404,6 +405,7 @@
 		EE0171AF1F49F7547191CEE5 /* SidebarWidthPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWidthPolicyTests.swift; sourceTree = "<group>"; };
 		F1000002A1B2C3D4E5F60718 /* cmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1000BF9907CEFA4C51E4070 /* GasTownDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GasTownDiscovery.swift; sourceTree = "<group>"; };
+		F1000BF9907CEFA4C51E4200 /* GasTownService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GasTownService.swift; sourceTree = "<group>"; };
 		F1C1AA20B7E84D10A1C10001 /* InactivePaneFirstClickFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactivePaneFirstClickFocusTests.swift; sourceTree = "<group>"; };
 		F2000001A1B2C3D4E5F60718 /* UpdatePillReleaseVisibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatePillReleaseVisibilityTests.swift; sourceTree = "<group>"; };
 		F2162863184D54DE84087CB8 /* HooksAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HooksAdapter.swift; sourceTree = "<group>"; };
@@ -634,6 +636,7 @@
 				963D510E51DB354D15DD9ECD /* MailInboxStore.swift */,
 				30224B41E1C0A5FBE49691AE /* GasTown */,
 				F1000BF9907CEFA4C51E4070 /* GasTownDiscovery.swift */,
+				F1000BF9907CEFA4C51E4200 /* GasTownService.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -1037,6 +1040,7 @@
 				E8E854B2F76A7AA0A32BD48E /* AgentIdentityResolver.swift in Sources */,
 				C8C4C6D72F00E7D7549F7988 /* BeadWriteService.swift in Sources */,
 				D71A4E160F9888166BC541A8 /* GasTownDiscovery.swift in Sources */,
+				D71A4E160F9888166BC54200 /* GasTownService.swift in Sources */,
 				7FF4FCE82A72B0CB45F9B384 /* OpenIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
