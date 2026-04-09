@@ -32,6 +32,10 @@
 		C2F1DEADBEEF000000000001 /* GasTownCLIRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */; };
 		AA11BB22CC33DD44EE55FF02 /* AgentHealthPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */; };
 		AA11BB22CC33DD44EE55FF03 /* AgentHealthPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */; };
+		TD0000000000000A /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = TD00000000000001 /* DesignTokens.swift */; };
+		TD0000000000000B /* TownDashboardAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = TD00000000000002 /* TownDashboardAdapter.swift */; };
+		TD0000000000000C /* TownDashboardPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = TD00000000000003 /* TownDashboardPanel.swift */; };
+		TD0000000000000D /* TownDashboardPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TD00000000000004 /* TownDashboardPanelView.swift */; };
 		6B524A0BA34FD46A771335AB /* WorkspaceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F8ED91A4B55D34BE6A0668 /* WorkspaceUnitTests.swift */; };
 		6CE58ABA8A75EBFA1A1C9D82 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3327F483F68DB590B7B63275 /* RigInventoryAdapter.swift */; };
 		734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C075029771815DD5DA1332 /* NotificationAndMenuBarTests.swift */; };
@@ -271,6 +275,10 @@
 		C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GasTownCLIRunner.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthPanel.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthPanelView.swift; sourceTree = "<group>"; };
+		TD00000000000001 /* DesignTokens.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		TD00000000000002 /* TownDashboardAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TownDashboardAdapter.swift; sourceTree = "<group>"; };
+		TD00000000000003 /* TownDashboardPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TownDashboardPanel.swift; sourceTree = "<group>"; };
+		TD00000000000004 /* TownDashboardPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TownDashboardPanelView.swift; sourceTree = "<group>"; };
 		39FF1D378676760E456F4A34 /* OpenRoutingError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenRoutingError.swift; sourceTree = "<group>"; };
 		3C2495A51A4A0FFDB6457FFE /* Rig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Rig.swift; sourceTree = "<group>"; };
 		40E21FEE4831CEBBED6E88A1 /* DiffPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiffPanelView.swift; sourceTree = "<group>"; };
@@ -525,6 +533,8 @@
 				8666D70114CF8D8F8621497C /* OpenIntent.swift */,
 				AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */,
 				C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */,
+				TD00000000000001 /* DesignTokens.swift */,
+				TD00000000000002 /* TownDashboardAdapter.swift */,
 			);
 			name = GasTown;
 			path = GasTown;
@@ -682,6 +692,8 @@
 				B989ED27CD4D2D36AD5E66B5 /* ReadyWorkPanelView.swift */,
 				AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */,
 				AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */,
+				TD00000000000003 /* TownDashboardPanel.swift */,
+				TD00000000000004 /* TownDashboardPanelView.swift */,
 			);
 			name = Panels;
 			path = Panels;
@@ -1058,6 +1070,10 @@
 				C2F1DEADBEEF000000000001 /* GasTownCLIRunner.swift in Sources */,
 				AA11BB22CC33DD44EE55FF02 /* AgentHealthPanel.swift in Sources */,
 				AA11BB22CC33DD44EE55FF03 /* AgentHealthPanelView.swift in Sources */,
+				TD0000000000000A /* DesignTokens.swift in Sources */,
+				TD0000000000000B /* TownDashboardAdapter.swift in Sources */,
+				TD0000000000000C /* TownDashboardPanel.swift in Sources */,
+				TD0000000000000D /* TownDashboardPanelView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

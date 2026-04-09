@@ -345,6 +345,11 @@ struct cmuxApp: App {
                 .onChange(of: socketControlMode) { _ in
                     updateSocketController()
                 }
+                .onChange(of: gasTownService.hasDiscovered) { discovered in
+                    if discovered, gasTownService.isConnected {
+                        activeTabManager.selectedWorkspace?.newTownDashboardSurface()
+                    }
+                }
                 .onReceive(NotificationCenter.default.publisher(for: .openBeadInspector)) { notification in
                     guard let beadId = notification.userInfo?["beadId"] as? String else { return }
                     activeTabManager.selectedWorkspace?.newBeadInspectorSurface(beadId: beadId)
@@ -406,6 +411,13 @@ struct cmuxApp: App {
             Group {
                 CommandMenu(String(localized: "menu.gastown.title", defaultValue: "Gas Town")) {
                     let isConnected = gasTownService.isConnected
+
+                    Button(String(localized: "menu.gastown.townDashboard", defaultValue: "Town Dashboard")) {
+                        activeTabManager.selectedWorkspace?.newTownDashboardSurface()
+                    }
+                    .disabled(!isConnected)
+
+                    Divider()
 
                     Button(String(localized: "menu.gastown.readyWork", defaultValue: "Ready Work")) {
                         activeTabManager.selectedWorkspace?.newReadyWorkSurface()

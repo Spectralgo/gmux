@@ -505,7 +505,7 @@ extension Workspace {
                 repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
-        case .beadInspector, .readyWork, .agentHealth:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard:
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
@@ -713,7 +713,7 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
-        case .beadInspector, .readyWork, .agentHealth:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard:
             return nil
         }
     }
@@ -7303,6 +7303,8 @@ final class Workspace: Identifiable, ObservableObject {
             return "readyWork"
         case .agentHealth:
             return "agentHealth"
+        case .townDashboard:
+            return "townDashboard"
         }
     }
 
@@ -9543,6 +9545,53 @@ final class Workspace: Identifiable, ObservableObject {
             title: panel.displayTitle,
             icon: panel.displayIcon,
             kind: "agentHealth",
+            isDirty: panel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: panel.id)
+            panelTitles.removeValue(forKey: panel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = panel.id
+        if focus {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: panel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        panel.refresh()
+        return panel
+    }
+
+    @discardableResult
+    func newTownDashboardSurface(focus: Bool = true) -> TownDashboardPanel? {
+        guard let paneId = bonsplitController.focusedPaneId else { return nil }
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let adapter: TownDashboardAdapter
+        if let townPath = GasTownService.shared.townRoot?.path {
+            adapter = TownDashboardAdapter(townRootPath: townPath)
+        } else {
+            adapter = TownDashboardAdapter()
+        }
+        let panel = TownDashboardPanel(workspaceId: id, adapter: adapter)
+        panels[panel.id] = panel
+        panelTitles[panel.id] = panel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: panel.displayTitle,
+            icon: panel.displayIcon,
+            kind: "townDashboard",
             isDirty: panel.isDirty,
             isLoading: false,
             isPinned: false,

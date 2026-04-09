@@ -1,0 +1,316 @@
+import Foundation
+
+// MARK: - Town Dashboard Adapter
+//
+// Aggregates data from multiple Gas Town CLI sources into a single
+// snapshot for the Town Dashboard. Runs all CLI calls off-main.
+//
+// Data sources:
+//   - Agent roster: `gt status --json` (via AgentHealthAdapter)
+//   - Bead counts: `bd list --json --all -n 0` (parsed for status counts)
+//   - Convoys: `gt convoy list --json` (via ConvoyAdapter)
+//   - Activity: `git log --oneline -20` (v1 simple)
+
+// MARK: - Domain Models
+
+/// Snapshot of all dashboard data, loaded atomically.
+struct TownDashboardSnapshot: Equatable, Sendable {
+    let agents: [AgentHealthEntry]
+    let attentionItems: [AttentionItem]
+    let beadCounts: BeadCountSummary
+    let activityFeed: [ActivityEntry]
+}
+
+/// An item that needs operator attention.
+struct AttentionItem: Equatable, Sendable, Identifiable {
+    let id: String
+    let severity: AttentionSeverity
+    let message: String
+    let timestamp: Date?
+    let actionLabel: String?
+    let agentAddress: String?
+}
+
+enum AttentionSeverity: String, Equatable, Sendable, Comparable {
+    case info
+    case warning
+    case critical
+
+    static func < (lhs: AttentionSeverity, rhs: AttentionSeverity) -> Bool {
+        let order: [AttentionSeverity] = [.info, .warning, .critical]
+        return (order.firstIndex(of: lhs) ?? 0) < (order.firstIndex(of: rhs) ?? 0)
+    }
+}
+
+/// Summary of bead counts by status.
+struct BeadCountSummary: Equatable, Sendable {
+    let ready: Int
+    let inProgress: Int
+    let closed: Int
+}
+
+/// A single entry in the activity feed.
+struct ActivityEntry: Equatable, Sendable, Identifiable {
+    let id: String
+    let timestamp: String
+    let message: String
+    let agentName: String?
+}
+
+// MARK: - Error
+
+enum TownDashboardAdapterError: Error, Equatable, Sendable {
+    case cliNotFound(tool: String)
+    case cliFailure(command: String, exitCode: Int32, stderr: String)
+    case partialFailure(detail: String)
+}
+
+// MARK: - Load State
+
+enum TownDashboardLoadState: Equatable, Sendable {
+    case idle
+    case loading
+    case loaded(TownDashboardSnapshot)
+    case failed(TownDashboardAdapterError)
+}
+
+// MARK: - Adapter
+
+struct TownDashboardAdapter: Sendable {
+
+    let agentAdapter: AgentHealthAdapter
+    let convoyAdapter: ConvoyAdapter
+    private let townRootPath: String?
+    private let bdPath: String?
+
+    init(townRootPath: String? = nil) {
+        self.townRootPath = townRootPath
+        if let townRootPath {
+            self.agentAdapter = AgentHealthAdapter(townRootPath: townRootPath)
+            self.convoyAdapter = ConvoyAdapter(townRootPath: townRootPath)
+        } else {
+            self.agentAdapter = AgentHealthAdapter()
+            self.convoyAdapter = ConvoyAdapter()
+        }
+        self.bdPath = GasTownCLIRunner.resolveBDCLI()
+    }
+
+    /// Load all dashboard data. Call from a background queue.
+    func loadSnapshot() -> Result<TownDashboardSnapshot, TownDashboardAdapterError> {
+        // 1. Load agents
+        let agents: [AgentHealthEntry]
+        switch agentAdapter.loadAgents() {
+        case .success(let entries):
+            agents = entries
+        case .failure:
+            agents = []
+        }
+
+        // 2. Load convoy data for attention items
+        let convoys: [ConvoySummary]
+        switch convoyAdapter.loadActiveConvoys() {
+        case .success(let summaries):
+            convoys = summaries
+        case .failure:
+            convoys = []
+        }
+
+        // 3. Derive attention items
+        let attentionItems = deriveAttentionItems(agents: agents, convoys: convoys)
+
+        // 4. Load bead counts
+        let beadCounts = loadBeadCounts()
+
+        // 5. Load activity feed
+        let activityFeed = loadActivityFeed()
+
+        let snapshot = TownDashboardSnapshot(
+            agents: agents,
+            attentionItems: attentionItems,
+            beadCounts: beadCounts,
+            activityFeed: activityFeed
+        )
+        return .success(snapshot)
+    }
+
+    // MARK: - Attention Derivation
+
+    private func deriveAttentionItems(
+        agents: [AgentHealthEntry],
+        convoys: [ConvoySummary]
+    ) -> [AttentionItem] {
+        var items: [AttentionItem] = []
+
+        // Agent stuck: running + has work but idle is inferred from external signals
+        // For now: agent not running but has work = stuck
+        for agent in agents {
+            if !agent.isRunning && agent.hasWork {
+                items.append(AttentionItem(
+                    id: "stuck-\(agent.address)",
+                    severity: .critical,
+                    message: String(
+                        localized: "dashboard.attention.agentStuck",
+                        defaultValue: "\(agent.name) has hooked work but is not running"
+                    ),
+                    timestamp: nil,
+                    actionLabel: String(localized: "dashboard.attention.nudge", defaultValue: "Nudge"),
+                    agentAddress: agent.address
+                ))
+            }
+
+            // High unread mail
+            if agent.unreadMail >= 3 {
+                items.append(AttentionItem(
+                    id: "mail-\(agent.address)",
+                    severity: .warning,
+                    message: String(
+                        localized: "dashboard.attention.unreadMail",
+                        defaultValue: "\(agent.name) has \(agent.unreadMail) unread messages"
+                    ),
+                    timestamp: nil,
+                    actionLabel: nil,
+                    agentAddress: agent.address
+                ))
+            }
+        }
+
+        // Stranded convoys
+        for convoy in convoys where convoy.attention == .stranded {
+            items.append(AttentionItem(
+                id: "stranded-\(convoy.id)",
+                severity: .warning,
+                message: String(
+                    localized: "dashboard.attention.strandedConvoy",
+                    defaultValue: "Convoy \(convoy.id) has ready work but no assignees"
+                ),
+                timestamp: nil,
+                actionLabel: String(localized: "dashboard.attention.feed", defaultValue: "Feed"),
+                agentAddress: nil
+            ))
+        }
+
+        // Blocked convoys
+        for convoy in convoys where convoy.attention == .blocked {
+            items.append(AttentionItem(
+                id: "blocked-\(convoy.id)",
+                severity: .critical,
+                message: String(
+                    localized: "dashboard.attention.blockedConvoy",
+                    defaultValue: "Convoy \(convoy.id) is fully blocked"
+                ),
+                timestamp: nil,
+                actionLabel: nil,
+                agentAddress: nil
+            ))
+        }
+
+        // Sort by severity (critical first)
+        return items.sorted { $0.severity > $1.severity }
+    }
+
+    // MARK: - Bead Counts
+
+    private func loadBeadCounts() -> BeadCountSummary {
+        guard let bdPath else {
+            return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
+        }
+
+        // Use bd list --json to get all beads and count by status
+        let result = GasTownCLIRunner.runProcess(
+            executablePath: bdPath,
+            arguments: ["list", "--json", "--all", "-n", "0"],
+            townRootPath: townRootPath
+        )
+
+        guard result.exitCode == 0,
+              let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]]
+        else {
+            return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
+        }
+
+        var ready = 0
+        var inProgress = 0
+        var closed = 0
+
+        for bead in array {
+            let status = bead["status"] as? String ?? ""
+            switch status {
+            case "open", "pinned":
+                ready += 1
+            case "in_progress", "hooked":
+                inProgress += 1
+            case "closed":
+                closed += 1
+            default:
+                break
+            }
+        }
+
+        return BeadCountSummary(ready: ready, inProgress: inProgress, closed: closed)
+    }
+
+    // MARK: - Activity Feed
+
+    private func loadActivityFeed() -> [ActivityEntry] {
+        // V1: parse git log from the town root
+        guard let townRootPath else { return [] }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = ["-C", townRootPath, "log", "--oneline", "--all", "-20",
+                             "--format=%h %ar %s"]
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            return []
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        let lines = output.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+        return lines.enumerated().map { index, line in
+            let parts = line.split(separator: " ", maxSplits: 2)
+            let hash = parts.count > 0 ? String(parts[0]) : ""
+            // Find the relative time (e.g. "3 hours ago") and message
+            let rest = parts.count > 1 ? String(parts[1...].joined(separator: " ")) : line
+
+            // Try to extract agent name from commit message
+            let agentName = extractAgentName(from: rest)
+
+            return ActivityEntry(
+                id: "git-\(hash)-\(index)",
+                timestamp: extractRelativeTime(from: rest),
+                message: extractMessage(from: rest),
+                agentName: agentName
+            )
+        }
+    }
+
+    private func extractRelativeTime(from text: String) -> String {
+        // Format: "3 hours ago fix: something" — find the "ago" marker
+        if let agoRange = text.range(of: " ago ") {
+            return String(text[text.startIndex...agoRange.lowerBound]) + "ago"
+        }
+        return ""
+    }
+
+    private func extractMessage(from text: String) -> String {
+        if let agoRange = text.range(of: " ago ") {
+            return String(text[agoRange.upperBound...]).trimmingCharacters(in: .whitespaces)
+        }
+        return text
+    }
+
+    private func extractAgentName(from text: String) -> String? {
+        let knownAgents = ["fury", "scavenger", "guzzle", "dust", "refinery", "witness", "mayor"]
+        let lower = text.lowercased()
+        return knownAgents.first { lower.contains($0) }
+    }
+}

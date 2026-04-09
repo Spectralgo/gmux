@@ -95,6 +95,16 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
+        case .townDashboard:
+            if let townDashboardPanel = panel as? TownDashboardPanel {
+                TownDashboardPanelView(
+                    panel: townDashboardPanel,
+                    isFocused: isFocused,
+                    isVisibleInUI: isVisibleInUI,
+                    portalPriority: portalPriority,
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+            }
         }
     }
 }
