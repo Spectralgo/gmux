@@ -20,7 +20,11 @@ enum GasTownCLIRunner {
     }
 
     /// Run a process synchronously and capture stdout + stderr.
-    static func runProcess(executablePath: String, arguments: [String]) -> CLIResult {
+    static func runProcess(
+        executablePath: String,
+        arguments: [String],
+        environment: [String: String]? = nil
+    ) -> CLIResult {
         let process = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -28,6 +32,9 @@ enum GasTownCLIRunner {
         process.arguments = arguments
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
+        if let environment {
+            process.environment = environment
+        }
 
         do {
             try process.run()
@@ -50,28 +57,52 @@ enum GasTownCLIRunner {
         )
     }
 
-    /// Attempt to find the `gt` binary on PATH.
+    /// Find the `gt` binary by searching well-known install locations.
+    /// Does not use `/usr/bin/which` — macOS GUI apps have no shell PATH.
     static func resolveGTCLI() -> String? {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        task.arguments = ["gt"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = FileHandle.nullDevice
-        do {
-            try task.run()
-            task.waitUntilExit()
-            if task.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let path = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if let path, !path.isEmpty {
-                    return path
-                }
+        resolveCLI(name: "gt")
+    }
+
+    /// Find the `bd` binary by searching well-known install locations.
+    static func resolveBDCLI() -> String? {
+        resolveCLI(name: "bd")
+    }
+
+    private static func resolveCLI(name: String) -> String? {
+        let searchPaths = [
+            "/opt/homebrew/bin/\(name)",
+            "/usr/local/bin/\(name)",
+            NSString(string: "~/go/bin/\(name)").expandingTildeInPath,
+        ]
+        for path in searchPaths {
+            if FileManager.default.isExecutableFile(atPath: path) {
+                return path
             }
-        } catch {
-            // which not available or failed — gt not on PATH.
         }
         return nil
+    }
+
+    /// Build a process environment dict with PATH, BEADS_DIR, and GT_TOWN_ROOT
+    /// set so child processes can find Gas Town tooling and data.
+    static func processEnvironment(
+        townRoot: String?,
+        rigBeadsPath: String? = nil
+    ) -> [String: String] {
+        var env = ProcessInfo.processInfo.environment
+        let extraPaths = "/opt/homebrew/bin:/usr/local/bin"
+        if let existing = env["PATH"] {
+            env["PATH"] = "\(extraPaths):\(existing)"
+        } else {
+            env["PATH"] = extraPaths
+        }
+        if let beadsPath = rigBeadsPath {
+            env["BEADS_DIR"] = beadsPath
+        } else if let townRoot {
+            env["BEADS_DIR"] = (townRoot as NSString).appendingPathComponent(".beads")
+        }
+        if let townRoot {
+            env["GT_TOWN_ROOT"] = townRoot
+        }
+        return env
     }
 }

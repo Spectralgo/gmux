@@ -60,12 +60,26 @@ struct AgentHealthAdapter: Sendable {
                 GasTownCLIRunner.runProcess(executablePath: path, arguments: args)
             }
         )
+
+        static func live(townRootPath: String) -> Environment {
+            let env = GasTownCLIRunner.processEnvironment(townRoot: townRootPath)
+            return Environment(
+                whichGT: { GasTownCLIRunner.resolveGTCLI() },
+                runCLI: { path, args in
+                    GasTownCLIRunner.runProcess(executablePath: path, arguments: args, environment: env)
+                }
+            )
+        }
     }
 
     let environment: Environment
 
     init(environment: Environment = .live) {
         self.environment = environment
+    }
+
+    init(townRootPath: String) {
+        self.environment = .live(townRootPath: townRootPath)
     }
 
     /// Load all agents from `gt status --json`.

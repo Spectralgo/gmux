@@ -173,12 +173,26 @@ struct HooksAdapter {
                 GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments)
             }
         )
+
+        static func live(townRootPath: String) -> Environment {
+            let env = GasTownCLIRunner.processEnvironment(townRoot: townRootPath)
+            return Environment(
+                whichGT: { GasTownCLIRunner.resolveGTCLI() },
+                runCLI: { executablePath, arguments in
+                    GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments, environment: env)
+                }
+            )
+        }
     }
 
     let environment: Environment
 
     init(environment: Environment = .live) {
         self.environment = environment
+    }
+
+    init(townRootPath: String) {
+        self.environment = .live(townRootPath: townRootPath)
     }
 
     // MARK: - Public API

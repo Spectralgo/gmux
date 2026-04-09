@@ -99,20 +99,15 @@ final class BeadsAdapter: ObservableObject {
     @Published private(set) var lastError: String?
 
     private let bdPath: String
+    private let processEnv: [String: String]?
 
-    nonisolated init() {
-        // Resolve bd from common locations
-        if FileManager.default.fileExists(atPath: "/usr/local/bin/bd") {
-            bdPath = "/usr/local/bin/bd"
-        } else if let home = ProcessInfo.processInfo.environment["HOME"] {
-            let localBd = "\(home)/.local/bin/bd"
-            if FileManager.default.fileExists(atPath: localBd) {
-                bdPath = localBd
-            } else {
-                bdPath = "bd"
-            }
+    nonisolated init(townRootPath: String? = nil) {
+        // Resolve bd from well-known install locations (GUI apps have no shell PATH)
+        self.bdPath = GasTownCLIRunner.resolveBDCLI() ?? "bd"
+        if let townRootPath {
+            self.processEnv = GasTownCLIRunner.processEnvironment(townRoot: townRootPath)
         } else {
-            bdPath = "bd"
+            self.processEnv = nil
         }
     }
 
@@ -166,16 +161,14 @@ final class BeadsAdapter: ObservableObject {
 
     private func runBdAsync(arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [bdPath] in
+            DispatchQueue.global(qos: .userInitiated).async { [bdPath, processEnv] in
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: bdPath)
                 process.arguments = arguments
 
-                var env = ProcessInfo.processInfo.environment
-                if let path = env["PATH"] {
-                    env["PATH"] = path
+                if let processEnv {
+                    process.environment = processEnv
                 }
-                process.environment = env
 
                 let pipe = Pipe()
                 process.standardOutput = pipe
@@ -207,11 +200,9 @@ final class BeadsAdapter: ObservableObject {
         process.executableURL = URL(fileURLWithPath: bdPath)
         process.arguments = arguments
 
-        var env = ProcessInfo.processInfo.environment
-        if let path = env["PATH"] {
-            env["PATH"] = path
+        if let processEnv {
+            process.environment = processEnv
         }
-        process.environment = env
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
