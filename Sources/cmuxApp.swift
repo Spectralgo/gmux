@@ -413,6 +413,11 @@ struct cmuxApp: App {
                     }
                     .disabled(!isConnected)
 
+                    Button(String(localized: "menu.gastown.agentHealth", defaultValue: "Agent Health")) {
+                        activeTabManager.selectedWorkspace?.newAgentHealthSurface()
+                    }
+                    .disabled(!isConnected)
+
                     Divider()
 
                     Button(String(localized: "menu.gastown.rigOverview", defaultValue: "Rig Overview")) {

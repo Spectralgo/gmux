@@ -505,7 +505,7 @@ extension Workspace {
                 repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
-        case .beadInspector, .readyWork:
+        case .beadInspector, .readyWork, .agentHealth:
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
@@ -713,7 +713,7 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
-        case .beadInspector, .readyWork:
+        case .beadInspector, .readyWork, .agentHealth:
             return nil
         }
     }
@@ -7301,6 +7301,8 @@ final class Workspace: Identifiable, ObservableObject {
             return "beadInspector"
         case .readyWork:
             return "readyWork"
+        case .agentHealth:
+            return "agentHealth"
         }
     }
 
@@ -9491,6 +9493,48 @@ final class Workspace: Identifiable, ObservableObject {
             title: panel.displayTitle,
             icon: panel.displayIcon,
             kind: "readyWork",
+            isDirty: panel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: panel.id)
+            panelTitles.removeValue(forKey: panel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = panel.id
+        if focus {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: panel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        panel.refresh()
+        return panel
+    }
+
+    /// Create a new Agent Health tab in the focused pane.
+    @discardableResult
+    func newAgentHealthSurface(focus: Bool = true) -> AgentHealthPanel? {
+        guard let paneId = bonsplitController.focusedPaneId else { return nil }
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let panel = AgentHealthPanel(workspaceId: id)
+        panels[panel.id] = panel
+        panelTitles[panel.id] = panel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: panel.displayTitle,
+            icon: panel.displayIcon,
+            kind: "agentHealth",
             isDirty: panel.isDirty,
             isLoading: false,
             isPinned: false,

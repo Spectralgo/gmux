@@ -10,6 +10,7 @@ public enum PanelType: String, Codable, Sendable {
     case diff
     case beadInspector
     case readyWork
+    case agentHealth
 }
 
 public enum TerminalPanelFocusIntent: Equatable {

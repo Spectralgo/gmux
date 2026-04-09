@@ -85,6 +85,16 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
+        case .agentHealth:
+            if let agentHealthPanel = panel as? AgentHealthPanel {
+                AgentHealthPanelView(
+                    panel: agentHealthPanel,
+                    isFocused: isFocused,
+                    isVisibleInUI: isVisibleInUI,
+                    portalPriority: portalPriority,
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+            }
         }
     }
 }

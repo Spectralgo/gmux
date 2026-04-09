@@ -6031,6 +6031,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.beadInspector", defaultValue: "Bead Inspector")
         case .readyWork:
             return String(localized: "commandPalette.kind.readyWork", defaultValue: "Ready Work")
+        case .agentHealth:
+            return String(localized: "commandPalette.kind.agentHealth", defaultValue: "Agent Health")
         }
     }
 
@@ -6048,6 +6050,8 @@ struct ContentView: View {
             return ["bead", "inspector", "issue", "detail"]
         case .readyWork:
             return ["ready", "work", "beads", "queue"]
+        case .agentHealth:
+            return ["agent", "health", "status", "grid"]
         }
     }
 

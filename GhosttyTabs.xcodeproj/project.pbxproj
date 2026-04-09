@@ -28,6 +28,9 @@
 		5341D7B12ABF386ABF50A5AA /* ConvoyTrackedBead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA5238B299ACCA071BD8A33 /* ConvoyTrackedBead.swift */; };
 		58015DD1423D39A9FFAE729F /* WorktreeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7106DB2DA287964BDCC5E4 /* WorktreeClassifier.swift */; };
 		5D2913CA73F897F95F0AAC87 /* ReadyWorkPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381AF7F8A9B526B8522D222B /* ReadyWorkPanel.swift */; };
+		AA11BB22CC33DD44EE55FF01 /* AgentHealthAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */; };
+		AA11BB22CC33DD44EE55FF02 /* AgentHealthPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */; };
+		AA11BB22CC33DD44EE55FF03 /* AgentHealthPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */; };
 		6B524A0BA34FD46A771335AB /* WorkspaceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F8ED91A4B55D34BE6A0668 /* WorkspaceUnitTests.swift */; };
 		6CE58ABA8A75EBFA1A1C9D82 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3327F483F68DB590B7B63275 /* RigInventoryAdapter.swift */; };
 		734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C075029771815DD5DA1332 /* NotificationAndMenuBarTests.swift */; };
@@ -263,6 +266,9 @@
 		3327F483F68DB590B7B63275 /* RigInventoryAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigInventoryAdapter.swift; sourceTree = "<group>"; };
 		38005F2FE18948D6631EE491 /* ConvoyAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyAdapter.swift; sourceTree = "<group>"; };
 		381AF7F8A9B526B8522D222B /* ReadyWorkPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadyWorkPanel.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthAdapter.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthPanel.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthPanelView.swift; sourceTree = "<group>"; };
 		39FF1D378676760E456F4A34 /* OpenRoutingError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenRoutingError.swift; sourceTree = "<group>"; };
 		3C2495A51A4A0FFDB6457FFE /* Rig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Rig.swift; sourceTree = "<group>"; };
 		40E21FEE4831CEBBED6E88A1 /* DiffPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiffPanelView.swift; sourceTree = "<group>"; };
@@ -515,6 +521,7 @@
 				43BA611807E65173AB3B3589 /* AgentIdentityResolver.swift */,
 				52232ADB05408DDB44C68DBD /* BeadWriteService.swift */,
 				8666D70114CF8D8F8621497C /* OpenIntent.swift */,
+				AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */,
 			);
 			name = GasTown;
 			path = GasTown;
@@ -670,6 +677,8 @@
 				5C14CD11C2FC796BC01FE84F /* BeadInspectorPanelView.swift */,
 				381AF7F8A9B526B8522D222B /* ReadyWorkPanel.swift */,
 				B989ED27CD4D2D36AD5E66B5 /* ReadyWorkPanelView.swift */,
+				AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */,
+				AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */,
 			);
 			name = Panels;
 			path = Panels;
@@ -1042,6 +1051,9 @@
 				D71A4E160F9888166BC541A8 /* GasTownDiscovery.swift in Sources */,
 				D71A4E160F9888166BC54200 /* GasTownService.swift in Sources */,
 				7FF4FCE82A72B0CB45F9B384 /* OpenIntent.swift in Sources */,
+				AA11BB22CC33DD44EE55FF01 /* AgentHealthAdapter.swift in Sources */,
+				AA11BB22CC33DD44EE55FF02 /* AgentHealthPanel.swift in Sources */,
+				AA11BB22CC33DD44EE55FF03 /* AgentHealthPanelView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
