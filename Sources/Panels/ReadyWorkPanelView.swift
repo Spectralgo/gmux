@@ -1,5 +1,9 @@
 import SwiftUI
 
+extension Notification.Name {
+    static let openBeadInspector = Notification.Name("com.cmux.openBeadInspector")
+}
+
 /// SwiftUI view that renders a ReadyWorkPanel's content —
 /// a list of dependency-cleared beads ready for work.
 struct ReadyWorkPanelView: View {
@@ -11,6 +15,8 @@ struct ReadyWorkPanelView: View {
 
     @State private var focusFlashOpacity: Double = 0.0
     @State private var focusFlashAnimationGeneration: Int = 0
+    @State private var showingSlingSheet: Bool = false
+    @State private var slingRigInput: String = ""
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -60,6 +66,49 @@ struct ReadyWorkPanelView: View {
                 break
             }
         }
+        .sheet(isPresented: $showingSlingSheet) {
+            slingSheet
+        }
+    }
+
+    private var slingSheet: some View {
+        VStack(spacing: 16) {
+            Text(String(localized: "readyWork.sling.title", defaultValue: "Sling to Rig"))
+                .font(.headline)
+
+            if let beadId = panel.selectedBeadId {
+                Text(beadId)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(.secondary)
+
+                TextField(
+                    String(localized: "readyWork.sling.rigPlaceholder", defaultValue: "Rig name (e.g. spectralChat)"),
+                    text: $slingRigInput
+                )
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 260)
+
+                HStack(spacing: 12) {
+                    Button(String(localized: "readyWork.sling.cancel", defaultValue: "Cancel")) {
+                        showingSlingSheet = false
+                        slingRigInput = ""
+                    }
+                    .keyboardShortcut(.cancelAction)
+
+                    Button(String(localized: "readyWork.sling.send", defaultValue: "Sling")) {
+                        let rig = slingRigInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !rig.isEmpty else { return }
+                        panel.slingBead(beadId, toRig: rig)
+                        showingSlingSheet = false
+                        slingRigInput = ""
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(slingRigInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .padding(24)
+        .frame(minWidth: 320)
     }
 
     // MARK: - Idle
@@ -338,6 +387,49 @@ struct ReadyWorkPanelView: View {
                     )
                 }
             }
+
+            Divider()
+                .padding(.vertical, 4)
+
+            // Action buttons
+            HStack(spacing: 8) {
+                Button(action: {
+                    NotificationCenter.default.post(
+                        name: .openBeadInspector,
+                        object: nil,
+                        userInfo: [
+                            "beadId": detail.id,
+                            "workspaceId": panel.workspaceId,
+                        ]
+                    )
+                }) {
+                    Label(
+                        String(localized: "readyWork.action.openInspector", defaultValue: "Open in Inspector"),
+                        systemImage: "doc.text.magnifyingglass"
+                    )
+                    .font(.system(size: 11))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(action: {
+                    showingSlingSheet = true
+                }) {
+                    Label(
+                        String(localized: "readyWork.action.sling", defaultValue: "Sling to Polecat"),
+                        systemImage: "paperplane"
+                    )
+                    .font(.system(size: 11))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Spacer()
+            }
+
+            if let result = panel.actionResult {
+                actionResultBanner(result)
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 10)
@@ -418,6 +510,29 @@ struct ReadyWorkPanelView: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
+    }
+
+    private func actionResultBanner(_ result: ReadyWorkPanel.ActionResult) -> some View {
+        HStack(spacing: 6) {
+            switch result {
+            case .success(let message):
+                Image(systemName: "checkmark.circle")
+                    .foregroundColor(.green)
+                    .font(.system(size: 11))
+                Text(message)
+                    .font(.system(size: 11))
+                    .foregroundColor(.green)
+            case .failure(let message):
+                Image(systemName: "xmark.circle")
+                    .foregroundColor(.red)
+                    .font(.system(size: 11))
+                Text(message)
+                    .font(.system(size: 11))
+                    .foregroundColor(.red)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.top, 4)
     }
 
     // MARK: - Styling

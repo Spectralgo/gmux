@@ -11,6 +11,8 @@ struct BeadInspectorPanelView: View {
 
     @State private var focusFlashOpacity: Double = 0.0
     @State private var focusFlashAnimationGeneration: Int = 0
+    @State private var showingAssignSheet: Bool = false
+    @State private var assigneeInput: String = ""
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -90,6 +92,17 @@ struct BeadInspectorPanelView: View {
                 }
 
                 Spacer(minLength: 16)
+
+                // Action buttons
+                actionsSection
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 8)
+
+                if let result = panel.actionResult {
+                    actionResultBanner(result)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 8)
+                }
 
                 // Refresh button at the bottom
                 refreshButton
@@ -282,6 +295,97 @@ struct BeadInspectorPanelView: View {
             .font(.system(size: 11, weight: .semibold))
             .foregroundColor(.secondary)
             .textCase(.uppercase)
+    }
+
+    private var actionsSection: some View {
+        HStack(spacing: 8) {
+            Button(action: { panel.closeBead() }) {
+                Label(
+                    String(localized: "beadInspector.action.close", defaultValue: "Close Bead"),
+                    systemImage: "xmark.circle"
+                )
+                .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(panel.isLoading)
+
+            Button(action: { showingAssignSheet = true }) {
+                Label(
+                    String(localized: "beadInspector.action.assign", defaultValue: "Assign"),
+                    systemImage: "person.badge.plus"
+                )
+                .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(panel.isLoading)
+
+            Spacer()
+        }
+        .sheet(isPresented: $showingAssignSheet) {
+            assignSheet
+        }
+    }
+
+    private var assignSheet: some View {
+        VStack(spacing: 16) {
+            Text(String(localized: "beadInspector.assign.title", defaultValue: "Assign Bead"))
+                .font(.headline)
+
+            Text(panel.beadId)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundColor(.secondary)
+
+            TextField(
+                String(localized: "beadInspector.assign.placeholder", defaultValue: "Assignee (e.g. gmux/polecats/fury)"),
+                text: $assigneeInput
+            )
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 300)
+
+            HStack(spacing: 12) {
+                Button(String(localized: "beadInspector.assign.cancel", defaultValue: "Cancel")) {
+                    showingAssignSheet = false
+                    assigneeInput = ""
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Button(String(localized: "beadInspector.assign.confirm", defaultValue: "Assign")) {
+                    let assignee = assigneeInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !assignee.isEmpty else { return }
+                    panel.assignBead(to: assignee)
+                    showingAssignSheet = false
+                    assigneeInput = ""
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(assigneeInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(minWidth: 360)
+    }
+
+    private func actionResultBanner(_ result: BeadInspectorPanel.ActionResult) -> some View {
+        HStack(spacing: 6) {
+            switch result {
+            case .success(let message):
+                Image(systemName: "checkmark.circle")
+                    .foregroundColor(.green)
+                    .font(.system(size: 11))
+                Text(message)
+                    .font(.system(size: 11))
+                    .foregroundColor(.green)
+            case .failure(let message):
+                Image(systemName: "xmark.circle")
+                    .foregroundColor(.red)
+                    .font(.system(size: 11))
+                Text(message)
+                    .font(.system(size: 11))
+                    .foregroundColor(.red)
+                    .lineLimit(2)
+            }
+        }
     }
 
     private var refreshButton: some View {

@@ -95,4 +95,36 @@ final class ReadyWorkPanel: Panel, ObservableObject {
         selectedBeadId = nil
         selectedDetail = .idle
     }
+
+    // MARK: - Actions
+
+    /// Result message from the last action, cleared on next action.
+    @Published private(set) var actionResult: ActionResult?
+
+    enum ActionResult: Equatable {
+        case success(String)
+        case failure(String)
+    }
+
+    /// Sling a bead to a rig via `gt sling <beadId> <rig>`.
+    func slingBead(_ beadId: String, toRig rig: String) {
+        actionResult = nil
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task {
+                let result = await GastownCommandRunner.gt(["sling", beadId, rig])
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    if result.succeeded {
+                        self.actionResult = .success(String(
+                            localized: "readyWork.action.slingSuccess",
+                            defaultValue: "Slung \(beadId) to \(rig)"
+                        ))
+                        self.refresh()
+                    } else {
+                        self.actionResult = .failure(result.stderr.isEmpty ? result.stdout : result.stderr)
+                    }
+                }
+            }
+        }
+    }
 }

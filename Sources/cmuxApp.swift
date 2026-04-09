@@ -345,6 +345,10 @@ struct cmuxApp: App {
                 .onChange(of: socketControlMode) { _ in
                     updateSocketController()
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .openBeadInspector)) { notification in
+                    guard let beadId = notification.userInfo?["beadId"] as? String else { return }
+                    activeTabManager.selectedWorkspace?.newBeadInspectorSurface(beadId: beadId)
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .commands {
