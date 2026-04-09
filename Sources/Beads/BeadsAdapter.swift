@@ -99,8 +99,10 @@ final class BeadsAdapter: ObservableObject {
     @Published private(set) var lastError: String?
 
     private let bdPath: String
+    private let townRootPath: String?
 
-    nonisolated init() {
+    nonisolated init(townRootPath: String? = nil) {
+        self.townRootPath = townRootPath
         bdPath = GasTownCLIRunner.resolveExecutable("bd") ?? "bd"
     }
 
@@ -154,11 +156,11 @@ final class BeadsAdapter: ObservableObject {
 
     private func runBdAsync(arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [bdPath] in
+            DispatchQueue.global(qos: .userInitiated).async { [bdPath, townRootPath] in
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: bdPath)
                 process.arguments = arguments
-                process.environment = GasTownCLIRunner.cliEnvironment()
+                process.environment = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
 
                 let pipe = Pipe()
                 process.standardOutput = pipe
@@ -189,7 +191,7 @@ final class BeadsAdapter: ObservableObject {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: bdPath)
         process.arguments = arguments
-        process.environment = GasTownCLIRunner.cliEnvironment()
+        process.environment = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -275,8 +277,8 @@ final class BeadsAdapter: ObservableObject {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
             // First line often contains title with status badge
-            if trimmed.contains("◇") || trimmed.contains("◆") {
-                if let firstDot = trimmed.range(of: " · ") {
+            if trimmed.contains("\u{25C7}") || trimmed.contains("\u{25C6}") {
+                if let firstDot = trimmed.range(of: " \u{00B7} ") {
                     let afterFirstDot = trimmed[firstDot.upperBound...]
                     if let bracketRange = afterFirstDot.range(of: "   [") {
                         title = String(afterFirstDot[..<bracketRange.lowerBound])
@@ -363,12 +365,12 @@ final class BeadsAdapter: ObservableObject {
                     acceptanceCriteria.append(trimmed)
                 }
             case .dependsOn:
-                if trimmed.hasPrefix("→") || trimmed.hasPrefix("->") {
+                if trimmed.hasPrefix("\u{2192}") || trimmed.hasPrefix("->") {
                     let cleaned = trimmed
-                        .replacingOccurrences(of: "→", with: "")
+                        .replacingOccurrences(of: "\u{2192}", with: "")
                         .replacingOccurrences(of: "->", with: "")
-                        .replacingOccurrences(of: "○", with: "")
-                        .replacingOccurrences(of: "●", with: "")
+                        .replacingOccurrences(of: "\u{25CB}", with: "")
+                        .replacingOccurrences(of: "\u{25CF}", with: "")
                         .trimmingCharacters(in: .whitespaces)
                     if let colonRange = cleaned.range(of: ":") {
                         let depId = String(cleaned[..<colonRange.lowerBound]).trimmingCharacters(in: .whitespaces)

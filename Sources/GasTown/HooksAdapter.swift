@@ -181,6 +181,17 @@ struct HooksAdapter {
         self.environment = environment
     }
 
+    /// Create an adapter that injects the town root path into all CLI calls.
+    init(townRootPath: String?) {
+        self.environment = Environment(
+            whichGT: { GasTownCLIRunner.resolveGTCLI() },
+            runCLI: { executablePath, arguments in
+                let env = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
+                return GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments, environment: env)
+            }
+        )
+    }
+
     // MARK: - Public API
 
     /// Load all managed hook targets and their sync status.

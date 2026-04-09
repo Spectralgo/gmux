@@ -32,16 +32,17 @@ final class BeadInspectorPanel: Panel, ObservableObject {
     /// Token incremented to trigger focus flash animation.
     @Published private(set) var focusFlashToken: Int = 0
 
-    private let adapter = BeadsAdapter()
+    private let adapter: BeadsAdapter
     private var isClosed = false
 
     // MARK: - Init
 
-    init(workspaceId: UUID, beadId: String) {
+    init(workspaceId: UUID, beadId: String, townRootPath: String? = nil) {
         self.id = UUID()
         self.workspaceId = workspaceId
         self.beadId = beadId
         self.displayTitle = beadId
+        self.adapter = BeadsAdapter(townRootPath: townRootPath)
 
         Task { @MainActor [weak self] in
             await self?.refresh()
