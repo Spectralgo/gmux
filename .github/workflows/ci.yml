@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Validate WarpBuild runner guards
+      - name: Validate CI runner guards
         run: ./tests/test_ci_self_hosted_guard.sh
 
       - name: Validate create-dmg version pinning
@@ -75,7 +75,7 @@ jobs:
         run: bun tsc --noEmit
 
   tests:
-    runs-on: warp-macos-15-arm64-6x
+    runs-on: macos-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -242,11 +242,11 @@ jobs:
           CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_version_memory_guard.py
 
   tests-build-and-lag:
-    # Build the full cmux scheme and run the lag regression on WarpBuild.
+    # Build the full cmux scheme and run the lag regression.
     # Keep lag validation separate from UI regressions so functional UI failures
     # and performance regressions stay isolated. Broader interactive UI suites
-    # still run via test-e2e.yml on GitHub-hosted runners.
-    runs-on: warp-macos-15-arm64-6x
+    # still run via test-e2e.yml.
+    runs-on: macos-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -415,7 +415,7 @@ jobs:
           rm -f /tmp/create-virtual-display
 
   ui-regressions:
-    runs-on: warp-macos-15-arm64-6x
+    runs-on: macos-latest
     timeout-minutes: 25
     steps:
       - name: Checkout
