@@ -47,8 +47,14 @@ final class AgentHealthPanel: Panel, ObservableObject {
 
     /// Load agent health data from `gt status --json`. Runs CLI off-main
     /// to avoid blocking UI, then publishes the result on main.
-    func refresh() {
-        loadState = .loading
+    ///
+    /// - Parameter silent: When `true` (used by auto-refresh), skips the
+    ///   `.loading` transition and only publishes if the result differs from
+    ///   the current state, preventing unnecessary SwiftUI re-renders.
+    func refresh(silent: Bool = false) {
+        if !silent {
+            loadState = .loading
+        }
 
         let adapter = self.adapter
         DispatchQueue.global(qos: .userInitiated).async {
@@ -57,9 +63,15 @@ final class AgentHealthPanel: Panel, ObservableObject {
                 guard let self else { return }
                 switch result {
                 case .success(let entries):
-                    self.loadState = .loaded(entries)
+                    let newState = AgentHealthLoadState.loaded(entries)
+                    if self.loadState != newState {
+                        self.loadState = newState
+                    }
                 case .failure(let error):
-                    self.loadState = .failed(error)
+                    let newState = AgentHealthLoadState.failed(error)
+                    if self.loadState != newState {
+                        self.loadState = newState
+                    }
                 }
             }
         }

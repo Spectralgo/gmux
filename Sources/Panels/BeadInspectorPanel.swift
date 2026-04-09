@@ -119,19 +119,30 @@ final class BeadInspectorPanel: Panel, ObservableObject {
 
     // MARK: - Data
 
-    func refresh() async {
+    /// - Parameter silent: When `true` (used by auto-refresh), skips the
+    ///   loading/error state transitions and only publishes if the fetched
+    ///   detail differs, preventing unnecessary SwiftUI re-renders.
+    func refresh(silent: Bool = false) async {
         guard !isClosed else { return }
-        isLoading = true
-        errorMessage = nil
+        if !silent {
+            isLoading = true
+            errorMessage = nil
+        }
 
         if let detail = await adapter.fetchBeadDetail(beadId: beadId) {
-            beadDetail = detail
-            displayTitle = detail.id
-        } else {
+            if beadDetail != detail {
+                beadDetail = detail
+            }
+            if displayTitle != detail.id {
+                displayTitle = detail.id
+            }
+        } else if !silent {
             errorMessage = adapter.lastError
                 ?? String(localized: "beadInspector.error.unknown", defaultValue: "Failed to load bead")
         }
 
-        isLoading = false
+        if !silent {
+            isLoading = false
+        }
     }
 }

@@ -51,10 +51,16 @@ final class ReadyWorkPanel: Panel, ObservableObject {
 
     /// Load ready work items from the Beads CLI. Runs the CLI off-main
     /// to avoid blocking UI, then publishes the result on main.
-    func refresh() {
-        loadState = .loading
-        selectedBeadId = nil
-        selectedDetail = .idle
+    ///
+    /// - Parameter silent: When `true` (used by auto-refresh), skips the
+    ///   `.loading` transition and only publishes if the result differs from
+    ///   the current state, preventing unnecessary SwiftUI re-renders.
+    func refresh(silent: Bool = false) {
+        if !silent {
+            loadState = .loading
+            selectedBeadId = nil
+            selectedDetail = .idle
+        }
 
         let adapter = self.adapter
         DispatchQueue.global(qos: .userInitiated).async {
@@ -63,9 +69,15 @@ final class ReadyWorkPanel: Panel, ObservableObject {
                 guard let self else { return }
                 switch result {
                 case .success(let summaries):
-                    self.loadState = .loaded(summaries)
+                    let newState: BeadsLoadState<[BeadSummary]> = .loaded(summaries)
+                    if self.loadState != newState {
+                        self.loadState = newState
+                    }
                 case .failure(let error):
-                    self.loadState = .failed(error)
+                    let newState: BeadsLoadState<[BeadSummary]> = .failed(error)
+                    if self.loadState != newState {
+                        self.loadState = newState
+                    }
                 }
             }
         }

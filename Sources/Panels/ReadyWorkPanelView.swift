@@ -61,7 +61,7 @@ struct ReadyWorkPanelView: View {
         .onReceive(GasTownService.shared.$refreshTick) { _ in
             switch panel.loadState {
             case .loaded, .failed:
-                panel.refresh()
+                panel.refresh(silent: true)
             default:
                 break
             }

@@ -45,7 +45,7 @@ struct BeadInspectorPanelView: View {
         .onReceive(GasTownService.shared.$refreshTick) { _ in
             guard panel.beadDetail != nil, !panel.isLoading else { return }
             Task {
-                await panel.refresh()
+                await panel.refresh(silent: true)
             }
         }
     }
