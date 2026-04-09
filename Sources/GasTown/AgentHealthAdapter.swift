@@ -52,19 +52,12 @@ enum AgentHealthLoadState: Equatable, Sendable {
 struct AgentHealthAdapter: Sendable {
     struct Environment: Sendable {
         let whichGT: @Sendable () -> String?
-        let runCLI: @Sendable (_ path: String, _ args: [String]) -> CLIResult
-
-        struct CLIResult: Sendable {
-            let exitCode: Int32
-            let stdout: Data
-            let stderr: Data
-        }
+        let runCLI: @Sendable (_ path: String, _ args: [String]) -> GasTownCLIRunner.CLIResult
 
         static let live = Environment(
-            whichGT: { GasTownDiscovery.resolveGTCLI() },
+            whichGT: { GasTownCLIRunner.resolveGTCLI() },
             runCLI: { path, args in
-                let result = AgentHealthAdapter.runProcess(executablePath: path, arguments: args)
-                return CLIResult(exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr)
+                GasTownCLIRunner.runProcess(executablePath: path, arguments: args)
             }
         )
     }
@@ -147,38 +140,4 @@ struct AgentHealthAdapter: Sendable {
         )
     }
 
-    // MARK: - Process Runner
-
-    private struct ProcessResult {
-        let exitCode: Int32
-        let stdout: Data
-        let stderr: Data
-    }
-
-    private static func runProcess(executablePath: String, arguments: [String]) -> ProcessResult {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        do {
-            try process.run()
-        } catch {
-            return ProcessResult(exitCode: -1, stdout: Data(), stderr: Data())
-        }
-
-        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-
-        return ProcessResult(
-            exitCode: process.terminationStatus,
-            stdout: stdoutData,
-            stderr: stderrData
-        )
-    }
 }

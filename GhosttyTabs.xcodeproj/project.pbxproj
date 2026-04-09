@@ -29,6 +29,7 @@
 		58015DD1423D39A9FFAE729F /* WorktreeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7106DB2DA287964BDCC5E4 /* WorktreeClassifier.swift */; };
 		5D2913CA73F897F95F0AAC87 /* ReadyWorkPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381AF7F8A9B526B8522D222B /* ReadyWorkPanel.swift */; };
 		AA11BB22CC33DD44EE55FF01 /* AgentHealthAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */; };
+		C2F1DEADBEEF000000000001 /* GasTownCLIRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */; };
 		AA11BB22CC33DD44EE55FF02 /* AgentHealthPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */; };
 		AA11BB22CC33DD44EE55FF03 /* AgentHealthPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */; };
 		6B524A0BA34FD46A771335AB /* WorkspaceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F8ED91A4B55D34BE6A0668 /* WorkspaceUnitTests.swift */; };
@@ -267,6 +268,7 @@
 		38005F2FE18948D6631EE491 /* ConvoyAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyAdapter.swift; sourceTree = "<group>"; };
 		381AF7F8A9B526B8522D222B /* ReadyWorkPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadyWorkPanel.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthAdapter.swift; sourceTree = "<group>"; };
+		C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GasTownCLIRunner.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF12 /* AgentHealthPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthPanel.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF13 /* AgentHealthPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentHealthPanelView.swift; sourceTree = "<group>"; };
 		39FF1D378676760E456F4A34 /* OpenRoutingError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenRoutingError.swift; sourceTree = "<group>"; };
@@ -522,6 +524,7 @@
 				52232ADB05408DDB44C68DBD /* BeadWriteService.swift */,
 				8666D70114CF8D8F8621497C /* OpenIntent.swift */,
 				AA11BB22CC33DD44EE55FF11 /* AgentHealthAdapter.swift */,
+				C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */,
 			);
 			name = GasTown;
 			path = GasTown;
@@ -1052,6 +1055,7 @@
 				D71A4E160F9888166BC54200 /* GasTownService.swift in Sources */,
 				7FF4FCE82A72B0CB45F9B384 /* OpenIntent.swift in Sources */,
 				AA11BB22CC33DD44EE55FF01 /* AgentHealthAdapter.swift in Sources */,
+				C2F1DEADBEEF000000000001 /* GasTownCLIRunner.swift in Sources */,
 				AA11BB22CC33DD44EE55FF02 /* AgentHealthPanel.swift in Sources */,
 				AA11BB22CC33DD44EE55FF03 /* AgentHealthPanelView.swift in Sources */,
 			);

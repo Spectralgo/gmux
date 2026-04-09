@@ -178,23 +178,16 @@ struct ConvoyAdapter {
     /// Abstraction over environment and CLI access for testability.
     struct Environment: Sendable {
         var whichGT: @Sendable () -> String?
-        var runCLI: @Sendable (_ executablePath: String, _ arguments: [String]) -> CLIResult
+        var runCLI: @Sendable (_ executablePath: String, _ arguments: [String]) -> GasTownCLIRunner.CLIResult
 
         static let live = Environment(
             whichGT: {
-                GasTownDiscovery.resolveGTCLI()
+                GasTownCLIRunner.resolveGTCLI()
             },
             runCLI: { executablePath, arguments in
-                ConvoyAdapter.runProcess(executablePath: executablePath, arguments: arguments)
+                GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments)
             }
         )
-    }
-
-    /// Result of running a CLI command.
-    struct CLIResult: Equatable, Sendable {
-        let exitCode: Int32
-        let stdout: Data
-        let stderr: Data
     }
 
     let environment: Environment
@@ -497,36 +490,4 @@ struct ConvoyAdapter {
         return prefix.isEmpty ? nil : prefix
     }
 
-    // MARK: - CLI Helpers
-
-    /// Run a CLI process and capture stdout + stderr.
-    static func runProcess(executablePath: String, arguments: [String]) -> CLIResult {
-        let process = Process()
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        do {
-            try process.run()
-        } catch {
-            return CLIResult(
-                exitCode: -1,
-                stdout: Data(),
-                stderr: Data("Failed to launch process: \(error.localizedDescription)".utf8)
-            )
-        }
-
-        let stdout = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderr = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-
-        return CLIResult(
-            exitCode: process.terminationStatus,
-            stdout: stdout,
-            stderr: stderr
-        )
-    }
 }

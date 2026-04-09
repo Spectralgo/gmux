@@ -373,25 +373,6 @@ struct GasTownDiscovery {
 
     /// Attempt to find the `gt` binary on PATH.
     static func resolveGTCLI() -> String? {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        task.arguments = ["gt"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = FileHandle.nullDevice
-        do {
-            try task.run()
-            task.waitUntilExit()
-            if task.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-                if let path, !path.isEmpty {
-                    return path
-                }
-            }
-        } catch {
-            // which not available or failed — gt not on PATH.
-        }
-        return nil
+        GasTownCLIRunner.resolveGTCLI()
     }
 }
