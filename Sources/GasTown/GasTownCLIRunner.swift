@@ -93,7 +93,13 @@ enum GasTownCLIRunner {
     ///
     /// Uses the augmented CLI environment so child processes can find
     /// their own dependencies (e.g. gt invoking bd, or bd connecting to Dolt).
-    static func runProcess(executablePath: String, arguments: [String]) -> CLIResult {
+    /// Pass a custom `environment` to override the default `cliEnvironment()`,
+    /// e.g. when the caller has a pre-built env with a specific town root.
+    static func runProcess(
+        executablePath: String,
+        arguments: [String],
+        environment: [String: String]? = nil
+    ) -> CLIResult {
         let process = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -101,7 +107,7 @@ enum GasTownCLIRunner {
         process.arguments = arguments
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
-        process.environment = cliEnvironment()
+        process.environment = environment ?? cliEnvironment()
 
         do {
             try process.run()

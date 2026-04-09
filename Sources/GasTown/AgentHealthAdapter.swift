@@ -72,11 +72,11 @@ struct AgentHealthAdapter: Sendable {
     /// The path is captured at init time (safe on @MainActor) and passed to
     /// background closures, avoiding @MainActor access from background threads.
     init(townRootPath: String?) {
+        let env = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
         self.environment = Environment(
             whichGT: { GasTownCLIRunner.resolveGTCLI() },
             runCLI: { path, args in
-                let env = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
-                return GasTownCLIRunner.runProcess(executablePath: path, arguments: args, environment: env)
+                GasTownCLIRunner.runProcess(executablePath: path, arguments: args, environment: env)
             }
         )
     }
