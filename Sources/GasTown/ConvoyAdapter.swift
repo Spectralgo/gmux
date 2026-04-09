@@ -196,6 +196,22 @@ struct ConvoyAdapter {
         self.environment = environment
     }
 
+    /// Convenience initializer that wires a known town root path into
+    /// the CLI environment so child processes get GT_TOWN_ROOT and BEADS_DIR
+    /// even when running inside a GUI app (where env vars are not inherited).
+    init(townRootPath: String) {
+        self.environment = Environment(
+            whichGT: { GasTownCLIRunner.resolveGTCLI() },
+            runCLI: { executablePath, arguments in
+                GasTownCLIRunner.runProcess(
+                    executablePath: executablePath,
+                    arguments: arguments,
+                    townRootPath: townRootPath
+                )
+            }
+        )
+    }
+
     // MARK: - Public API
 
     /// Load active convoy summaries suitable for the operator dashboard.

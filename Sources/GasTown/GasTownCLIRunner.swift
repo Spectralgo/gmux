@@ -93,7 +93,7 @@ enum GasTownCLIRunner {
     ///
     /// Uses the augmented CLI environment so child processes can find
     /// their own dependencies (e.g. gt invoking bd, or bd connecting to Dolt).
-    static func runProcess(executablePath: String, arguments: [String]) -> CLIResult {
+    static func runProcess(executablePath: String, arguments: [String], townRootPath: String? = nil) -> CLIResult {
         let process = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -101,7 +101,7 @@ enum GasTownCLIRunner {
         process.arguments = arguments
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
-        process.environment = cliEnvironment()
+        process.environment = cliEnvironment(townRootPath: townRootPath)
 
         do {
             try process.run()
@@ -127,6 +127,11 @@ enum GasTownCLIRunner {
     /// Attempt to find the `gt` binary.
     static func resolveGTCLI() -> String? {
         resolveExecutable("gt")
+    }
+
+    /// Attempt to find the `bd` binary.
+    static func resolveBDCLI() -> String? {
+        resolveExecutable("bd")
     }
 
     // MARK: - Town Root Detection

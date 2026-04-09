@@ -99,9 +99,11 @@ final class BeadsAdapter: ObservableObject {
     @Published private(set) var lastError: String?
 
     private let bdPath: String
+    private let townRootPath: String?
 
-    nonisolated init() {
-        bdPath = GasTownCLIRunner.resolveExecutable("bd") ?? "bd"
+    nonisolated init(townRootPath: String? = nil) {
+        self.bdPath = GasTownCLIRunner.resolveBDCLI() ?? "bd"
+        self.townRootPath = townRootPath
     }
 
     /// Fetch full bead detail by ID (async).
@@ -154,11 +156,11 @@ final class BeadsAdapter: ObservableObject {
 
     private func runBdAsync(arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [bdPath] in
+            DispatchQueue.global(qos: .userInitiated).async { [bdPath, townRootPath] in
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: bdPath)
                 process.arguments = arguments
-                process.environment = GasTownCLIRunner.cliEnvironment()
+                process.environment = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
 
                 let pipe = Pipe()
                 process.standardOutput = pipe
@@ -189,7 +191,7 @@ final class BeadsAdapter: ObservableObject {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: bdPath)
         process.arguments = arguments
-        process.environment = GasTownCLIRunner.cliEnvironment()
+        process.environment = GasTownCLIRunner.cliEnvironment(townRootPath: townRootPath)
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()

@@ -9444,7 +9444,8 @@ final class Workspace: Identifiable, ObservableObject {
         let previousFocusedPanelId = focusedPanelId
         let previousHostedView = focusedTerminalPanel?.hostedView
 
-        let panel = BeadInspectorPanel(workspaceId: id, beadId: beadId)
+        let townPath = GasTownService.shared.townRoot?.path
+        let panel = BeadInspectorPanel(workspaceId: id, beadId: beadId, townRootPath: townPath)
         panels[panel.id] = panel
         panelTitles[panel.id] = panel.displayTitle
 
@@ -9485,7 +9486,8 @@ final class Workspace: Identifiable, ObservableObject {
         let previousFocusedPanelId = focusedPanelId
         let previousHostedView = focusedTerminalPanel?.hostedView
 
-        let panel = ReadyWorkPanel(workspaceId: id)
+        let townPath = GasTownService.shared.townRoot?.path
+        let panel = ReadyWorkPanel(workspaceId: id, adapter: BeadsAdapter(townRootPath: townPath))
         panels[panel.id] = panel
         panelTitles[panel.id] = panel.displayTitle
 
@@ -9527,7 +9529,13 @@ final class Workspace: Identifiable, ObservableObject {
         let previousFocusedPanelId = focusedPanelId
         let previousHostedView = focusedTerminalPanel?.hostedView
 
-        let panel = AgentHealthPanel(workspaceId: id)
+        let adapter: AgentHealthAdapter
+        if let townPath = GasTownService.shared.townRoot?.path {
+            adapter = AgentHealthAdapter(townRootPath: townPath)
+        } else {
+            adapter = AgentHealthAdapter()
+        }
+        let panel = AgentHealthPanel(workspaceId: id, adapter: adapter)
         panels[panel.id] = panel
         panelTitles[panel.id] = panel.displayTitle
 
