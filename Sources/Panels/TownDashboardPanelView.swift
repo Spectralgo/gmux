@@ -89,13 +89,10 @@ struct TownDashboardPanelView: View {
                     defaultValue: "No agents found"
                 ))
             } else {
-                let grouped = Dictionary(grouping: agents, by: \.rig)
-                let rigOrder = orderedRigNames(from: agents)
+                let groups = panel.groupedAgents(from: agents)
                 LazyVStack(spacing: 0) {
-                    ForEach(rigOrder, id: \.self) { rigName in
-                        if let rigAgents = grouped[rigName] {
-                            rigGroup(rigName, agents: rigAgents)
-                        }
+                    ForEach(groups, id: \.group) { item in
+                        roleGroupSection(item.group, agents: item.agents)
                     }
                 }
             }
@@ -105,52 +102,76 @@ struct TownDashboardPanelView: View {
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
     }
 
-    private func rigGroup(_ rigName: String, agents: [AgentHealthEntry]) -> some View {
+    private func roleGroupSection(_ group: AgentRoleGroup, agents: [AgentHealthEntry]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(rigName)
-                .font(GasTownTypography.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-                .padding(.horizontal, GasTownSpacing.rowPaddingH)
-                .padding(.top, 10)
-                .padding(.bottom, 4)
-            ForEach(agents) { agent in
-                agentRow(agent)
-                Divider().padding(.horizontal, GasTownSpacing.rowPaddingH)
+            // Section header with count badge
+            HStack {
+                Text(group.title)
+                    .font(GasTownTypography.sectionHeader)
+                    .foregroundColor(.secondary)
+                Text("(\(agents.count))")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                Spacer()
+
+                // Infrastructure collapse toggle
+                if group == .infrastructure {
+                    Button {
+                        withAnimation(GasTownAnimation.statusChange) {
+                            panel.infrastructureCollapsed.toggle()
+                        }
+                    } label: {
+                        Image(systemName: panel.infrastructureCollapsed ? "chevron.right" : "chevron.down")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, GasTownSpacing.cardPadding)
+            .padding(.top, GasTownSpacing.sectionGap)
+            .padding(.bottom, 4)
+
+            // Collapsed infrastructure — show toggle only
+            if group == .infrastructure && panel.infrastructureCollapsed {
+                // Nothing to render — header + chevron is enough
+            } else {
+                ForEach(agents) { agent in
+                    agentRow(agent, group: group)
+                    Divider().padding(.horizontal, GasTownSpacing.rowPaddingH)
+                }
             }
         }
     }
 
-    private func agentRow(_ agent: AgentHealthEntry) -> some View {
+    private func agentRow(_ agent: AgentHealthEntry, group: AgentRoleGroup) -> some View {
         HStack(spacing: 10) {
+            // Left border indicator
+            RoundedRectangle(cornerRadius: 2)
+                .fill(group.borderColor)
+                .frame(width: 3)
+
             // Role icon
-            Image(systemName: GasTownRoleIcon.sfSymbol(for: agent.role))
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-                .frame(width: 16)
+            Image(systemName: AgentRoleGroup.icon(for: agent.role))
+                .font(.system(size: 14))
+                .foregroundColor(group.borderColor)
+                .frame(width: 20)
+
+            // Name + rig
+            VStack(alignment: .leading, spacing: 2) {
+                Text(agent.name)
+                    .font(GasTownTypography.label)
+                Text(agent.rig)
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
 
             // Status dot
             Circle()
                 .fill(agentStatusColor(for: agent))
                 .frame(width: GasTownStatusDot.size, height: GasTownStatusDot.size)
-
-            // Name
-            Text(agent.name)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.primary)
-                .frame(minWidth: 80, alignment: .leading)
-
-            // Role badge
-            Text(agent.role)
-                .font(GasTownTypography.badge)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 1)
-                .background(Color.secondary.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 3))
-
-            Spacer()
 
             // Work indicator
             if agent.hasWork {
@@ -173,9 +194,44 @@ struct TownDashboardPanelView: View {
                 }
                 .foregroundColor(.orange)
             }
+
+            // Per-role action buttons
+            roleActions(for: agent, group: group)
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.vertical, GasTownSpacing.rowPaddingV)
+    }
+
+    // MARK: - Per-Role Action Buttons
+
+    @ViewBuilder
+    private func roleActions(for agent: AgentHealthEntry, group: AgentRoleGroup) -> some View {
+        HStack(spacing: 4) {
+            switch group {
+            case .workers:
+                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                actionButton(String(localized: "dashboard.action.nudge", defaultValue: "Nudge"), enabled: true)
+                actionButton(String(localized: "dashboard.action.nuke", defaultValue: "Nuke"), enabled: false)
+            case .specialists:
+                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                actionButton(String(localized: "dashboard.action.assign", defaultValue: "Assign"), enabled: false)
+            case .coordination:
+                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                actionButton(String(localized: "dashboard.action.handoff", defaultValue: "Handoff"), enabled: false)
+            case .infrastructure:
+                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+            }
+        }
+    }
+
+    private func actionButton(_ title: String, enabled: Bool) -> some View {
+        Button(title) {
+            // Placeholder — actions not wired in Phase 1.5
+        }
+        .font(.system(size: 10))
+        .buttonStyle(.bordered)
+        .controlSize(.mini)
+        .disabled(!enabled)
     }
 
     // MARK: - Attention Section
@@ -480,21 +536,6 @@ struct TownDashboardPanelView: View {
         case .warning: return GasTownColors.attention
         case .critical: return GasTownColors.error
         }
-    }
-
-    private func orderedRigNames(from entries: [AgentHealthEntry]) -> [String] {
-        var seen = Set<String>()
-        var order: [String] = []
-        for entry in entries {
-            if seen.insert(entry.rig).inserted {
-                order.append(entry.rig)
-            }
-        }
-        if let townIndex = order.firstIndex(of: "town"), townIndex != 0 {
-            order.remove(at: townIndex)
-            order.insert("town", at: 0)
-        }
-        return order
     }
 
     private func errorMessage(for error: TownDashboardAdapterError) -> String {

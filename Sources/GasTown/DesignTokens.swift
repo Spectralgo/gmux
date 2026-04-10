@@ -86,27 +86,92 @@ enum GasTownAnimation {
     static let removeItemDuration: TimeInterval = 0.2
 }
 
-// MARK: - Agent Role Icons
+// MARK: - Role Border Colors
+
+enum GasTownRoleColors {
+    static let worker = Color(red: 0.231, green: 0.510, blue: 0.965)        // #3B82F6 blue
+    static let specialist = Color(red: 0.545, green: 0.361, blue: 0.965)    // #8B5CF6 purple
+    static let infrastructure = Color(red: 0.063, green: 0.725, blue: 0.506) // #10B981 green
+    static let coordinator = Color(red: 0.961, green: 0.620, blue: 0.043)   // #F59E0B gold
+}
+
+// MARK: - Role SF Symbol Icons
+
+enum GasTownRoleIcons {
+    static let mayor = "crown.fill"
+    static let polecat = "wrench.fill"
+    static let crew = "doc.on.clipboard"
+    static let refinery = "building.2.fill"
+    static let witness = "eye.fill"
+    static let deacon = "dog.fill"
+}
+
+// MARK: - Agent Role Icons (legacy)
 
 enum GasTownRoleIcon {
     /// Return the SF Symbol name for an agent role.
     static func sfSymbol(for role: String) -> String {
         switch role.lowercased() {
         case "mayor", "coordinator":
-            return "crown"
+            return GasTownRoleIcons.mayor
         case "polecat", "worker":
-            return "wrench"
+            return GasTownRoleIcons.polecat
         case "refinery":
-            return "gearshape.2"
+            return GasTownRoleIcons.refinery
         case "witness":
-            return "eye"
+            return GasTownRoleIcons.witness
         case "crew":
-            return "doc.on.clipboard"
+            return GasTownRoleIcons.crew
         case "deacon":
-            return "dog"
+            return GasTownRoleIcons.deacon
         default:
-            return "person"
+            return "person.fill"
         }
+    }
+}
+
+// MARK: - Role Group Ordering
+
+enum AgentRoleGroup: Int, CaseIterable {
+    case coordination = 0   // mayor
+    case workers = 1        // polecats
+    case specialists = 2    // crew
+    case infrastructure = 3 // refinery, witness, deacon
+
+    var title: String {
+        switch self {
+        case .coordination:
+            return String(localized: "roleGroup.coordination", defaultValue: "Coordination")
+        case .workers:
+            return String(localized: "roleGroup.workers", defaultValue: "Workers")
+        case .specialists:
+            return String(localized: "roleGroup.specialists", defaultValue: "Specialists")
+        case .infrastructure:
+            return String(localized: "roleGroup.infrastructure", defaultValue: "Infrastructure")
+        }
+    }
+
+    var borderColor: Color {
+        switch self {
+        case .coordination: return GasTownRoleColors.coordinator
+        case .workers: return GasTownRoleColors.worker
+        case .specialists: return GasTownRoleColors.specialist
+        case .infrastructure: return GasTownRoleColors.infrastructure
+        }
+    }
+
+    static func from(role: String) -> AgentRoleGroup {
+        switch role.lowercased() {
+        case "mayor", "coordinator": return .coordination
+        case "polecat": return .workers
+        case "crew": return .specialists
+        case "refinery", "witness", "deacon": return .infrastructure
+        default: return .workers
+        }
+    }
+
+    static func icon(for role: String) -> String {
+        GasTownRoleIcon.sfSymbol(for: role)
     }
 }
 

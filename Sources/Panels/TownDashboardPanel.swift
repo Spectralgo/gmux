@@ -15,6 +15,9 @@ final class TownDashboardPanel: Panel, ObservableObject {
 
     @Published private(set) var loadState: TownDashboardLoadState = .idle
 
+    /// Whether infrastructure agents (refinery, witness, deacon) are collapsed.
+    @Published var infrastructureCollapsed: Bool = true
+
     /// Token incremented to trigger focus flash animation.
     @Published private(set) var focusFlashToken: Int = 0
 
@@ -42,6 +45,17 @@ final class TownDashboardPanel: Panel, ObservableObject {
         _ = reason
         guard NotificationPaneFlashSettings.isEnabled() else { return }
         focusFlashToken += 1
+    }
+
+    // MARK: - Role Grouping
+
+    /// Group agents by role category, ordered by AgentRoleGroup case order.
+    func groupedAgents(from agents: [AgentHealthEntry]) -> [(group: AgentRoleGroup, agents: [AgentHealthEntry])] {
+        let grouped = Dictionary(grouping: agents) { AgentRoleGroup.from(role: $0.role) }
+        return AgentRoleGroup.allCases.compactMap { group in
+            guard let agents = grouped[group], !agents.isEmpty else { return nil }
+            return (group: group, agents: agents)
+        }
     }
 
     // MARK: - Data Loading
