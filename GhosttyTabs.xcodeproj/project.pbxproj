@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AP00000000000001 /* AgentProfilePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000011 /* AgentProfilePanel.swift */; };
+		AP00000000000002 /* AgentProfilePanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000012 /* AgentProfilePanelView.swift */; };
+		AP00000000000003 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000013 /* ProfileHeaderView.swift */; };
+		AP00000000000004 /* StatsGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000014 /* StatsGridView.swift */; };
+		AP00000000000005 /* SkillsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000015 /* SkillsSection.swift */; };
+		AP00000000000006 /* MemorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000016 /* MemorySection.swift */; };
+		AP00000000000007 /* CVChainSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000017 /* CVChainSection.swift */; };
+		AP00000000000008 /* ActionsBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000018 /* ActionsBarView.swift */; };
+		AP00000000000009 /* AgentStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000019 /* AgentStats.swift */; };
+		AP0000000000000A /* AgentSkill.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP0000000000001A /* AgentSkill.swift */; };
+		AP0000000000000B /* AgentProfileAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP0000000000001B /* AgentProfileAdapter.swift */; };
 		0596CF174447681CAFA46CBC /* HooksAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2162863184D54DE84087CB8 /* HooksAdapter.swift */; };
 		063BC42CEE257D6213A2E30C /* WindowAndDragTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE83F8394D90ACACD8E19DD /* WindowAndDragTests.swift */; };
 		0D433DCC03263E4C565547C2 /* GmuxProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFCF7BB79AF8F0DD6627CAD /* GmuxProfile.swift */; };
@@ -269,6 +280,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AP00000000000011 /* AgentProfilePanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfilePanel.swift; sourceTree = "<group>"; };
+		AP00000000000012 /* AgentProfilePanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfilePanelView.swift; sourceTree = "<group>"; };
+		AP00000000000013 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
+		AP00000000000014 /* StatsGridView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatsGridView.swift; sourceTree = "<group>"; };
+		AP00000000000015 /* SkillsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SkillsSection.swift; sourceTree = "<group>"; };
+		AP00000000000016 /* MemorySection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MemorySection.swift; sourceTree = "<group>"; };
+		AP00000000000017 /* CVChainSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CVChainSection.swift; sourceTree = "<group>"; };
+		AP00000000000018 /* ActionsBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActionsBarView.swift; sourceTree = "<group>"; };
+		AP00000000000019 /* AgentStats.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentStats.swift; sourceTree = "<group>"; };
+		AP0000000000001A /* AgentSkill.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentSkill.swift; sourceTree = "<group>"; };
+		AP0000000000001B /* AgentProfileAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfileAdapter.swift; sourceTree = "<group>"; };
 		02FC74F2C27127CC565B3E8C /* TerminalAndGhosttyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalAndGhosttyTests.swift; sourceTree = "<group>"; };
 		10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSessionSnapshotTests.swift; sourceTree = "<group>"; };
 		14A7DC53B9CA33BE2A421711 /* WorkspacePullRequestSidebarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePullRequestSidebarTests.swift; sourceTree = "<group>"; };
@@ -559,6 +581,9 @@
 				TD00000000000002 /* TownDashboardAdapter.swift */,
 				RP00000000000011 /* RigHealthIndicators.swift */,
 				RP00000000000012 /* RigPanelAdapter.swift */,
+				AP00000000000019 /* AgentStats.swift */,
+				AP0000000000001A /* AgentSkill.swift */,
+				AP0000000000001B /* AgentProfileAdapter.swift */,
 			);
 			name = GasTown;
 			path = GasTown;
@@ -722,6 +747,9 @@
 				RP00000000000013 /* RigPanel.swift */,
 				RP00000000000014 /* RigPanelView.swift */,
 				RP0000000000001A /* RigPanelSections */,
+				AP00000000000011 /* AgentProfilePanel.swift */,
+				AP00000000000012 /* AgentProfilePanelView.swift */,
+				AP0000000000001C /* AgentProfileSections */,
 			);
 			name = Panels;
 			path = Panels;
@@ -748,6 +776,20 @@
 			);
 			name = SharedComponents;
 			path = SharedComponents;
+			sourceTree = "<group>";
+		};
+		AP0000000000001C /* AgentProfileSections */ = {
+			isa = PBXGroup;
+			children = (
+				AP00000000000013 /* ProfileHeaderView.swift */,
+				AP00000000000014 /* StatsGridView.swift */,
+				AP00000000000015 /* SkillsSection.swift */,
+				AP00000000000016 /* MemorySection.swift */,
+				AP00000000000017 /* CVChainSection.swift */,
+				AP00000000000018 /* ActionsBarView.swift */,
+			);
+			name = AgentProfileSections;
+			path = AgentProfileSections;
 			sourceTree = "<group>";
 		};
 		F1000003A1B2C3D4E5F60718 /* cmuxTests */ = {
@@ -1136,6 +1178,17 @@
 				RP00000000000007 /* RigWorkSection.swift in Sources */,
 				RP00000000000008 /* RigHealthSection.swift in Sources */,
 				RP00000000000009 /* RigConfigSection.swift in Sources */,
+				AP00000000000001 /* AgentProfilePanel.swift in Sources */,
+				AP00000000000002 /* AgentProfilePanelView.swift in Sources */,
+				AP00000000000003 /* ProfileHeaderView.swift in Sources */,
+				AP00000000000004 /* StatsGridView.swift in Sources */,
+				AP00000000000005 /* SkillsSection.swift in Sources */,
+				AP00000000000006 /* MemorySection.swift in Sources */,
+				AP00000000000007 /* CVChainSection.swift in Sources */,
+				AP00000000000008 /* ActionsBarView.swift in Sources */,
+				AP00000000000009 /* AgentStats.swift in Sources */,
+				AP0000000000000A /* AgentSkill.swift in Sources */,
+				AP0000000000000B /* AgentProfileAdapter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

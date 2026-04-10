@@ -106,7 +106,15 @@ struct PanelContentView: View {
                 )
             }
         case .agentProfile:
-            EmptyView()
+            if let agentProfilePanel = panel as? AgentProfilePanel {
+                AgentProfilePanelView(
+                    panel: agentProfilePanel,
+                    isFocused: isFocused,
+                    isVisibleInUI: isVisibleInUI,
+                    portalPriority: portalPriority,
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+            }
         case .rigPanel:
             if let rigPanel = panel as? RigPanel {
                 RigPanelView(

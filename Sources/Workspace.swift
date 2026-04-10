@@ -9673,13 +9673,45 @@ final class Workspace: Identifiable, ObservableObject {
 
     /// Open an Agent Profile panel for the given agent address.
     ///
-    /// Routes through ``OpenRouter`` to resolve the agent identity.
-    /// The AgentProfile panel type is registered but not yet implemented
-    /// (see gm-iq4). This stub logs a debug message until the panel is built.
-    func openAgentProfile(agentAddress: String) {
-        #if DEBUG
-        dlog("openAgentProfile: \(agentAddress) (panel not yet implemented)")
-        #endif
+    /// Creates an ``AgentProfilePanel`` and inserts it as a new tab in the
+    /// focused pane. Uses ``AgentProfileAdapter`` for data fetching.
+    @discardableResult
+    func openAgentProfile(agentAddress: String) -> AgentProfilePanel? {
+        guard let paneId = bonsplitController.focusedPaneId else { return nil }
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let adapter: AgentProfileAdapter
+        if let townPath = GasTownService.shared.townRoot?.path {
+            adapter = AgentProfileAdapter(townRootPath: townPath)
+        } else {
+            adapter = AgentProfileAdapter()
+        }
+        let panel = AgentProfilePanel(agentAddress: agentAddress, workspaceId: id, adapter: adapter)
+        panels[panel.id] = panel
+        panelTitles[panel.id] = panel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: panel.displayTitle,
+            icon: panel.displayIcon,
+            kind: "agentProfile",
+            isDirty: panel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: panel.id)
+            panelTitles.removeValue(forKey: panel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = panel.id
+        bonsplitController.focusPane(paneId)
+        bonsplitController.selectTab(newTabId)
+        applyTabSelection(tabId: newTabId, inPane: paneId)
+
+        panel.refresh()
+        return panel
     }
 
     /// Tear down all panels in this workspace, freeing their Ghostty surfaces.
