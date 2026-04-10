@@ -19,6 +19,9 @@ enum GasTownColors {
     /// Not running, no work.
     static let idle = Color(red: 0x6B / 255.0, green: 0x72 / 255.0, blue: 0x80 / 255.0)
 
+    /// Primary interactive accent (system accent).
+    static let accent = Color.accentColor
+
     /// Section background (subtle elevation) for dark mode.
     static let sectionBackgroundDark = Color(nsColor: NSColor(white: 0.15, alpha: 1.0))
     /// Section background (subtle elevation) for light mode.
@@ -122,7 +125,7 @@ enum GasTownRoleIcon {
             return GasTownRoleIcons.witness
         case "crew":
             return GasTownRoleIcons.crew
-        case "deacon":
+        case "deacon", "watchdog":
             return GasTownRoleIcons.deacon
         default:
             return "person.fill"
@@ -165,7 +168,7 @@ enum AgentRoleGroup: Int, CaseIterable {
         case "mayor", "coordinator": return .coordination
         case "polecat": return .workers
         case "crew": return .specialists
-        case "refinery", "witness", "deacon": return .infrastructure
+        case "refinery", "witness", "deacon", "watchdog": return .infrastructure
         default: return .workers
         }
     }

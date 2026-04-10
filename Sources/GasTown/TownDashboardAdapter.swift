@@ -228,11 +228,19 @@ struct TownDashboardAdapter: Sendable {
             return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
         }
 
+        // Internal bead types to exclude from user-facing counts
+        let internalTypes: Set<String> = [
+            "wisp", "patrol", "gate", "molecule", "event", "heartbeat", "ping"
+        ]
+
         var ready = 0
         var inProgress = 0
         var closed = 0
 
         for bead in array {
+            let beadType = bead["type"] as? String ?? ""
+            if internalTypes.contains(beadType) { continue }
+
             let status = bead["status"] as? String ?? ""
             switch status {
             case "open", "pinned":

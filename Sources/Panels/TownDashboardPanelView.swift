@@ -228,10 +228,11 @@ struct TownDashboardPanelView: View {
         Button(title) {
             // Placeholder — actions not wired in Phase 1.5
         }
-        .font(.system(size: 10))
+        .font(.system(size: 10, weight: enabled ? .medium : .regular))
         .buttonStyle(.bordered)
         .controlSize(.mini)
         .disabled(!enabled)
+        .tint(enabled ? GasTownColors.accent : nil)
     }
 
     // MARK: - Attention Section
@@ -519,7 +520,7 @@ struct TownDashboardPanelView: View {
         if !agent.isRunning {
             return agent.hasWork ? GasTownColors.error : GasTownColors.idle
         }
-        return agent.hasWork ? GasTownColors.attention : GasTownColors.active
+        return agent.hasWork ? GasTownColors.active : GasTownColors.idle
     }
 
     private func severityIcon(_ severity: AttentionSeverity) -> String {
