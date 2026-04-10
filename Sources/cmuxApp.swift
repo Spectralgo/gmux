@@ -371,6 +371,9 @@ struct cmuxApp: App {
                     dlog("createRigWorkspace: rigId=\(rigId ?? "nil") (not yet implemented)")
                     #endif
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .openMailPanel)) { _ in
+                    activeTabManager.selectedWorkspace?.openMailPanel()
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .commands {

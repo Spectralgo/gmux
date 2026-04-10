@@ -6039,6 +6039,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.agentProfile", defaultValue: "Agent Profile")
         case .rigPanel:
             return String(localized: "commandPalette.kind.rigPanel", defaultValue: "Rig Panel")
+        case .mailPanel:
+            return String(localized: "commandPalette.kind.mailPanel", defaultValue: "Mail")
         }
     }
 
@@ -6064,6 +6066,8 @@ struct ContentView: View {
             return ["agent", "profile", "polecat", "worker"]
         case .rigPanel:
             return ["rig", "panel", "project", "home"]
+        case .mailPanel:
+            return ["mail", "inbox", "message", "compose", "send"]
         }
     }
 

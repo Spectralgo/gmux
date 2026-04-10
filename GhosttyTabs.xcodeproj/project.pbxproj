@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		MP00000000000001 /* MailPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000011 /* MailPanel.swift */; };
+		MP00000000000002 /* MailPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000012 /* MailPanelView.swift */; };
+		MP00000000000003 /* InboxListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000013 /* InboxListView.swift */; };
+		MP00000000000004 /* MessageDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000014 /* MessageDetailView.swift */; };
+		MP00000000000005 /* ComposeSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000015 /* ComposeSheetView.swift */; };
+		MP00000000000006 /* QuickReplyBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000016 /* QuickReplyBar.swift */; };
+		MP00000000000007 /* FilterBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000017 /* FilterBarView.swift */; };
+		MP00000000000008 /* ThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000018 /* ThreadView.swift */; };
+		MP00000000000009 /* MailToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000019 /* MailToolbarView.swift */; };
 		AP00000000000001 /* AgentProfilePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000011 /* AgentProfilePanel.swift */; };
 		AP00000000000002 /* AgentProfilePanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000012 /* AgentProfilePanelView.swift */; };
 		AP00000000000003 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000013 /* ProfileHeaderView.swift */; };
@@ -280,6 +289,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		MP00000000000011 /* MailPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MailPanel.swift; sourceTree = "<group>"; };
+		MP00000000000012 /* MailPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MailPanelView.swift; sourceTree = "<group>"; };
+		MP00000000000013 /* InboxListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InboxListView.swift; sourceTree = "<group>"; };
+		MP00000000000014 /* MessageDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MessageDetailView.swift; sourceTree = "<group>"; };
+		MP00000000000015 /* ComposeSheetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComposeSheetView.swift; sourceTree = "<group>"; };
+		MP00000000000016 /* QuickReplyBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickReplyBar.swift; sourceTree = "<group>"; };
+		MP00000000000017 /* FilterBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FilterBarView.swift; sourceTree = "<group>"; };
+		MP00000000000018 /* ThreadView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThreadView.swift; sourceTree = "<group>"; };
+		MP00000000000019 /* MailToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MailToolbarView.swift; sourceTree = "<group>"; };
 		AP00000000000011 /* AgentProfilePanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfilePanel.swift; sourceTree = "<group>"; };
 		AP00000000000012 /* AgentProfilePanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfilePanelView.swift; sourceTree = "<group>"; };
 		AP00000000000013 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
@@ -750,9 +768,27 @@
 				AP00000000000011 /* AgentProfilePanel.swift */,
 				AP00000000000012 /* AgentProfilePanelView.swift */,
 				AP0000000000001C /* AgentProfileSections */,
+				MP00000000000011 /* MailPanel.swift */,
+				MP00000000000012 /* MailPanelView.swift */,
+				MP0000000000001A /* MailPanelSections */,
 			);
 			name = Panels;
 			path = Panels;
+			sourceTree = "<group>";
+		};
+		MP0000000000001A /* MailPanelSections */ = {
+			isa = PBXGroup;
+			children = (
+				MP00000000000013 /* InboxListView.swift */,
+				MP00000000000014 /* MessageDetailView.swift */,
+				MP00000000000015 /* ComposeSheetView.swift */,
+				MP00000000000016 /* QuickReplyBar.swift */,
+				MP00000000000017 /* FilterBarView.swift */,
+				MP00000000000018 /* ThreadView.swift */,
+				MP00000000000019 /* MailToolbarView.swift */,
+			);
+			name = MailPanelSections;
+			path = MailPanelSections;
 			sourceTree = "<group>";
 		};
 		RP0000000000001A /* RigPanelSections */ = {
@@ -1178,6 +1214,15 @@
 				RP00000000000007 /* RigWorkSection.swift in Sources */,
 				RP00000000000008 /* RigHealthSection.swift in Sources */,
 				RP00000000000009 /* RigConfigSection.swift in Sources */,
+				MP00000000000001 /* MailPanel.swift in Sources */,
+				MP00000000000002 /* MailPanelView.swift in Sources */,
+				MP00000000000003 /* InboxListView.swift in Sources */,
+				MP00000000000004 /* MessageDetailView.swift in Sources */,
+				MP00000000000005 /* ComposeSheetView.swift in Sources */,
+				MP00000000000006 /* QuickReplyBar.swift in Sources */,
+				MP00000000000007 /* FilterBarView.swift in Sources */,
+				MP00000000000008 /* ThreadView.swift in Sources */,
+				MP00000000000009 /* MailToolbarView.swift in Sources */,
 				AP00000000000001 /* AgentProfilePanel.swift in Sources */,
 				AP00000000000002 /* AgentProfilePanelView.swift in Sources */,
 				AP00000000000003 /* ProfileHeaderView.swift in Sources */,

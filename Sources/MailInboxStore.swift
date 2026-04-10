@@ -58,6 +58,31 @@ struct MailMessage: Identifiable, Hashable {
     let provenance: MailProvenance
     let createdAt: Date
     var isRead: Bool
+    var isPinned: Bool = false
+    var isArchived: Bool = false
+    var priority: Int = 2  // 0=urgent, 1=high, 2=normal, 3=low, 4=backlog
+    var threadId: String?  // Groups messages in threads via reply-to chain
+    var replyTo: UUID?     // ID of the message this is a reply to
+}
+
+/// Read status filter for mail messages.
+enum MailReadStatus: String, CaseIterable {
+    case unread
+    case read
+    case all
+}
+
+/// Combined filter state for the Mail Panel inbox.
+struct MailFilter: Equatable {
+    var sender: String?
+    var rig: String?
+    var priority: Int?
+    var type: MailMessageType?
+    var readStatus: MailReadStatus?
+
+    static let empty = MailFilter()
+
+    var isActive: Bool { self != .empty }
 }
 
 /// Observable store managing the mail inbox. Singleton pattern matching TerminalNotificationStore.
@@ -108,6 +133,74 @@ final class MailInboxStore: ObservableObject {
 
     func clearByType(_ type: MailMessageType) {
         messages.removeAll(where: { $0.type == type })
+    }
+
+    // MARK: - Mail Panel Extensions
+
+    /// Pinned standing orders, sorted by creation date (newest first).
+    var pinnedMessages: [MailMessage] {
+        messages.filter { $0.isPinned && !$0.isArchived }
+    }
+
+    /// Non-archived, non-pinned messages (the regular inbox).
+    var inboxMessages: [MailMessage] {
+        messages.filter { !$0.isPinned && !$0.isArchived }
+    }
+
+    /// Toggle pinned status of a message.
+    func togglePinned(id: UUID) {
+        guard let index = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[index].isPinned.toggle()
+    }
+
+    /// Archive a message.
+    func archive(id: UUID) {
+        guard let index = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[index].isArchived = true
+    }
+
+    /// Search messages by query across subject, body, and sender.
+    func search(query: String) -> [MailMessage] {
+        let q = query.lowercased()
+        return messages.filter { msg in
+            msg.subject.lowercased().contains(q) ||
+            msg.body.lowercased().contains(q) ||
+            msg.sender.lowercased().contains(q)
+        }
+    }
+
+    /// Filter messages by the given criteria.
+    func filtered(by filter: MailFilter) -> [MailMessage] {
+        inboxMessages.filter { msg in
+            if let sender = filter.sender, !msg.sender.lowercased().contains(sender.lowercased()) {
+                return false
+            }
+            if let rig = filter.rig, !msg.sender.lowercased().contains(rig.lowercased()) {
+                return false
+            }
+            if let priority = filter.priority, msg.priority != priority {
+                return false
+            }
+            if let type = filter.type, msg.type != type {
+                return false
+            }
+            if let readStatus = filter.readStatus {
+                switch readStatus {
+                case .unread: if msg.isRead { return false }
+                case .read: if !msg.isRead { return false }
+                case .all: break
+                }
+            }
+            return true
+        }
+    }
+
+    /// Get all messages in the same thread as the given message.
+    func thread(for message: MailMessage) -> [MailMessage] {
+        guard let threadId = message.threadId else { return [message] }
+        return messages
+            .filter { $0.threadId == threadId }
+            .sorted { $0.createdAt < $1.createdAt }
     }
 
     /// Create a mail message from parsed socket command options.

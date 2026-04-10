@@ -505,7 +505,7 @@ extension Workspace {
                 repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel:
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
@@ -713,7 +713,7 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel:
             return nil
         }
     }
@@ -7309,6 +7309,8 @@ final class Workspace: Identifiable, ObservableObject {
             return "agentProfile"
         case .rigPanel:
             return "rigPanel"
+        case .mailPanel:
+            return "mailPanel"
         }
     }
 
@@ -9709,6 +9711,48 @@ final class Workspace: Identifiable, ObservableObject {
         bonsplitController.focusPane(paneId)
         bonsplitController.selectTab(newTabId)
         applyTabSelection(tabId: newTabId, inPane: paneId)
+
+        panel.refresh()
+        return panel
+    }
+
+    /// Open a Mail Panel in the focused pane.
+    @discardableResult
+    func openMailPanel(focus: Bool = true) -> MailPanel? {
+        guard let paneId = bonsplitController.focusedPaneId else { return nil }
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let panel = MailPanel(workspaceId: id)
+        panels[panel.id] = panel
+        panelTitles[panel.id] = panel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: panel.displayTitle,
+            icon: panel.displayIcon,
+            kind: "mailPanel",
+            isDirty: panel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: panel.id)
+            panelTitles.removeValue(forKey: panel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = panel.id
+        if focus {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: panel.id,
+                previousHostedView: previousHostedView
+            )
+        }
 
         panel.refresh()
         return panel
