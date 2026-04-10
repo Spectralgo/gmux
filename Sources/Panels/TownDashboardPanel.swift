@@ -21,6 +21,12 @@ final class TownDashboardPanel: Panel, ObservableObject {
     /// Token incremented to trigger focus flash animation.
     @Published private(set) var focusFlashToken: Int = 0
 
+    /// Callback when user clicks [Attach] — hosting code wires to TabManager.addWorkspace
+    var onAttachAgent: ((AgentHealthEntry) -> Void)?
+
+    /// Cached active tmux session names, refreshed each cycle
+    @Published private(set) var activeSessions: Set<String> = []
+
     private(set) var workspaceId: UUID
     private let adapter: TownDashboardAdapter
 
@@ -58,6 +64,12 @@ final class TownDashboardPanel: Panel, ObservableObject {
         }
     }
 
+    /// Whether the given agent has an active tmux session to attach to.
+    func hasActiveSession(for agent: AgentHealthEntry) -> Bool {
+        let prefix = String(agent.rig.prefix(2))
+        return activeSessions.contains("\(prefix)-\(agent.name)")
+    }
+
     // MARK: - Data Loading
 
     /// Load all dashboard data. Runs CLI calls off-main, publishes on main.
@@ -72,8 +84,13 @@ final class TownDashboardPanel: Panel, ObservableObject {
         let adapter = self.adapter
         DispatchQueue.global(qos: .userInitiated).async {
             let result = adapter.loadSnapshot()
+            let sessions = TmuxSessionResolver.listSessions()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
+                let newSessions = Set(sessions)
+                if self.activeSessions != newSessions {
+                    self.activeSessions = newSessions
+                }
                 switch result {
                 case .success(let snapshot):
                     let newState = TownDashboardLoadState.loaded(snapshot)

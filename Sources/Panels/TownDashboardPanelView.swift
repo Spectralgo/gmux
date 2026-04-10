@@ -209,24 +209,34 @@ struct TownDashboardPanelView: View {
         HStack(spacing: 4) {
             switch group {
             case .workers:
-                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                attachButton(for: agent)
                 actionButton(String(localized: "dashboard.action.nudge", defaultValue: "Nudge"), enabled: true)
                 actionButton(String(localized: "dashboard.action.nuke", defaultValue: "Nuke"), enabled: false)
             case .specialists:
-                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                attachButton(for: agent)
                 actionButton(String(localized: "dashboard.action.assign", defaultValue: "Assign"), enabled: false)
             case .coordination:
-                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                attachButton(for: agent)
                 actionButton(String(localized: "dashboard.action.handoff", defaultValue: "Handoff"), enabled: false)
             case .infrastructure:
-                actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
+                attachButton(for: agent)
             }
         }
     }
 
+    private func attachButton(for agent: AgentHealthEntry) -> some View {
+        Button(String(localized: "dashboard.action.attach", defaultValue: "Attach")) {
+            panel.onAttachAgent?(agent)
+        }
+        .font(.system(size: 10))
+        .buttonStyle(.bordered)
+        .controlSize(.mini)
+        .disabled(!panel.hasActiveSession(for: agent))
+    }
+
     private func actionButton(_ title: String, enabled: Bool) -> some View {
         Button(title) {
-            // Placeholder — actions not wired in Phase 1.5
+            // Placeholder — other actions not wired yet
         }
         .font(.system(size: 10))
         .buttonStyle(.bordered)

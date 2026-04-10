@@ -9585,6 +9585,26 @@ final class Workspace: Identifiable, ObservableObject {
             adapter = TownDashboardAdapter()
         }
         let panel = TownDashboardPanel(workspaceId: id, adapter: adapter)
+        panel.onAttachAgent = { [weak self] agent in
+            guard let tabManager = self?.owningTabManager else { return }
+            guard let command = TmuxSessionResolver.attachCommand(agentName: agent.name, rig: agent.rig) else { return }
+            let roleEmoji: String = {
+                switch agent.role.lowercased() {
+                case "mayor", "coordinator": return "\u{1F3A9}"
+                case "polecat": return "\u{1F527}"
+                case "crew": return "\u{1F4CB}"
+                case "refinery": return "\u{1F3ED}"
+                case "witness": return "\u{1F440}"
+                case "deacon": return "\u{1F415}"
+                default: return "\u{1F916}"
+                }
+            }()
+            tabManager.addWorkspace(
+                title: "\(roleEmoji) \(agent.name) (\(agent.rig))",
+                initialTerminalCommand: command,
+                select: true
+            )
+        }
         panels[panel.id] = panel
         panelTitles[panel.id] = panel.displayTitle
 
