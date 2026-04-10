@@ -228,11 +228,18 @@ struct TownDashboardAdapter: Sendable {
             return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
         }
 
+        let internalTypes: Set<String> = [
+            "wisp", "patrol", "gate", "molecule", "event", "heartbeat", "ping"
+        ]
+
         var ready = 0
         var inProgress = 0
         var closed = 0
 
         for bead in array {
+            let beadType = bead["type"] as? String ?? ""
+            if internalTypes.contains(beadType) { continue }
+
             let status = bead["status"] as? String ?? ""
             switch status {
             case "open", "pinned":
@@ -275,37 +282,36 @@ struct TownDashboardAdapter: Sendable {
         let output = String(data: data, encoding: .utf8) ?? ""
         let lines = output.components(separatedBy: "\n").filter { !$0.isEmpty }
 
-        return lines.enumerated().map { index, line in
-            let parts = line.split(separator: " ", maxSplits: 2)
-            let hash = parts.count > 0 ? String(parts[0]) : ""
-            // Find the relative time (e.g. "3 hours ago") and message
-            let rest = parts.count > 1 ? String(parts[1...].joined(separator: " ")) : line
+        return lines.enumerated().compactMap { index, line in
+            // Format: "<hash> <N unit(s) ago> <message>"
+            // Split hash from rest
+            guard let firstSpace = line.firstIndex(of: " ") else { return nil }
+            let hash = String(line[line.startIndex..<firstSpace])
+            let rest = String(line[line.index(after: firstSpace)...])
 
-            // Try to extract agent name from commit message
-            let agentName = extractAgentName(from: rest)
+            // Split relative time (ends with " ago") from commit message
+            let timestamp: String
+            let message: String
+            if let agoRange = rest.range(of: " ago ") {
+                timestamp = String(rest[rest.startIndex...agoRange.lowerBound]) + "ago"
+                message = String(rest[agoRange.upperBound...]).trimmingCharacters(in: .whitespaces)
+            } else if rest.hasSuffix(" ago") {
+                timestamp = rest
+                message = ""
+            } else {
+                timestamp = ""
+                message = rest
+            }
+
+            let agentName = extractAgentName(from: message)
 
             return ActivityEntry(
                 id: "git-\(hash)-\(index)",
-                timestamp: extractRelativeTime(from: rest),
-                message: extractMessage(from: rest),
+                timestamp: timestamp,
+                message: message,
                 agentName: agentName
             )
         }
-    }
-
-    private func extractRelativeTime(from text: String) -> String {
-        // Format: "3 hours ago fix: something" — find the "ago" marker
-        if let agoRange = text.range(of: " ago ") {
-            return String(text[text.startIndex...agoRange.lowerBound]) + "ago"
-        }
-        return ""
-    }
-
-    private func extractMessage(from text: String) -> String {
-        if let agoRange = text.range(of: " ago ") {
-            return String(text[agoRange.upperBound...]).trimmingCharacters(in: .whitespaces)
-        }
-        return text
     }
 
     private func extractAgentName(from text: String) -> String? {

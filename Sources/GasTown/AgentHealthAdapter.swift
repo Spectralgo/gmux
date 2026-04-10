@@ -28,6 +28,12 @@ struct AgentHealthEntry: Equatable, Sendable, Identifiable {
     let hasWork: Bool
     /// Number of unread mail messages.
     let unreadMail: Int
+    /// Current task bead ID (e.g. "hq-29z"), if any.
+    let currentTask: String?
+    /// Context window usage percentage (0.0–1.0), if reported.
+    let contextPercent: Double?
+    /// How long the agent has been on current task (e.g. "45m"), if reported.
+    let elapsed: String?
 }
 
 // MARK: - Error
@@ -144,6 +150,9 @@ struct AgentHealthAdapter: Sendable {
         let isRunning = json["running"] as? Bool ?? false
         let hasWork = json["has_work"] as? Bool ?? false
         let unreadMail = json["unread_mail"] as? Int ?? 0
+        let currentTask = json["hook_bead"] as? String ?? json["current_task"] as? String
+        let contextPercent = json["context_pct"] as? Double
+        let elapsed = json["elapsed"] as? String
 
         return AgentHealthEntry(
             name: name,
@@ -152,7 +161,10 @@ struct AgentHealthAdapter: Sendable {
             rig: rig,
             isRunning: isRunning,
             hasWork: hasWork,
-            unreadMail: unreadMail
+            unreadMail: unreadMail,
+            currentTask: currentTask,
+            contextPercent: contextPercent,
+            elapsed: elapsed
         )
     }
 

@@ -11,6 +11,7 @@ struct TownDashboardPanelView: View {
 
     @State private var focusFlashOpacity: Double = 0.0
     @State private var focusFlashAnimationGeneration: Int = 0
+    @State private var selectedRig: String?
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -75,21 +76,44 @@ struct TownDashboardPanelView: View {
     // MARK: - Agent Roster Section
 
     private func agentRosterSection(_ agents: [AgentHealthEntry]) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionHeader(
-                title: String(localized: "dashboard.section.agents", defaultValue: "Agents"),
-                icon: "person.3",
-                count: agents.count
-            )
+        let rigs = Array(Set(agents.map(\.rig))).sorted()
+        let filtered = selectedRig.map { rig in agents.filter { $0.rig == rig } } ?? agents
+
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                sectionHeader(
+                    title: String(localized: "dashboard.section.agents", defaultValue: "Agents"),
+                    icon: "person.3",
+                    count: filtered.count
+                )
+            }
+            // Rig filter (H5)
+            if rigs.count > 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        rigFilterChip(
+                            label: String(localized: "dashboard.filter.all", defaultValue: "All"),
+                            isSelected: selectedRig == nil
+                        ) { selectedRig = nil }
+                        ForEach(rigs, id: \.self) { rig in
+                            rigFilterChip(label: rig, isSelected: selectedRig == rig) {
+                                selectedRig = rig
+                            }
+                        }
+                    }
+                    .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                    .padding(.bottom, 6)
+                }
+            }
             Divider().padding(.horizontal, GasTownSpacing.rowPaddingH)
 
-            if agents.isEmpty {
+            if filtered.isEmpty {
                 emptySection(String(
                     localized: "dashboard.agents.empty",
                     defaultValue: "No agents found"
                 ))
             } else {
-                let groups = panel.groupedAgents(from: agents)
+                let groups = panel.groupedAgents(from: filtered)
                 LazyVStack(spacing: 0) {
                     ForEach(groups, id: \.group) { item in
                         roleGroupSection(item.group, agents: item.agents)
@@ -157,13 +181,37 @@ struct TownDashboardPanelView: View {
                 .foregroundColor(group.borderColor)
                 .frame(width: 20)
 
-            // Name + rig
+            // Name + rig + current task (H1) + context bar (H2)
             VStack(alignment: .leading, spacing: 2) {
-                Text(agent.name)
-                    .font(GasTownTypography.label)
-                Text(agent.rig)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Text(agent.name)
+                        .font(GasTownTypography.label)
+                    // Time elapsed (H3)
+                    if let elapsed = agent.elapsed {
+                        Text(elapsed)
+                            .font(GasTownTypography.badge)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                HStack(spacing: 4) {
+                    Text(agent.rig)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                    // Current task (H1)
+                    if let task = agent.currentTask {
+                        Text("·")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        Text(task)
+                            .font(GasTownTypography.badge)
+                            .foregroundColor(cmuxAccentColor())
+                            .lineLimit(1)
+                    }
+                }
+                // Context bar (H2)
+                if let pct = agent.contextPercent {
+                    contextBar(percent: pct)
+                }
             }
 
             Spacer()
@@ -209,6 +257,7 @@ struct TownDashboardPanelView: View {
         HStack(spacing: 4) {
             switch group {
             case .workers:
+                actionButton(String(localized: "dashboard.action.sling", defaultValue: "Sling"), enabled: !agent.hasWork)
                 actionButton(String(localized: "dashboard.action.attach", defaultValue: "Attach"), enabled: false)
                 actionButton(String(localized: "dashboard.action.nudge", defaultValue: "Nudge"), enabled: true)
                 actionButton(String(localized: "dashboard.action.nuke", defaultValue: "Nuke"), enabled: false)
@@ -228,9 +277,10 @@ struct TownDashboardPanelView: View {
         Button(title) {
             // Placeholder — actions not wired in Phase 1.5
         }
-        .font(.system(size: 10))
+        .font(.system(size: 10, weight: enabled ? .medium : .regular))
         .buttonStyle(.bordered)
         .controlSize(.mini)
+        .tint(enabled ? cmuxAccentColor() : .secondary)
         .disabled(!enabled)
     }
 
@@ -501,6 +551,42 @@ struct TownDashboardPanelView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: - Context Bar (H2)
+
+    private func contextBar(percent: Double) -> some View {
+        let clamped = min(max(percent, 0), 1)
+        let barColor: Color = clamped < 0.6 ? GasTownColors.active
+            : clamped < 0.8 ? GasTownColors.attention
+            : GasTownColors.error
+
+        return GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.secondary.opacity(0.15))
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(barColor)
+                    .frame(width: geo.size.width * clamped)
+            }
+        }
+        .frame(height: 4)
+        .frame(maxWidth: 120)
+    }
+
+    // MARK: - Rig Filter (H5)
+
+    private func rigFilterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(GasTownTypography.badge)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(isSelected ? cmuxAccentColor().opacity(0.2) : Color.secondary.opacity(0.1))
+                .foregroundColor(isSelected ? cmuxAccentColor() : .secondary)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Helpers
 
     private var refreshButton: some View {
@@ -519,7 +605,7 @@ struct TownDashboardPanelView: View {
         if !agent.isRunning {
             return agent.hasWork ? GasTownColors.error : GasTownColors.idle
         }
-        return agent.hasWork ? GasTownColors.attention : GasTownColors.active
+        return agent.hasWork ? GasTownColors.active : GasTownColors.idle
     }
 
     private func severityIcon(_ severity: AttentionSeverity) -> String {

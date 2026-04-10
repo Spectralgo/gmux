@@ -122,7 +122,7 @@ enum GasTownRoleIcon {
             return GasTownRoleIcons.witness
         case "crew":
             return GasTownRoleIcons.crew
-        case "deacon":
+        case "deacon", "watchdog":
             return GasTownRoleIcons.deacon
         default:
             return "person.fill"
@@ -165,7 +165,7 @@ enum AgentRoleGroup: Int, CaseIterable {
         case "mayor", "coordinator": return .coordination
         case "polecat": return .workers
         case "crew": return .specialists
-        case "refinery", "witness", "deacon": return .infrastructure
+        case "refinery", "witness", "deacon", "watchdog": return .infrastructure
         default: return .workers
         }
     }
