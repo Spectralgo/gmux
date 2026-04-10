@@ -105,6 +105,10 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
+        case .agentProfile:
+            EmptyView()
+        case .rigPanel:
+            EmptyView()
         }
     }
 }

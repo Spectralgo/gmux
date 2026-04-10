@@ -505,7 +505,7 @@ extension Workspace {
                 repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel:
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
@@ -713,7 +713,7 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel:
             return nil
         }
     }
@@ -7305,6 +7305,10 @@ final class Workspace: Identifiable, ObservableObject {
             return "agentHealth"
         case .townDashboard:
             return "townDashboard"
+        case .agentProfile:
+            return "agentProfile"
+        case .rigPanel:
+            return "rigPanel"
         }
     }
 
@@ -9617,6 +9621,17 @@ final class Workspace: Identifiable, ObservableObject {
 
         panel.refresh()
         return panel
+    }
+
+    /// Open an Agent Profile panel for the given agent address.
+    ///
+    /// Routes through ``OpenRouter`` to resolve the agent identity.
+    /// The AgentProfile panel type is registered but not yet implemented
+    /// (see gm-iq4). This stub logs a debug message until the panel is built.
+    func openAgentProfile(agentAddress: String) {
+        #if DEBUG
+        dlog("openAgentProfile: \(agentAddress) (panel not yet implemented)")
+        #endif
     }
 
     /// Tear down all panels in this workspace, freeing their Ghostty surfaces.

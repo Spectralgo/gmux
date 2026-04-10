@@ -354,6 +354,10 @@ struct cmuxApp: App {
                     guard let beadId = notification.userInfo?["beadId"] as? String else { return }
                     activeTabManager.selectedWorkspace?.newBeadInspectorSurface(beadId: beadId)
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .openAgentProfile)) { notification in
+                    guard let address = notification.userInfo?["agentAddress"] as? String else { return }
+                    activeTabManager.selectedWorkspace?.openAgentProfile(agentAddress: address)
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .commands {

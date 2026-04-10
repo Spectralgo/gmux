@@ -6035,6 +6035,10 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.agentHealth", defaultValue: "Agent Health")
         case .townDashboard:
             return String(localized: "commandPalette.kind.townDashboard", defaultValue: "Town Dashboard")
+        case .agentProfile:
+            return String(localized: "commandPalette.kind.agentProfile", defaultValue: "Agent Profile")
+        case .rigPanel:
+            return String(localized: "commandPalette.kind.rigPanel", defaultValue: "Rig Panel")
         }
     }
 
@@ -6056,6 +6060,10 @@ struct ContentView: View {
             return ["agent", "health", "status", "grid"]
         case .townDashboard:
             return ["town", "dashboard", "overview", "agents", "gastown"]
+        case .agentProfile:
+            return ["agent", "profile", "polecat", "worker"]
+        case .rigPanel:
+            return ["rig", "panel", "project", "home"]
         }
     }
 

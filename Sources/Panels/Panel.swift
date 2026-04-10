@@ -12,6 +12,8 @@ public enum PanelType: String, Codable, Sendable {
     case readyWork
     case agentHealth
     case townDashboard
+    case agentProfile
+    case rigPanel
 }
 
 public enum TerminalPanelFocusIntent: Equatable {

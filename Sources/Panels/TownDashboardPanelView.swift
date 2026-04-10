@@ -210,7 +210,7 @@ struct TownDashboardPanelView: View {
                 }
                 // Context bar (H2)
                 if let pct = agent.contextPercent {
-                    contextBar(percent: pct)
+                    ContextBarView(percent: pct)
                 }
             }
 
@@ -552,25 +552,7 @@ struct TownDashboardPanelView: View {
     }
 
     // MARK: - Context Bar (H2)
-
-    private func contextBar(percent: Double) -> some View {
-        let clamped = min(max(percent, 0), 1)
-        let barColor: Color = clamped < 0.6 ? GasTownColors.active
-            : clamped < 0.8 ? GasTownColors.attention
-            : GasTownColors.error
-
-        return GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.secondary.opacity(0.15))
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(barColor)
-                    .frame(width: geo.size.width * clamped)
-            }
-        }
-        .frame(height: 4)
-        .frame(maxWidth: 120)
-    }
+    // Uses shared ContextBarView from SharedComponents.
 
     // MARK: - Rig Filter (H5)
 
