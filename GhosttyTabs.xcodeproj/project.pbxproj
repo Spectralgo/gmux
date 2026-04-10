@@ -38,6 +38,15 @@
 		TD0000000000000D /* TownDashboardPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TD00000000000004 /* TownDashboardPanelView.swift */; };
 		SC00000000000001 /* ContextBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC00000000000003 /* ContextBarView.swift */; };
 		SC00000000000002 /* AgentNameLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC00000000000004 /* AgentNameLink.swift */; };
+		RP00000000000001 /* RigHealthIndicators.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000011 /* RigHealthIndicators.swift */; };
+		RP00000000000002 /* RigPanelAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000012 /* RigPanelAdapter.swift */; };
+		RP00000000000003 /* RigPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000013 /* RigPanel.swift */; };
+		RP00000000000004 /* RigPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000014 /* RigPanelView.swift */; };
+		RP00000000000005 /* RigPanelHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000015 /* RigPanelHeaderView.swift */; };
+		RP00000000000006 /* RigTeamSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000016 /* RigTeamSection.swift */; };
+		RP00000000000007 /* RigWorkSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000017 /* RigWorkSection.swift */; };
+		RP00000000000008 /* RigHealthSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000018 /* RigHealthSection.swift */; };
+		RP00000000000009 /* RigConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP00000000000019 /* RigConfigSection.swift */; };
 		6B524A0BA34FD46A771335AB /* WorkspaceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F8ED91A4B55D34BE6A0668 /* WorkspaceUnitTests.swift */; };
 		6CE58ABA8A75EBFA1A1C9D82 /* RigInventoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3327F483F68DB590B7B63275 /* RigInventoryAdapter.swift */; };
 		734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C075029771815DD5DA1332 /* NotificationAndMenuBarTests.swift */; };
@@ -283,6 +292,15 @@
 		TD00000000000004 /* TownDashboardPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TownDashboardPanelView.swift; sourceTree = "<group>"; };
 		SC00000000000003 /* ContextBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContextBarView.swift; sourceTree = "<group>"; };
 		SC00000000000004 /* AgentNameLink.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentNameLink.swift; sourceTree = "<group>"; };
+		RP00000000000011 /* RigHealthIndicators.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigHealthIndicators.swift; sourceTree = "<group>"; };
+		RP00000000000012 /* RigPanelAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigPanelAdapter.swift; sourceTree = "<group>"; };
+		RP00000000000013 /* RigPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigPanel.swift; sourceTree = "<group>"; };
+		RP00000000000014 /* RigPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigPanelView.swift; sourceTree = "<group>"; };
+		RP00000000000015 /* RigPanelHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigPanelHeaderView.swift; sourceTree = "<group>"; };
+		RP00000000000016 /* RigTeamSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigTeamSection.swift; sourceTree = "<group>"; };
+		RP00000000000017 /* RigWorkSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigWorkSection.swift; sourceTree = "<group>"; };
+		RP00000000000018 /* RigHealthSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigHealthSection.swift; sourceTree = "<group>"; };
+		RP00000000000019 /* RigConfigSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RigConfigSection.swift; sourceTree = "<group>"; };
 		39FF1D378676760E456F4A34 /* OpenRoutingError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenRoutingError.swift; sourceTree = "<group>"; };
 		3C2495A51A4A0FFDB6457FFE /* Rig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Rig.swift; sourceTree = "<group>"; };
 		40E21FEE4831CEBBED6E88A1 /* DiffPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiffPanelView.swift; sourceTree = "<group>"; };
@@ -539,6 +557,8 @@
 				C2F1DEADBEEF000000000011 /* GasTownCLIRunner.swift */,
 				TD00000000000001 /* DesignTokens.swift */,
 				TD00000000000002 /* TownDashboardAdapter.swift */,
+				RP00000000000011 /* RigHealthIndicators.swift */,
+				RP00000000000012 /* RigPanelAdapter.swift */,
 			);
 			name = GasTown;
 			path = GasTown;
@@ -699,9 +719,25 @@
 				TD00000000000003 /* TownDashboardPanel.swift */,
 				TD00000000000004 /* TownDashboardPanelView.swift */,
 				SC00000000000005 /* SharedComponents */,
+				RP00000000000013 /* RigPanel.swift */,
+				RP00000000000014 /* RigPanelView.swift */,
+				RP0000000000001A /* RigPanelSections */,
 			);
 			name = Panels;
 			path = Panels;
+			sourceTree = "<group>";
+		};
+		RP0000000000001A /* RigPanelSections */ = {
+			isa = PBXGroup;
+			children = (
+				RP00000000000015 /* RigPanelHeaderView.swift */,
+				RP00000000000016 /* RigTeamSection.swift */,
+				RP00000000000017 /* RigWorkSection.swift */,
+				RP00000000000018 /* RigHealthSection.swift */,
+				RP00000000000019 /* RigConfigSection.swift */,
+			);
+			name = RigPanelSections;
+			path = RigPanelSections;
 			sourceTree = "<group>";
 		};
 		SC00000000000005 /* SharedComponents */ = {
@@ -1091,6 +1127,15 @@
 				TD0000000000000D /* TownDashboardPanelView.swift in Sources */,
 				SC00000000000001 /* ContextBarView.swift in Sources */,
 				SC00000000000002 /* AgentNameLink.swift in Sources */,
+				RP00000000000001 /* RigHealthIndicators.swift in Sources */,
+				RP00000000000002 /* RigPanelAdapter.swift in Sources */,
+				RP00000000000003 /* RigPanel.swift in Sources */,
+				RP00000000000004 /* RigPanelView.swift in Sources */,
+				RP00000000000005 /* RigPanelHeaderView.swift in Sources */,
+				RP00000000000006 /* RigTeamSection.swift in Sources */,
+				RP00000000000007 /* RigWorkSection.swift in Sources */,
+				RP00000000000008 /* RigHealthSection.swift in Sources */,
+				RP00000000000009 /* RigConfigSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -358,6 +358,19 @@ struct cmuxApp: App {
                     guard let address = notification.userInfo?["agentAddress"] as? String else { return }
                     activeTabManager.selectedWorkspace?.openAgentProfile(agentAddress: address)
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .openConvoyBoard)) { notification in
+                    #if DEBUG
+                    let convoyId = notification.userInfo?["convoyId"] as? String
+                    let filter = notification.userInfo?["filter"] as? String
+                    dlog("openConvoyBoard: convoyId=\(convoyId ?? "nil") filter=\(filter ?? "nil") (panel not yet implemented)")
+                    #endif
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .createRigWorkspace)) { notification in
+                    #if DEBUG
+                    let rigId = notification.userInfo?["rigId"] as? String
+                    dlog("createRigWorkspace: rigId=\(rigId ?? "nil") (not yet implemented)")
+                    #endif
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .commands {

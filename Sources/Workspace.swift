@@ -9623,6 +9623,54 @@ final class Workspace: Identifiable, ObservableObject {
         return panel
     }
 
+    /// Open a Rig Panel for the given rig ID.
+    @discardableResult
+    func newRigPanelSurface(rigId: String, focus: Bool = true) -> RigPanel? {
+        guard let paneId = bonsplitController.focusedPaneId else { return nil }
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let adapter: RigPanelAdapter
+        if let townPath = GasTownService.shared.townRoot?.path {
+            adapter = RigPanelAdapter(townRootPath: townPath)
+        } else {
+            adapter = RigPanelAdapter()
+        }
+        let panel = RigPanel(rigId: rigId, workspaceId: id, adapter: adapter)
+        panels[panel.id] = panel
+        panelTitles[panel.id] = panel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: panel.displayTitle,
+            icon: panel.displayIcon,
+            kind: "rigPanel",
+            isDirty: panel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: panel.id)
+            panelTitles.removeValue(forKey: panel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = panel.id
+        if focus {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: panel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        panel.refresh()
+        return panel
+    }
+
     /// Open an Agent Profile panel for the given agent address.
     ///
     /// Routes through ``OpenRouter`` to resolve the agent identity.
