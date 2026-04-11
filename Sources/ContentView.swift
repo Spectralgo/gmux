@@ -6045,6 +6045,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.convoyBoard", defaultValue: "Convoys")
         case .refinery:
             return String(localized: "commandPalette.kind.refinery", defaultValue: "Merge Pipeline")
+        case .diagnostics:
+            return String(localized: "commandPalette.kind.diagnostics", defaultValue: "Engine Room")
         }
     }
 
@@ -6076,6 +6078,8 @@ struct ContentView: View {
             return ["convoy", "convoys", "board", "progress", "work"]
         case .refinery:
             return ["refinery", "merge", "pipeline", "queue", "mq"]
+        case .diagnostics:
+            return ["diagnostics", "engine", "room", "health", "vitals", "status"]
         }
     }
 

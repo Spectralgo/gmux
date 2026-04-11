@@ -505,7 +505,7 @@ extension Workspace {
                 repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard, .refinery:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard, .refinery, .diagnostics:
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
@@ -713,7 +713,7 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard, .refinery:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard, .refinery, .diagnostics:
             return nil
         }
     }
@@ -7315,6 +7315,8 @@ final class Workspace: Identifiable, ObservableObject {
             return "convoyBoard"
         case .refinery:
             return "refinery"
+        case .diagnostics:
+            return "diagnostics"
         }
     }
 
