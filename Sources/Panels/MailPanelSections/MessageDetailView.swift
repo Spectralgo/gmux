@@ -80,14 +80,146 @@ struct MessageDetailView: View {
         }
     }
 
+    // MARK: - Parsed Body Fields
+
+    /// Known structured field keys that appear as "Key: value" lines in message bodies.
+    private static let structuredFieldKeys: Set<String> = [
+        "Branch", "Polecat", "Rig", "Target", "Bead", "Convoy", "Author", "Stage",
+    ]
+
+    /// A parsed key-value field from the message body.
+    private struct BodyField: Identifiable {
+        let key: String
+        let value: String
+        var id: String { key }
+    }
+
+    /// Parse structured fields from the body and return (fields, remainingBody).
+    private var parsedBody: (fields: [BodyField], remainder: String) {
+        var fields: [BodyField] = []
+        var remainderLines: [String] = []
+        var seenKeys = Set<String>()
+
+        for line in message.body.components(separatedBy: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if let colonIndex = trimmed.firstIndex(of: ":") {
+                let key = String(trimmed[trimmed.startIndex..<colonIndex])
+                    .trimmingCharacters(in: .whitespaces)
+                let value = String(trimmed[trimmed.index(after: colonIndex)...])
+                    .trimmingCharacters(in: .whitespaces)
+                if Self.structuredFieldKeys.contains(key), !value.isEmpty, !seenKeys.contains(key) {
+                    seenKeys.insert(key)
+                    fields.append(BodyField(key: key, value: value))
+                    continue
+                }
+            }
+            remainderLines.append(line)
+        }
+
+        let remainder = remainderLines
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (fields, remainder)
+    }
+
     // MARK: - Body
 
     private var messageBody: some View {
-        Text(message.body)
-            .font(GasTownTypography.label)
-            .foregroundColor(.primary)
-            .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        let parsed = parsedBody
+        return VStack(alignment: .leading, spacing: GasTownSpacing.sectionGap) {
+            if !parsed.fields.isEmpty {
+                structuredFieldsSection(parsed.fields)
+            }
+            if !parsed.remainder.isEmpty {
+                Text(parsed.remainder)
+                    .font(GasTownTypography.label)
+                    .foregroundColor(.primary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    // MARK: - Structured Fields Section
+
+    private func structuredFieldsSection(_ fields: [BodyField]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(fields) { field in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(field.key)
+                        .font(GasTownTypography.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 56, alignment: .trailing)
+
+                    fieldValue(for: field)
+                }
+            }
+        }
+        .padding(GasTownSpacing.cardPadding)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(GasTownColors.sectionBackground(for: colorScheme))
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String(localized: "mailPanel.structuredFields.a11y",
+                                   defaultValue: "Message details"))
+    }
+
+    /// Render a field value — clickable pill for Bead, Convoy, Polecat/Author; plain text otherwise.
+    @ViewBuilder
+    private func fieldValue(for field: BodyField) -> some View {
+        switch field.key {
+        case "Bead":
+            fieldPill(label: field.value, icon: "circlebadge") {
+                navigateToBead(field.value)
+            }
+            .accessibilityHint(String(localized: "mailPanel.field.bead.hint.a11y",
+                                      defaultValue: "Opens bead inspector"))
+        case "Convoy":
+            fieldPill(label: field.value, icon: "shippingbox") {
+                navigateToConvoy(field.value)
+            }
+            .accessibilityHint(String(localized: "mailPanel.field.convoy.hint.a11y",
+                                      defaultValue: "Opens convoy board"))
+        case "Polecat", "Author":
+            fieldPill(label: field.value, icon: "bolt") {
+                navigateToAgent(field.value)
+            }
+            .accessibilityHint(String(localized: "mailPanel.field.agent.hint.a11y",
+                                      defaultValue: "Opens agent profile"))
+        default:
+            Text(field.value)
+                .font(GasTownTypography.data)
+                .foregroundColor(.primary)
+                .textSelection(.enabled)
+        }
+    }
+
+    /// Clickable capsule pill for navigable field values.
+    private func fieldPill(label: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.system(size: 9))
+                Text(label)
+                    .font(GasTownTypography.badge)
+            }
+            .foregroundColor(cmuxAccentColor())
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(GasTownColors.sectionBackground(for: colorScheme))
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
     }
 
     // MARK: - Provenance Bar
@@ -230,6 +362,14 @@ struct MessageDetailView: View {
             name: .openAgentProfile,
             object: nil,
             userInfo: ["agentAddress": agentName]
+        )
+    }
+
+    private func navigateToConvoy(_ convoyId: String) {
+        NotificationCenter.default.post(
+            name: .openConvoyBoard,
+            object: nil,
+            userInfo: ["convoyId": convoyId]
         )
     }
 
