@@ -139,9 +139,101 @@ enum EscalationCategory: String, Equatable, Sendable {
     case lifecycle
 }
 
+// MARK: - Doctor
+
+struct DoctorResult: Equatable, Sendable {
+    let passCount: Int
+    let warnCount: Int
+    let failCount: Int
+    let failures: [DoctorCheck]
+    let warnings: [DoctorCheck]
+    let timestamp: Date
+}
+
+struct DoctorCheck: Equatable, Identifiable, Sendable {
+    let id: String
+    let status: DoctorCheckStatus
+    let message: String
+    let fixHint: String?
+}
+
+enum DoctorCheckStatus: String, Equatable, Sendable {
+    case pass, warn, fail
+}
+
+struct DoctorFixEntry: Equatable, Identifiable, Sendable {
+    let id: String
+    let status: DoctorFixStatus
+    let message: String
+}
+
+enum DoctorFixStatus: String, Equatable, Sendable {
+    case fixed
+    case manual
+    case unchanged
+    case error
+}
+
+// MARK: - Plugins
+
+struct PluginEntry: Equatable, Identifiable, Sendable {
+    let id: String
+    let lastRun: Date?
+    let result: PluginResult
+    let nextRun: Date?
+    let detail: String?
+}
+
+enum PluginResult: String, Equatable, Sendable {
+    case passed
+    case issues
+    case failed
+    case pending
+}
+
+// MARK: - Event Timeline
+
+struct EventEntry: Equatable, Identifiable, Sendable {
+    let id: String
+    let timestamp: Date
+    let actor: String?
+    let message: String
+    let kind: String?
+}
+
+// MARK: - Formulas
+
+struct FormulaEntry: Equatable, Identifiable, Sendable {
+    let id: String
+    let rig: String
+    let status: FormulaRunStatus
+    let elapsed: TimeInterval?
+}
+
+enum FormulaRunStatus: String, Equatable, Sendable {
+    case running, idle, error
+}
+
 // MARK: - Action Result
 
 struct ActionResult: Equatable, Sendable {
     let success: Bool
     let message: String
+}
+
+// MARK: - TrafficLight Accessibility
+
+extension TrafficLight {
+    var accessibilityDescription: String {
+        switch self {
+        case .unknown:
+            return String(localized: "trafficLight.a11y.unknown", defaultValue: "checking")
+        case .green:
+            return String(localized: "trafficLight.a11y.green", defaultValue: "healthy")
+        case .amber:
+            return String(localized: "trafficLight.a11y.amber", defaultValue: "needs attention")
+        case .red:
+            return String(localized: "trafficLight.a11y.red", defaultValue: "critical issue")
+        }
+    }
 }

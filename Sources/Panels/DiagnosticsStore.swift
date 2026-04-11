@@ -30,6 +30,23 @@ final class DiagnosticsStore: ObservableObject {
 
     @Published private(set) var escalations: [EscalationEntry] = []
 
+    // MARK: - Doctor
+
+    @Published private(set) var doctorResult: DoctorResult?
+    @Published private(set) var doctorFixLog: [DoctorFixEntry]?
+
+    // MARK: - Plugins
+
+    @Published private(set) var plugins: [PluginEntry] = []
+
+    // MARK: - Event Timeline
+
+    @Published private(set) var recentEvents: [EventEntry] = []
+
+    // MARK: - Formulas
+
+    @Published private(set) var formulaStatus: [FormulaEntry] = []
+
     // MARK: - Meta
 
     @Published private(set) var isRefreshing: Bool = false
@@ -39,6 +56,10 @@ final class DiagnosticsStore: ObservableObject {
 
     private var refreshTimer: Timer?
     private var refreshTask: Task<Void, Never>?
+    private var eventStreamTask: Task<Void, Never>?
+
+    /// Maximum number of events to keep in the ring buffer.
+    private static let eventBufferSize = 50
 
     /// Start automatic polling at the given interval.
     func startPolling(interval: TimeInterval = 30) {
@@ -50,6 +71,7 @@ final class DiagnosticsStore: ObservableObject {
                 await self?.refreshNow()
             }
         }
+        startEventStream()
     }
 
     /// Stop automatic polling.
@@ -58,6 +80,7 @@ final class DiagnosticsStore: ObservableObject {
         refreshTimer = nil
         refreshTask?.cancel()
         refreshTask = nil
+        stopEventStream()
     }
 
     /// Trigger a single refresh cycle.
@@ -78,6 +101,8 @@ final class DiagnosticsStore: ObservableObject {
             group.addTask { await .deaconHeartbeat(Self.fetchDeaconHeartbeat()) }
             group.addTask { await .bootStatus(Self.fetchBootStatus()) }
             group.addTask { await .escalations(Self.fetchEscalations()) }
+            group.addTask { await .formulas(Self.fetchFormulas()) }
+            group.addTask { await .plugins(Self.fetchPlugins()) }
 
             for await result in group {
                 switch result {
@@ -97,6 +122,10 @@ final class DiagnosticsStore: ObservableObject {
                     applyBootStatus(b)
                 case .escalations(let e):
                     applyEscalations(e)
+                case .formulas(let f):
+                    applyFormulas(f)
+                case .plugins(let p):
+                    applyPlugins(p)
                 }
             }
         }
@@ -115,6 +144,8 @@ final class DiagnosticsStore: ObservableObject {
         case deaconHeartbeat(DeaconHeartbeatData?)
         case bootStatus(BootStatusData?)
         case escalations([EscalationEntry])
+        case formulas([FormulaEntry])
+        case plugins([PluginEntry])
     }
 
     // MARK: - Vitals Parsing
@@ -688,6 +719,296 @@ final class DiagnosticsStore: ObservableObject {
         if (s.derivedDataSize ?? 0) > 20_000_000_000 { return .amber }
         if (s.buildCacheSize ?? 0) > 50_000_000_000 { return .amber }
         return .green
+    }
+
+    // MARK: - Doctor Actions
+
+    func runDoctor() async -> DoctorResult {
+        let result = await GastownCommandRunner.gt(["doctor", "--json"], timeoutSeconds: 30)
+        guard result.succeeded,
+              let data = result.stdout.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            let fallback = DoctorResult(passCount: 0, warnCount: 0, failCount: 0, failures: [], warnings: [], timestamp: Date())
+            doctorResult = fallback
+            return fallback
+        }
+
+        let parsed = Self.parseDoctorResult(json)
+        doctorResult = parsed
+        recomputeTrafficLights()
+        return parsed
+    }
+
+    func runDoctorFix() async -> [DoctorFixEntry] {
+        let result = await GastownCommandRunner.gt(["doctor", "--fix"], timeoutSeconds: 60)
+        let output = result.stdout
+        var entries: [DoctorFixEntry] = []
+
+        for line in output.components(separatedBy: "\n") where !line.isEmpty {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty { continue }
+
+            let status: DoctorFixStatus
+            let id: String
+            let message: String
+
+            if trimmed.contains("✓") || trimmed.lowercased().contains("fixed") {
+                status = .fixed
+            } else if trimmed.lowercased().contains("manual") {
+                status = .manual
+            } else if trimmed.lowercased().contains("unchanged") || trimmed.lowercased().contains("already") {
+                status = .unchanged
+            } else {
+                status = .error
+            }
+
+            // Parse "check_name: result message" format
+            let parts = trimmed.split(separator: ":", maxSplits: 1)
+            if parts.count == 2 {
+                id = String(parts[0]).trimmingCharacters(in: .whitespaces)
+                message = String(parts[1]).trimmingCharacters(in: .whitespaces)
+            } else {
+                id = "fix-\(entries.count)"
+                message = trimmed
+            }
+
+            entries.append(DoctorFixEntry(id: id, status: status, message: message))
+        }
+
+        doctorFixLog = entries
+        // Re-run doctor to get updated results
+        _ = await runDoctor()
+        return entries
+    }
+
+    private static func parseDoctorResult(_ json: [String: Any]) -> DoctorResult {
+        let checks = json["checks"] as? [[String: Any]] ?? []
+        var passCount = 0
+        var warnCount = 0
+        var failCount = 0
+        var failures: [DoctorCheck] = []
+        var warnings: [DoctorCheck] = []
+
+        for check in checks {
+            let statusStr = check["status"] as? String ?? "pass"
+            let status = DoctorCheckStatus(rawValue: statusStr) ?? .pass
+            let id = check["name"] as? String ?? check["id"] as? String ?? UUID().uuidString
+            let message = check["message"] as? String ?? ""
+            let fixHint = check["fix_hint"] as? String ?? check["fix"] as? String
+
+            switch status {
+            case .pass:
+                passCount += 1
+            case .warn:
+                warnCount += 1
+                warnings.append(DoctorCheck(id: id, status: status, message: message, fixHint: fixHint))
+            case .fail:
+                failCount += 1
+                failures.append(DoctorCheck(id: id, status: status, message: message, fixHint: fixHint))
+            }
+        }
+
+        // Fall back to summary counts if provided
+        if let summary = json["summary"] as? [String: Any] {
+            passCount = summary["pass"] as? Int ?? passCount
+            warnCount = summary["warn"] as? Int ?? warnCount
+            failCount = summary["fail"] as? Int ?? failCount
+        }
+
+        return DoctorResult(
+            passCount: passCount,
+            warnCount: warnCount,
+            failCount: failCount,
+            failures: failures,
+            warnings: warnings,
+            timestamp: Date()
+        )
+    }
+
+    // MARK: - Formulas
+
+    private static func fetchFormulas() async -> [FormulaEntry] {
+        let result = await GastownCommandRunner.bd(["formula", "list", "--json"], timeoutSeconds: 10)
+        guard result.succeeded,
+              let data = result.stdout.data(using: .utf8),
+              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return []
+        }
+
+        return jsonArray.compactMap { json -> FormulaEntry? in
+            guard let id = json["name"] as? String ?? json["id"] as? String else { return nil }
+            let rig = json["rig"] as? String ?? ""
+            let statusStr = json["status"] as? String ?? "idle"
+            let status = FormulaRunStatus(rawValue: statusStr) ?? .idle
+            let elapsed = json["elapsed"] as? TimeInterval
+            return FormulaEntry(id: id, rig: rig, status: status, elapsed: elapsed)
+        }
+    }
+
+    private func applyFormulas(_ entries: [FormulaEntry]) {
+        if formulaStatus != entries {
+            formulaStatus = entries
+        }
+    }
+
+    // MARK: - Plugins
+
+    private static func fetchPlugins() async -> [PluginEntry] {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let townRoot = Self.resolveTownRoot() else {
+                    continuation.resume(returning: [])
+                    return
+                }
+                let path = (townRoot as NSString).appendingPathComponent("deacon/health-check-state.json")
+                guard let data = FileManager.default.contents(atPath: path),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let pluginsJson = json["plugins"] as? [[String: Any]] else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+                let entries = pluginsJson.compactMap { p -> PluginEntry? in
+                    guard let id = p["name"] as? String ?? p["id"] as? String else { return nil }
+                    let resultStr = p["result"] as? String ?? "pending"
+                    let result = PluginResult(rawValue: resultStr) ?? .pending
+                    let detail = p["detail"] as? String ?? p["message"] as? String
+
+                    var lastRun: Date?
+                    if let ts = p["last_run"] as? String { lastRun = formatter.date(from: ts) }
+                    else if let ts = p["last_run"] as? TimeInterval { lastRun = Date(timeIntervalSince1970: ts) }
+
+                    var nextRun: Date?
+                    if let ts = p["next_run"] as? String { nextRun = formatter.date(from: ts) }
+                    else if let ts = p["next_run"] as? TimeInterval { nextRun = Date(timeIntervalSince1970: ts) }
+
+                    return PluginEntry(id: id, lastRun: lastRun, result: result, nextRun: nextRun, detail: detail)
+                }
+
+                continuation.resume(returning: entries)
+            }
+        }
+    }
+
+    private func applyPlugins(_ entries: [PluginEntry]) {
+        if plugins != entries {
+            plugins = entries
+        }
+    }
+
+    // MARK: - Event Stream
+
+    /// Start streaming events from `gt log --follow`.
+    func startEventStream() {
+        guard eventStreamTask == nil else { return }
+        eventStreamTask = Task { [weak self] in
+            var retries = 0
+            let maxRetries = 3
+
+            while !Task.isCancelled, retries <= maxRetries {
+                do {
+                    try await self?.streamEvents()
+                } catch is CancellationError {
+                    break
+                } catch {
+                    retries += 1
+                    if retries > maxRetries { break }
+                    try? await Task.sleep(nanoseconds: 5_000_000_000) // 5s retry
+                }
+            }
+        }
+    }
+
+    /// Stop the event stream.
+    func stopEventStream() {
+        eventStreamTask?.cancel()
+        eventStreamTask = nil
+    }
+
+    private func streamEvents() async throws {
+        let process = Process()
+        let pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+
+        // Resolve gt path
+        let gtPath = ProcessInfo.processInfo.environment["GT_BIN"]
+            ?? "/usr/local/bin/gt"
+
+        process.executableURL = URL(fileURLWithPath: gtPath)
+        process.arguments = ["log", "--follow"]
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+
+        try process.run()
+
+        let handle = pipe.fileHandleForReading
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        for try await line in handle.bytes.lines {
+            if Task.isCancelled {
+                process.terminate()
+                break
+            }
+
+            let entry = Self.parseEventLine(line, formatter: formatter)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                var events = self.recentEvents
+                events.insert(entry, at: 0)
+                if events.count > Self.eventBufferSize {
+                    events = Array(events.prefix(Self.eventBufferSize))
+                }
+                self.recentEvents = events
+            }
+        }
+
+        process.terminate()
+        process.waitUntilExit()
+    }
+
+    nonisolated private static func parseEventLine(_ line: String, formatter: ISO8601DateFormatter) -> EventEntry {
+        // Expected format: "2026-04-11T14:23:01Z [mayor] Slung bead hq-2i0 to diagnostics_designer"
+        // Or simpler: "14:23:01  [mayor]  message text"
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+        var timestamp = Date()
+        var actor: String?
+        var message = trimmed
+        var kind: String?
+
+        // Try to parse ISO timestamp at start
+        if trimmed.count > 20, let spaceIdx = trimmed.firstIndex(of: " ") {
+            let tsCandidate = String(trimmed[trimmed.startIndex..<spaceIdx])
+            if let parsed = formatter.date(from: tsCandidate) {
+                timestamp = parsed
+                message = String(trimmed[trimmed.index(after: spaceIdx)...]).trimmingCharacters(in: .whitespaces)
+            }
+        }
+
+        // Try to extract [actor] from message
+        if message.hasPrefix("["), let closing = message.firstIndex(of: "]") {
+            actor = String(message[message.index(after: message.startIndex)..<closing])
+            message = String(message[message.index(after: closing)...]).trimmingCharacters(in: .whitespaces)
+        }
+
+        // Infer event kind from keywords
+        if message.lowercased().contains("merge") { kind = "merge" }
+        else if message.lowercased().contains("slung") || message.lowercased().contains("dispatch") { kind = "dispatch" }
+        else if message.lowercased().contains("decision") || message.lowercased().contains("boot") { kind = "watchdog" }
+        else if message.lowercased().contains("health") || message.lowercased().contains("check") { kind = "health" }
+        else if message.lowercased().contains("error") || message.lowercased().contains("fail") { kind = "error" }
+
+        return EventEntry(
+            id: UUID().uuidString,
+            timestamp: timestamp,
+            actor: actor,
+            message: message,
+            kind: kind
+        )
     }
 
     // MARK: - Shell Helpers
