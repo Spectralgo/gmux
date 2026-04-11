@@ -145,20 +145,16 @@ struct DoctorResult: Equatable, Sendable {
     let passCount: Int
     let warnCount: Int
     let failCount: Int
-    let failures: [DoctorCheck]
-    let warnings: [DoctorCheck]
+    let failures: [DiagnosticsDoctorCheck]
+    let warnings: [DiagnosticsDoctorCheck]
     let timestamp: Date
 }
 
-struct DoctorCheck: Equatable, Identifiable, Sendable {
+struct DiagnosticsDoctorCheck: Equatable, Identifiable, Sendable {
     let id: String
     let status: DoctorCheckStatus
     let message: String
     let fixHint: String?
-}
-
-enum DoctorCheckStatus: String, Equatable, Sendable {
-    case pass, warn, fail
 }
 
 struct DoctorFixEntry: Equatable, Identifiable, Sendable {

@@ -786,8 +786,8 @@ final class DiagnosticsStore: ObservableObject {
         var passCount = 0
         var warnCount = 0
         var failCount = 0
-        var failures: [DoctorCheck] = []
-        var warnings: [DoctorCheck] = []
+        var failures: [DiagnosticsDoctorCheck] = []
+        var warnings: [DiagnosticsDoctorCheck] = []
 
         for check in checks {
             let statusStr = check["status"] as? String ?? "pass"
@@ -801,10 +801,10 @@ final class DiagnosticsStore: ObservableObject {
                 passCount += 1
             case .warn:
                 warnCount += 1
-                warnings.append(DoctorCheck(id: id, status: status, message: message, fixHint: fixHint))
+                warnings.append(DiagnosticsDoctorCheck(id: id, status: status, message: message, fixHint: fixHint))
             case .fail:
                 failCount += 1
-                failures.append(DoctorCheck(id: id, status: status, message: message, fixHint: fixHint))
+                failures.append(DiagnosticsDoctorCheck(id: id, status: status, message: message, fixHint: fixHint))
             }
         }
 

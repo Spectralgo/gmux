@@ -57,6 +57,12 @@ struct DiagnosticsPanelView: View {
                     )
                 }
 
+                DoctorScorecard(store: panel.store)
+
+                PluginStatusSection(plugins: panel.store.plugins)
+
+                EventTimelineSection(events: panel.store.recentEvents)
+
                 if let lastRefresh = panel.store.lastRefresh {
                     HStack {
                         Spacer()
@@ -213,6 +219,9 @@ private struct TrafficLightIndicator: View {
             .padding(.vertical, GasTownSpacing.rowPaddingV)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(label) health: \(status.accessibilityDescription)")
+        .accessibilityHint(String(localized: "diagnostics.a11y.trafficLightHint", defaultValue: "Activate to expand \(label.lowercased()) health details"))
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -551,6 +560,8 @@ private struct WatchdogChainView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(GasTownColors.sectionBackground(for: colorScheme))
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String(localized: "diagnostics.a11y.watchdogChain", defaultValue: "Watchdog chain status"))
     }
 
     private func toggleTier(_ tier: WatchdogTier) {
@@ -689,6 +700,9 @@ private struct WatchdogTierNode: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(tierName) watchdog: \(metric), \(statusLabel)")
+        .accessibilityHint(String(localized: "diagnostics.a11y.tierHint", defaultValue: "Activate to see \(tierName) details"))
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -889,6 +903,8 @@ private struct EscalationRow: View {
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.vertical, GasTownSpacing.rowPaddingV)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.severity.rawValue) \(entry.category.rawValue) escalation: \(entry.summary). Raised \(relativeTime(entry.raisedAt)) ago. \(entry.acknowledged ? "Acknowledged" : "Unacknowledged")")
     }
 }
 
@@ -927,6 +943,7 @@ private struct ActionSubCheckRow: View {
             .buttonStyle(.bordered)
             .font(.system(size: 12))
             .disabled(isLoading)
+            .accessibilityLabel("\(actionLabel) \(label), currently \(value)")
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.vertical, GasTownSpacing.rowPaddingV)
@@ -979,6 +996,444 @@ private var noDataRow: some View {
         Spacer()
     }
     .padding(GasTownSpacing.rowPaddingV)
+}
+
+// MARK: - Doctor Scorecard
+
+private struct DoctorScorecard: View {
+    let store: DiagnosticsStore
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var doctorRunning = false
+    @State private var fixRunning = false
+    @State private var showWarnings = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SectionHeader(title: String(localized: "diagnostics.doctor", defaultValue: "Doctor"))
+
+            if let result = store.doctorResult {
+                // Score pills row
+                HStack(spacing: 16) {
+                    ScorePill(count: result.passCount, label: String(localized: "diagnostics.pass", defaultValue: "pass"), color: GasTownColors.active)
+                    ScorePill(count: result.warnCount, label: String(localized: "diagnostics.warn", defaultValue: "warn"), color: GasTownColors.attention)
+                    ScorePill(count: result.failCount, label: String(localized: "diagnostics.fail", defaultValue: "fail"), color: GasTownColors.error)
+                    Spacer()
+                    Text(String(localized: "diagnostics.lastRun", defaultValue: "Last run: \(relativeTime(result.timestamp))"))
+                        .font(GasTownTypography.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                .padding(.vertical, GasTownSpacing.rowPaddingV)
+
+                // Failures (expanded by default)
+                if !result.failures.isEmpty {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(GasTownColors.error)
+                                .font(.system(size: 12))
+                            Text(String(localized: "diagnostics.failures", defaultValue: "Failures (\(result.failures.count))"))
+                                .font(GasTownTypography.label)
+                            Spacer()
+                        }
+                        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                        .padding(.vertical, 4)
+
+                        ForEach(result.failures) { check in
+                            DoctorCheckRow(check: check)
+                        }
+                    }
+                }
+
+                // Warnings (collapsed by default)
+                if !result.warnings.isEmpty {
+                    Button {
+                        withAnimation(GasTownAnimation.statusChange) {
+                            showWarnings.toggle()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(GasTownColors.attention)
+                                .font(.system(size: 12))
+                            Text(String(localized: "diagnostics.warnings", defaultValue: "Warnings (\(result.warnings.count))"))
+                                .font(GasTownTypography.label)
+                            Spacer()
+                            Image(systemName: showWarnings ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(localized: "diagnostics.a11y.warnings", defaultValue: "\(result.warnings.count) warnings"))
+                    .accessibilityHint(String(localized: "diagnostics.a11y.warningsHint", defaultValue: "Activate to \(showWarnings ? "collapse" : "expand") warnings list"))
+
+                    if showWarnings {
+                        ForEach(result.warnings) { check in
+                            DoctorCheckRow(check: check)
+                        }
+                    }
+                }
+
+                // Fix log (shown after Fix All)
+                if let fixLog = store.doctorFixLog {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Image(systemName: "wrench.fill")
+                                .foregroundColor(.primary)
+                                .font(.system(size: 12))
+                            Text(String(localized: "diagnostics.fixResults", defaultValue: "Fix Results"))
+                                .font(GasTownTypography.label)
+                            Spacer()
+                        }
+                        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                        .padding(.vertical, 4)
+
+                        ForEach(fixLog) { entry in
+                            DoctorFixRow(entry: entry)
+                        }
+                    }
+                }
+            } else {
+                HStack {
+                    Spacer()
+                    Text(String(localized: "diagnostics.doctorNotRun", defaultValue: "Not yet run"))
+                        .font(GasTownTypography.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(GasTownSpacing.rowPaddingV)
+            }
+
+            // Action buttons
+            HStack(spacing: 8) {
+                Spacer()
+                Button {
+                    doctorRunning = true
+                    Task {
+                        _ = await store.runDoctor()
+                        doctorRunning = false
+                    }
+                } label: {
+                    if doctorRunning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text(String(localized: "diagnostics.runDoctor", defaultValue: "Run Doctor"))
+                    }
+                }
+                .controlSize(.small)
+                .buttonStyle(.bordered)
+                .font(.system(size: 12))
+                .disabled(doctorRunning || fixRunning)
+                .accessibilityLabel(String(localized: "diagnostics.a11y.runDoctor", defaultValue: "Run Doctor diagnostic checks"))
+
+                Button {
+                    fixRunning = true
+                    Task {
+                        _ = await store.runDoctorFix()
+                        fixRunning = false
+                    }
+                } label: {
+                    if fixRunning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text(String(localized: "diagnostics.fixAll", defaultValue: "Fix All"))
+                    }
+                }
+                .controlSize(.small)
+                .buttonStyle(.bordered)
+                .font(.system(size: 12))
+                .disabled(doctorRunning || fixRunning)
+                .accessibilityLabel(String(localized: "diagnostics.a11y.fixAll", defaultValue: "Run Doctor and attempt to fix all issues"))
+                .accessibilityHint(String(localized: "diagnostics.a11y.fixAllHint", defaultValue: "Runs gt doctor --fix to automatically resolve issues"))
+            }
+            .padding(.horizontal, GasTownSpacing.rowPaddingH)
+            .padding(.vertical, GasTownSpacing.rowPaddingV)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(GasTownColors.sectionBackground(for: colorScheme))
+        )
+    }
+}
+
+// MARK: - Score Pill
+
+private struct ScorePill: View {
+    let count: Int
+    let label: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("\(count)")
+                .font(GasTownTypography.sectionHeader)
+                .foregroundColor(color)
+            Text(label)
+                .font(GasTownTypography.caption)
+                .foregroundColor(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(count) \(label)")
+    }
+}
+
+// MARK: - Doctor Check Row
+
+private struct DoctorCheckRow: View {
+    let check: DiagnosticsDoctorCheck
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(doctorCheckColor(check.status))
+                    .frame(width: GasTownStatusDot.size, height: GasTownStatusDot.size)
+                Text(check.id)
+                    .font(GasTownTypography.data)
+                Spacer()
+            }
+            Text(check.message)
+                .font(GasTownTypography.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+            if let hint = check.fixHint {
+                Text(hint)
+                    .font(GasTownTypography.caption)
+                    .foregroundColor(GasTownColors.attention)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private func doctorCheckColor(_ status: DoctorCheckStatus) -> Color {
+    switch status {
+    case .pass: return GasTownColors.active
+    case .warn: return GasTownColors.attention
+    case .fail: return GasTownColors.error
+    }
+}
+
+// MARK: - Doctor Fix Row
+
+private struct DoctorFixRow: View {
+    let entry: DoctorFixEntry
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: fixStatusIcon(entry.status))
+                .foregroundColor(fixStatusColor(entry.status))
+                .font(.system(size: 12))
+            Text(entry.id)
+                .font(GasTownTypography.data)
+            Spacer()
+            Text(entry.message)
+                .font(GasTownTypography.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func fixStatusIcon(_ status: DoctorFixStatus) -> String {
+        switch status {
+        case .fixed: return "checkmark.circle.fill"
+        case .manual: return "hand.raised.fill"
+        case .unchanged: return "minus.circle"
+        case .error: return "xmark.circle.fill"
+        }
+    }
+
+    private func fixStatusColor(_ status: DoctorFixStatus) -> Color {
+        switch status {
+        case .fixed: return GasTownColors.active
+        case .manual: return GasTownColors.attention
+        case .unchanged: return GasTownColors.idle
+        case .error: return GasTownColors.error
+        }
+    }
+}
+
+// MARK: - Plugin Status Section
+
+private struct PluginStatusSection: View {
+    let plugins: [PluginEntry]
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var expandedPlugin: String?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SectionHeader(title: String(localized: "diagnostics.plugins", defaultValue: "Plugins (\(plugins.count))"))
+
+            if plugins.isEmpty {
+                HStack {
+                    Spacer()
+                    Text(String(localized: "diagnostics.noPlugins", defaultValue: "No plugins found"))
+                        .font(GasTownTypography.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(GasTownSpacing.rowPaddingV)
+            } else {
+                ForEach(plugins) { plugin in
+                    VStack(spacing: 0) {
+                        Button {
+                            withAnimation(GasTownAnimation.statusChange) {
+                                expandedPlugin = expandedPlugin == plugin.id ? nil : plugin.id
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text(plugin.id)
+                                    .font(GasTownTypography.label)
+                                Spacer()
+                                if let lastRun = plugin.lastRun {
+                                    Text(String(localized: "diagnostics.lastRunTime", defaultValue: "Last: \(relativeTime(lastRun))"))
+                                        .font(GasTownTypography.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(pluginResultColor(plugin.result))
+                                        .frame(width: GasTownStatusDot.size, height: GasTownStatusDot.size)
+                                    Text(plugin.result.rawValue)
+                                        .font(GasTownTypography.caption)
+                                        .foregroundColor(pluginResultColor(plugin.result))
+                                }
+                                if let nextRun = plugin.nextRun {
+                                    Text(String(localized: "diagnostics.nextRunTime", defaultValue: "Next: \(relativeTime(nextRun))"))
+                                        .font(GasTownTypography.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                            .padding(.vertical, GasTownSpacing.rowPaddingV)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Plugin \(plugin.id): \(plugin.result.rawValue)")
+                        .accessibilityHint(String(localized: "diagnostics.a11y.pluginHint", defaultValue: "Activate to see plugin details"))
+
+                        if expandedPlugin == plugin.id, let detail = plugin.detail {
+                            Text(detail)
+                                .font(GasTownTypography.data)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                                .padding(.bottom, GasTownSpacing.rowPaddingV)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        if plugin.id != plugins.last?.id {
+                            Divider()
+                                .padding(.horizontal, GasTownSpacing.rowPaddingH)
+                        }
+                    }
+                }
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(GasTownColors.sectionBackground(for: colorScheme))
+        )
+    }
+}
+
+private func pluginResultColor(_ result: PluginResult) -> Color {
+    switch result {
+    case .passed: return GasTownColors.active
+    case .issues: return GasTownColors.attention
+    case .failed: return GasTownColors.error
+    case .pending: return GasTownColors.idle
+    }
+}
+
+// MARK: - Event Timeline Section
+
+private struct EventTimelineSection: View {
+    let events: [EventEntry]
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(String(localized: "diagnostics.events", defaultValue: "Events"))
+                    .font(GasTownTypography.sectionHeader)
+                if !events.isEmpty {
+                    Text(String(localized: "diagnostics.eventsLive", defaultValue: "(live)"))
+                        .font(GasTownTypography.caption)
+                        .foregroundColor(GasTownColors.active)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, GasTownSpacing.rowPaddingH)
+            .padding(.vertical, GasTownSpacing.rowPaddingV)
+
+            if events.isEmpty {
+                HStack {
+                    Spacer()
+                    Text(String(localized: "diagnostics.noEvents", defaultValue: "Waiting for events…"))
+                        .font(GasTownTypography.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(GasTownSpacing.rowPaddingV)
+            } else {
+                ForEach(events) { event in
+                    EventRow(event: event)
+                }
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(GasTownColors.sectionBackground(for: colorScheme))
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String(localized: "diagnostics.a11y.eventTimeline", defaultValue: "Event timeline, \(events.count) events"))
+    }
+}
+
+private struct EventRow: View {
+    let event: EventEntry
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }()
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(Self.timeFormatter.string(from: event.timestamp))
+                .font(GasTownTypography.data)
+                .foregroundColor(.secondary)
+                .frame(width: 64, alignment: .leading)
+
+            if let actor = event.actor {
+                Text(actor)
+                    .font(GasTownTypography.badge)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.15))
+                    .clipShape(Capsule())
+            }
+
+            Text(event.message)
+                .font(GasTownTypography.label)
+                .lineLimit(1)
+
+            Spacer()
+        }
+        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+        .padding(.vertical, 3)
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .accessibilityElement(children: .combine)
+    }
 }
 
 // MARK: - Formatting Helpers
