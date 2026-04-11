@@ -6041,6 +6041,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.rigPanel", defaultValue: "Rig Panel")
         case .mailPanel:
             return String(localized: "commandPalette.kind.mailPanel", defaultValue: "Mail")
+        case .convoyBoard:
+            return String(localized: "commandPalette.kind.convoyBoard", defaultValue: "Convoys")
         }
     }
 
@@ -6068,6 +6070,8 @@ struct ContentView: View {
             return ["rig", "panel", "project", "home"]
         case .mailPanel:
             return ["mail", "inbox", "message", "compose", "send"]
+        case .convoyBoard:
+            return ["convoy", "convoys", "board", "progress", "work"]
         }
     }
 

@@ -16,6 +16,11 @@
 		MP00000000000007 /* FilterBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000017 /* FilterBarView.swift */; };
 		MP00000000000008 /* ThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000018 /* ThreadView.swift */; };
 		MP00000000000009 /* MailToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000019 /* MailToolbarView.swift */; };
+		CB00000000000001 /* ConvoyBoardPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000011 /* ConvoyBoardPanel.swift */; };
+		CB00000000000002 /* ConvoyBoardPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000012 /* ConvoyBoardPanelView.swift */; };
+		CB00000000000003 /* ConvoyCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000013 /* ConvoyCardView.swift */; };
+		CB00000000000004 /* ConvoyDetailSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000014 /* ConvoyDetailSection.swift */; };
+		CB00000000000005 /* ConvoyBoardToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000015 /* ConvoyBoardToolbar.swift */; };
 		AP00000000000001 /* AgentProfilePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000011 /* AgentProfilePanel.swift */; };
 		AP00000000000002 /* AgentProfilePanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000012 /* AgentProfilePanelView.swift */; };
 		AP00000000000003 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000013 /* ProfileHeaderView.swift */; };
@@ -298,6 +303,11 @@
 		MP00000000000017 /* FilterBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FilterBarView.swift; sourceTree = "<group>"; };
 		MP00000000000018 /* ThreadView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThreadView.swift; sourceTree = "<group>"; };
 		MP00000000000019 /* MailToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MailToolbarView.swift; sourceTree = "<group>"; };
+		CB00000000000011 /* ConvoyBoardPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyBoardPanel.swift; sourceTree = "<group>"; };
+		CB00000000000012 /* ConvoyBoardPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyBoardPanelView.swift; sourceTree = "<group>"; };
+		CB00000000000013 /* ConvoyCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyCardView.swift; sourceTree = "<group>"; };
+		CB00000000000014 /* ConvoyDetailSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyDetailSection.swift; sourceTree = "<group>"; };
+		CB00000000000015 /* ConvoyBoardToolbar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyBoardToolbar.swift; sourceTree = "<group>"; };
 		AP00000000000011 /* AgentProfilePanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfilePanel.swift; sourceTree = "<group>"; };
 		AP00000000000012 /* AgentProfilePanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfilePanelView.swift; sourceTree = "<group>"; };
 		AP00000000000013 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
@@ -771,6 +781,9 @@
 				MP00000000000011 /* MailPanel.swift */,
 				MP00000000000012 /* MailPanelView.swift */,
 				MP0000000000001A /* MailPanelSections */,
+				CB00000000000011 /* ConvoyBoardPanel.swift */,
+				CB00000000000012 /* ConvoyBoardPanelView.swift */,
+				CB0000000000001A /* ConvoyBoardSections */,
 			);
 			name = Panels;
 			path = Panels;
@@ -789,6 +802,17 @@
 			);
 			name = MailPanelSections;
 			path = MailPanelSections;
+			sourceTree = "<group>";
+		};
+		CB0000000000001A /* ConvoyBoardSections */ = {
+			isa = PBXGroup;
+			children = (
+				CB00000000000013 /* ConvoyCardView.swift */,
+				CB00000000000014 /* ConvoyDetailSection.swift */,
+				CB00000000000015 /* ConvoyBoardToolbar.swift */,
+			);
+			name = ConvoyBoardSections;
+			path = ConvoyBoardSections;
 			sourceTree = "<group>";
 		};
 		RP0000000000001A /* RigPanelSections */ = {
@@ -1223,6 +1247,11 @@
 				MP00000000000007 /* FilterBarView.swift in Sources */,
 				MP00000000000008 /* ThreadView.swift in Sources */,
 				MP00000000000009 /* MailToolbarView.swift in Sources */,
+				CB00000000000001 /* ConvoyBoardPanel.swift in Sources */,
+				CB00000000000002 /* ConvoyBoardPanelView.swift in Sources */,
+				CB00000000000003 /* ConvoyCardView.swift in Sources */,
+				CB00000000000004 /* ConvoyDetailSection.swift in Sources */,
+				CB00000000000005 /* ConvoyBoardToolbar.swift in Sources */,
 				AP00000000000001 /* AgentProfilePanel.swift in Sources */,
 				AP00000000000002 /* AgentProfilePanelView.swift in Sources */,
 				AP00000000000003 /* ProfileHeaderView.swift in Sources */,

@@ -135,6 +135,16 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
+        case .convoyBoard:
+            if let convoyBoardPanel = panel as? ConvoyBoardPanel {
+                ConvoyBoardPanelView(
+                    panel: convoyBoardPanel,
+                    isFocused: isFocused,
+                    isVisibleInUI: isVisibleInUI,
+                    portalPriority: portalPriority,
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+            }
         }
     }
 }

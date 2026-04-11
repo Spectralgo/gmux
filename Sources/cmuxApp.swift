@@ -359,11 +359,9 @@ struct cmuxApp: App {
                     activeTabManager.selectedWorkspace?.openAgentProfile(agentAddress: address)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openConvoyBoard)) { notification in
-                    #if DEBUG
                     let convoyId = notification.userInfo?["convoyId"] as? String
                     let filter = notification.userInfo?["filter"] as? String
-                    dlog("openConvoyBoard: convoyId=\(convoyId ?? "nil") filter=\(filter ?? "nil") (panel not yet implemented)")
-                    #endif
+                    activeTabManager.selectedWorkspace?.openConvoyBoard(convoyId: convoyId, filter: filter)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .createRigWorkspace)) { notification in
                     #if DEBUG
