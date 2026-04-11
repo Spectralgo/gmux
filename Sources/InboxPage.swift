@@ -136,14 +136,7 @@ private struct InboxGroupSection: View {
     }
 
     private func colorForType(_ type: MailMessageType) -> Color {
-        switch type {
-        case .mergeReady: return .orange
-        case .polecatDone: return .green
-        case .merged: return cmuxAccentColor()
-        case .mergeFailed: return Color(GasTownColors.error)
-        case .reworkRequest: return .purple
-        case .info: return .secondary
-        }
+        type.severityColor
     }
 }
 

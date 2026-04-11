@@ -268,7 +268,7 @@ struct RefineryAdapter: Sendable {
         case .reworkRequest:
             guard let beadId = message.provenance.beadId else { return nil }
             return .reworkRequest(beadId: beadId, reworkPolecat: message.provenance.polecatName)
-        case .info:
+        case .help, .handoff, .witnessPing, .info:
             return nil
         }
     }

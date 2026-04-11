@@ -141,20 +141,20 @@ struct MessageRow: View, Equatable {
                 // Priority border (left edge)
                 priorityBar
 
-                // Unread dot
+                // Severity dot (type-based color)
                 Circle()
-                    .fill(message.isRead ? Color.clear : cmuxAccentColor())
+                    .fill(message.isRead ? message.type.severityColor.opacity(0.3) : message.type.severityColor)
                     .overlay(
                         Circle()
-                            .stroke(cmuxAccentColor().opacity(message.isRead ? 0.2 : 1), lineWidth: 1)
+                            .stroke(message.type.severityColor.opacity(message.isRead ? 0.2 : 1), lineWidth: 1)
                     )
                     .frame(width: GasTownStatusDot.size, height: GasTownStatusDot.size)
                     .padding(.top, 5)
 
-                // Role icon
-                Image(systemName: GasTownRoleIcon.sfSymbol(for: senderRole))
+                // Type-specific icon
+                Image(systemName: message.type.iconName)
                     .font(.system(size: 12))
-                    .foregroundColor(roleColor)
+                    .foregroundColor(message.type.severityColor)
                     .frame(width: 16, height: 16)
                     .padding(.top, 3)
 

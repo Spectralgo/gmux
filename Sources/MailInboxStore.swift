@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Message types from the Gas Town mail protocol.
 enum MailMessageType: String, Codable, CaseIterable {
@@ -7,6 +8,9 @@ enum MailMessageType: String, Codable, CaseIterable {
     case merged = "MERGED"
     case mergeFailed = "MERGE_FAILED"
     case reworkRequest = "REWORK_REQUEST"
+    case help = "HELP"
+    case handoff = "HANDOFF"
+    case witnessPing = "WITNESS_PING"
     case info = "INFO"
 
     var displayLabel: String {
@@ -16,6 +20,9 @@ enum MailMessageType: String, Codable, CaseIterable {
         case .merged: return String(localized: "inbox.messageType.merged", defaultValue: "Merged")
         case .mergeFailed: return String(localized: "inbox.messageType.mergeFailed", defaultValue: "Merge Failed")
         case .reworkRequest: return String(localized: "inbox.messageType.reworkRequest", defaultValue: "Rework Request")
+        case .help: return String(localized: "inbox.messageType.help", defaultValue: "Help")
+        case .handoff: return String(localized: "inbox.messageType.handoff", defaultValue: "Handoff")
+        case .witnessPing: return String(localized: "inbox.messageType.witnessPing", defaultValue: "Witness Ping")
         case .info: return String(localized: "inbox.messageType.info", defaultValue: "Info")
         }
     }
@@ -27,7 +34,26 @@ enum MailMessageType: String, Codable, CaseIterable {
         case .merged: return "arrow.triangle.pull"
         case .mergeFailed: return "xmark.circle.fill"
         case .reworkRequest: return "arrow.triangle.2.circlepath"
+        case .help: return "exclamationmark.bubble.fill"
+        case .handoff: return "arrow.right.arrow.left"
+        case .witnessPing: return "eye.fill"
         case .info: return "info.circle"
+        }
+    }
+
+    /// Severity-based color for visual hierarchy in message lists.
+    var severityColor: Color {
+        switch self {
+        case .mergeFailed, .reworkRequest, .help:
+            return GasTownColors.error
+        case .polecatDone, .mergeReady, .handoff:
+            return .secondary
+        case .merged:
+            return GasTownColors.active
+        case .witnessPing:
+            return GasTownColors.idle.opacity(0.5)
+        case .info:
+            return .secondary
         }
     }
 
@@ -35,10 +61,13 @@ enum MailMessageType: String, Codable, CaseIterable {
         switch self {
         case .mergeFailed: return 0
         case .reworkRequest: return 1
-        case .mergeReady: return 2
-        case .polecatDone: return 3
-        case .merged: return 4
-        case .info: return 5
+        case .help: return 2
+        case .mergeReady: return 3
+        case .polecatDone: return 4
+        case .handoff: return 5
+        case .merged: return 6
+        case .witnessPing: return 7
+        case .info: return 8
         }
     }
 }

@@ -57,19 +57,19 @@ struct MessageDetailView: View {
 
                 Spacer()
 
-                // Type badge
+                // Type badge with severity color
                 HStack(spacing: 3) {
                     Image(systemName: message.type.iconName)
                         .font(.system(size: 10))
                     Text(message.type.displayLabel)
                         .font(GasTownTypography.badge)
                 }
-                .foregroundColor(.secondary)
+                .foregroundColor(message.type.severityColor)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: .quaternaryLabelColor).opacity(0.3))
+                        .fill(message.type.severityColor.opacity(0.12))
                 )
             }
 
