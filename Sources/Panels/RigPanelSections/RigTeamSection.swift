@@ -157,12 +157,21 @@ struct RigTeamSection: View {
                 .foregroundColor(.secondary)
                 .lineLimit(1)
 
-            // Current task
+            // Current task (bead ID + title)
             if let task = agent.currentTask {
-                Text(task)
-                    .font(GasTownTypography.data)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 2) {
+                    Text(task)
+                        .font(GasTownTypography.data)
+                        .foregroundColor(.secondary)
+                    if let title = agent.hookBeadTitle {
+                        Text(title)
+                            .font(GasTownTypography.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .lineLimit(1)
             }
 
             Spacer()

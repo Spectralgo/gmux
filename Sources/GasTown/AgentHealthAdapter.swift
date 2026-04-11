@@ -35,7 +35,8 @@ struct AgentHealthEntry: Equatable, Sendable, Identifiable {
     let contextPercent: Double?
     /// How long the agent has been on current task (e.g. "45m"), if reported.
     let elapsed: String?
-
+    /// Resolved bead title for the hook bead (e.g. "Fix polecat idle state").
+    var hookBeadTitle: String?
 
     /// Whether this agent is a polecat (worker). Polecats have exactly 3 states:
     /// Working, Stalled, Zombie — they never "idle" because non-working polecats are nuked.
@@ -212,7 +213,8 @@ struct AgentHealthAdapter: Sendable {
             unreadMail: unreadMail,
             currentTask: currentTask,
             contextPercent: contextPercent,
-            elapsed: elapsed
+            elapsed: elapsed,
+            hookBeadTitle: nil
         )
     }
 

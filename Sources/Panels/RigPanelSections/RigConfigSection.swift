@@ -25,6 +25,57 @@ struct RigConfigSection: View {
                 value: rig.config.beads.prefix
             )
 
+            // Operational config fields
+            if let status = rig.config.status {
+                HStack(spacing: GasTownSpacing.gridGap) {
+                    Text(String(localized: "rigPanel.config.status", defaultValue: "Status:"))
+                        .font(GasTownTypography.label)
+                        .foregroundColor(.secondary)
+                        .frame(width: 120, alignment: .trailing)
+                    rigStatusBadge(status)
+                    Spacer()
+                }
+            }
+
+            if let maxPolecats = rig.config.max_polecats {
+                configRow(
+                    label: String(localized: "rigPanel.config.maxPolecats", defaultValue: "Max polecats:"),
+                    value: "\(maxPolecats)"
+                )
+            }
+
+            if let autoRestart = rig.config.auto_restart {
+                configRow(
+                    label: String(localized: "rigPanel.config.autoRestart", defaultValue: "Auto-restart:"),
+                    value: autoRestart
+                        ? String(localized: "rigPanel.config.on", defaultValue: "on")
+                        : String(localized: "rigPanel.config.off", defaultValue: "off")
+                )
+            }
+
+            if let dnd = rig.config.dnd, dnd {
+                HStack(spacing: GasTownSpacing.gridGap) {
+                    Text(String(localized: "rigPanel.config.dnd", defaultValue: "DND:"))
+                        .font(GasTownTypography.label)
+                        .foregroundColor(.secondary)
+                        .frame(width: 120, alignment: .trailing)
+                    Image(systemName: "moon.fill")
+                        .font(.caption)
+                        .foregroundColor(GasTownColors.attention)
+                    Text(String(localized: "rigPanel.config.dndActive", defaultValue: "do not disturb"))
+                        .font(GasTownTypography.data)
+                        .foregroundColor(GasTownColors.attention)
+                    Spacer()
+                }
+            }
+
+            if let namepool = rig.config.namepool {
+                configRow(
+                    label: String(localized: "rigPanel.config.namepool", defaultValue: "Name pool:"),
+                    value: namepool
+                )
+            }
+
             HStack {
                 Spacer()
                 Button(String(localized: "rigPanel.action.viewConfig", defaultValue: "View Config")) {
@@ -66,6 +117,31 @@ struct RigConfigSection: View {
                 .lineLimit(1)
             Spacer()
         }
+    }
+
+    @ViewBuilder
+    private func rigStatusBadge(_ status: String) -> some View {
+        let color: Color = {
+            switch status.lowercased() {
+            case "operational": return GasTownColors.active
+            case "parked": return GasTownColors.idle
+            case "docked": return GasTownColors.attention
+            default: return GasTownColors.idle
+            }
+        }()
+
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: GasTownStatusDot.size, height: GasTownStatusDot.size)
+            Text(status)
+                .font(GasTownTypography.data)
+                .foregroundColor(color)
+        }
+        .accessibilityLabel(String(
+            localized: "rigPanel.config.status.a11y",
+            defaultValue: "Rig status: \(status)"
+        ))
     }
 
     private func displayGitURL(_ url: String) -> String {

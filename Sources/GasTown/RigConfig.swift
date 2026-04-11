@@ -12,7 +12,16 @@ struct RigConfig: Codable, Equatable {
     let default_branch: String
     let beads: RigConfigBeads
 
-    // CodingKeys not needed — property names match JSON snake_case keys.
+    /// Operational status: "operational", "parked", or "docked".
+    let status: String?
+    /// Maximum number of polecats allowed in this rig.
+    let max_polecats: Int?
+    /// Whether polecats auto-restart on failure.
+    let auto_restart: Bool?
+    /// Do not disturb — suppresses notifications and nudges.
+    let dnd: Bool?
+    /// Name pool used when spawning polecats.
+    let namepool: String?
 }
 
 /// Beads configuration from the per-rig config.

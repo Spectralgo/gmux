@@ -74,13 +74,16 @@ struct RigPanelAdapter: Sendable {
         }
 
         // Load agents, filtered to this rig
-        let agents: [AgentHealthEntry]
+        var agents: [AgentHealthEntry]
         switch agentAdapter.loadAgents() {
         case .success(let all):
             agents = all.filter { $0.rig == rigId }
         case .failure:
             agents = []
         }
+
+        // Resolve bead titles for agents with hook beads
+        resolveBeadTitles(agents: &agents)
 
         // Load convoys, filtered to this rig
         let convoys: [ConvoySummary]
@@ -119,13 +122,16 @@ struct RigPanelAdapter: Sendable {
             return .failure(.rigNotFound(rigId: rigId))
         }
 
-        let agents: [AgentHealthEntry]
+        var agents: [AgentHealthEntry]
         switch agentAdapter.loadAgents() {
         case .success(let all):
             agents = all.filter { $0.rig == rigId }
         case .failure:
             agents = []
         }
+
+        // Resolve bead titles for agents with hook beads
+        resolveBeadTitles(agents: &agents)
 
         let convoys: [ConvoySummary]
         switch convoyAdapter.loadActiveConvoys() {
@@ -154,6 +160,43 @@ struct RigPanelAdapter: Sendable {
             healthIndicators: health
         )
         return .success(snapshot)
+    }
+
+    // MARK: - Bead Title Resolution
+
+    /// Resolve bead titles for agents that have a hook bead ID.
+    /// Calls `bd show <id> --json` for each unique bead ID and caches results.
+    private func resolveBeadTitles(agents: inout [AgentHealthEntry]) {
+        guard let bdPath else { return }
+
+        // Collect unique bead IDs
+        var beadIds: Set<String> = []
+        for agent in agents {
+            if let task = agent.currentTask { beadIds.insert(task) }
+        }
+        guard !beadIds.isEmpty else { return }
+
+        // Resolve each bead ID → title
+        var titleCache: [String: String] = [:]
+        for beadId in beadIds {
+            let result = GasTownCLIRunner.runProcess(
+                executablePath: bdPath,
+                arguments: ["show", beadId, "--json"],
+                townRootPath: townRootPath
+            )
+            guard result.exitCode == 0,
+                  let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any],
+                  let title = json["title"] as? String
+            else { continue }
+            titleCache[beadId] = title
+        }
+
+        // Apply resolved titles
+        for i in agents.indices {
+            if let task = agents[i].currentTask, let title = titleCache[task] {
+                agents[i].hookBeadTitle = title
+            }
+        }
     }
 
     // MARK: - Bead Counts (filtered by prefix)

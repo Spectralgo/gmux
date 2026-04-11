@@ -71,6 +71,18 @@ struct RigPanelHeaderView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
 
+                Button(String(localized: "rigPanel.action.spawnPolecat", defaultValue: "Spawn Polecat")) {
+                    panel.spawnPolecat()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(String(localized: "rigPanel.action.addCrew", defaultValue: "Add Crew")) {}
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(true)
+                    .help(String(localized: "rigPanel.action.addCrew.tooltip", defaultValue: "Coming soon"))
+
                 Spacer()
             }
         }

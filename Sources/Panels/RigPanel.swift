@@ -131,6 +131,18 @@ final class RigPanel: Panel, ObservableObject {
         }
     }
 
+    /// Spawn a new polecat in this rig via `gt polecat spawn <rig>`.
+    func spawnPolecat() {
+        let rigId = self.rigId
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return }
+            _ = GasTownCLIRunner.runProcess(
+                executablePath: gtPath,
+                arguments: ["polecat", "spawn", rigId]
+            )
+        }
+    }
+
     /// Toggle expansion of a health row by indicator name.
     func toggleHealthRow(_ name: String) {
         if expandedHealthRow == name {
