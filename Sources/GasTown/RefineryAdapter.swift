@@ -81,6 +81,11 @@ struct RefinerySnapshot: Equatable, Sendable {
     let skipped: [MergeQueueItem]       // Operator-skipped items
     let history: [MergeHistoryEntry]    // Recently merged (capped at 20)
     let stageCounts: PipelineStageCounts
+
+    /// Items at mergeReady stage (build passed, ready for merge).
+    var passedCount: Int {
+        queue.filter { $0.stage == .mergeReady }.count
+    }
 }
 
 // MARK: - Error
@@ -445,6 +450,117 @@ struct RefineryAdapter: Sendable {
         }
         formatter.formatOptions = [.withInternetDateTime]
         return formatter.date(from: string)
+    }
+
+    // MARK: - Action Commands
+
+    /// Retry a failed build. Call from a background queue.
+    func retryItem(beadId: String, clean: Bool = false) -> Result<String, RefineryAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        var args = ["refinery", "retry", beadId]
+        if clean {
+            args.append("--clean")
+        }
+        let result = environment.runCLI(gtPath, args)
+
+        guard result.exitCode == 0 else {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt refinery retry \(beadId)",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return .success(output.isEmpty ? "Retry queued for \(beadId)" : output)
+    }
+
+    /// Skip a failed item, unblocking the queue. Call from a background queue.
+    func skipItem(beadId: String) -> Result<String, RefineryAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        let result = environment.runCLI(gtPath, ["refinery", "skip", beadId])
+
+        guard result.exitCode == 0 else {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt refinery skip \(beadId)",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return .success(output.isEmpty ? "Skipped \(beadId)" : output)
+    }
+
+    /// Merge a single passed item. Call from a background queue.
+    func mergeItem(beadId: String) -> Result<String, RefineryAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        let result = environment.runCLI(gtPath, ["refinery", "merge", beadId])
+
+        guard result.exitCode == 0 else {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt refinery merge \(beadId)",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return .success(output.isEmpty ? "Merge started for \(beadId)" : output)
+    }
+
+    /// Merge all items with passing builds. Call from a background queue.
+    func mergeAllPassed() -> Result<String, RefineryAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        let result = environment.runCLI(gtPath, ["refinery", "merge-all"])
+
+        guard result.exitCode == 0 else {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt refinery merge-all",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return .success(output.isEmpty ? "Merge all passed items queued" : output)
+    }
+
+    /// Force-merge despite failing build. Call from a background queue.
+    func forceMergeItem(beadId: String) -> Result<String, RefineryAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        let result = environment.runCLI(gtPath, ["refinery", "force-merge", beadId])
+
+        guard result.exitCode == 0 else {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt refinery force-merge \(beadId)",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return .success(output.isEmpty ? "Force merge started for \(beadId)" : output)
     }
 
     // MARK: - Helpers

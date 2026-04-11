@@ -6,6 +6,9 @@ extension Notification.Name {
     static let createRigWorkspace = Notification.Name("com.cmux.createRigWorkspace")
     static let openRefineryPanel = Notification.Name("com.cmux.openRefineryPanel")
     static let openMailPanel = Notification.Name("com.cmux.openMailPanel")
+    static let openDiffPanel = Notification.Name("com.cmux.openDiffPanel")
+    static let openTerminalAttach = Notification.Name("com.cmux.openTerminalAttach")
+    static let openDiagnosticsPanel = Notification.Name("com.cmux.openDiagnosticsPanel")
 }
 
 /// Clickable agent name that navigates to Agent Profile.

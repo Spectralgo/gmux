@@ -2,9 +2,9 @@ import SwiftUI
 
 /// Top-level SwiftUI view for the Refinery Panel.
 ///
-/// Phase 2: PipelineFlowBar, expandable queue item cards with detail view,
-/// build log viewer, skipped section, improved history section, and
-/// Equatable-based view efficiency.
+/// Phase 3: Action buttons (merge, retry, skip, force-merge, merge-all),
+/// rig selector, cross-panel links, keyboard navigation, and full
+/// accessibility (VoiceOver labels, hints, traits).
 struct RefineryPanelView: View {
     @ObservedObject var panel: RefineryPanel
     let isFocused: Bool
@@ -14,6 +14,8 @@ struct RefineryPanelView: View {
 
     @State private var focusFlashOpacity: Double = 0.0
     @State private var focusFlashAnimationGeneration: Int = 0
+    @State private var showMergeAllConfirmation: Bool = false
+    @State private var showForceMergeConfirmation: String? = nil
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -62,6 +64,38 @@ struct RefineryPanelView: View {
                 break
             }
         }
+        .background(
+            RefineryKeyHandler(panel: panel, showMergeAllConfirmation: $showMergeAllConfirmation)
+        )
+        .confirmationDialog(
+            String(localized: "refineryPanel.mergeAll.confirm.title",
+                   defaultValue: "Merge All Passed Items?"),
+            isPresented: $showMergeAllConfirmation
+        ) {
+            Button(String(localized: "refineryPanel.mergeAll.confirm.action",
+                          defaultValue: "Merge All")) {
+                panel.mergeAllPassed()
+            }
+            Button(String(localized: "refineryPanel.cancel", defaultValue: "Cancel"),
+                   role: .cancel) {}
+        }
+        .confirmationDialog(
+            String(localized: "refineryPanel.forceMerge.confirm.title",
+                   defaultValue: "Force Merge Without Passing Build?"),
+            isPresented: Binding(
+                get: { showForceMergeConfirmation != nil },
+                set: { if !$0 { showForceMergeConfirmation = nil } }
+            )
+        ) {
+            if let itemId = showForceMergeConfirmation {
+                Button(String(localized: "refineryPanel.forceMerge.confirm.action",
+                              defaultValue: "Force Merge"), role: .destructive) {
+                    panel.forceMergeItem(itemId)
+                }
+            }
+            Button(String(localized: "refineryPanel.cancel", defaultValue: "Cancel"),
+                   role: .cancel) {}
+        }
     }
 
     // MARK: - States
@@ -88,11 +122,23 @@ struct RefineryPanelView: View {
                 .font(GasTownTypography.label)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            Button(String(localized: "refineryPanel.retry", defaultValue: "Retry")) {
-                panel.refresh()
+            HStack(spacing: GasTownSpacing.gridGap) {
+                Button(String(localized: "refineryPanel.retry", defaultValue: "Retry")) {
+                    panel.refresh()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(String(localized: "refineryPanel.openDiagnostics", defaultValue: "Open Diagnostics")) {
+                    NotificationCenter.default.post(
+                        name: .openDiagnosticsPanel,
+                        object: nil,
+                        userInfo: ["workspaceId": panel.workspaceId]
+                    )
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
         }
         .padding()
     }
@@ -215,21 +261,39 @@ struct RefineryPanelView: View {
     // MARK: - Header
 
     private func pipelineHeader(_ snapshot: RefinerySnapshot) -> some View {
-        HStack(spacing: GasTownSpacing.gridGap) {
-            Image(systemName: GasTownRoleIcons.refinery)
-                .foregroundColor(.secondary)
-            Text(String(localized: "refineryPanel.header.title", defaultValue: "Merge Pipeline"))
-                .font(GasTownTypography.sectionHeader)
-            Spacer()
-            RefineryHealthBadge(health: snapshot.health)
-            Button {
-                panel.refresh()
-            } label: {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 12))
+        VStack(spacing: 4) {
+            HStack(spacing: GasTownSpacing.gridGap) {
+                Image(systemName: GasTownRoleIcons.refinery)
+                    .foregroundColor(.secondary)
+                Text(String(localized: "refineryPanel.header.title", defaultValue: "Merge Pipeline"))
+                    .font(GasTownTypography.sectionHeader)
+
+                RigSelectorPicker(
+                    selectedRigId: panel.rigId,
+                    onSelect: { panel.switchRig($0) }
+                )
+
+                Spacer()
+
+                RefineryHealthBadge(health: snapshot.health)
+
+                Button {
+                    panel.refresh()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(.borderless)
+                .help(String(localized: "refineryPanel.refresh", defaultValue: "Refresh"))
             }
-            .buttonStyle(.borderless)
-            .help(String(localized: "refineryPanel.refresh", defaultValue: "Refresh"))
+
+            // Merge All Passed button (shows only when there are passed items)
+            if snapshot.passedCount > 0 {
+                MergeAllPassedButton(
+                    passedCount: snapshot.passedCount,
+                    action: { showMergeAllConfirmation = true }
+                )
+            }
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.vertical, GasTownSpacing.rowPaddingV)
@@ -272,13 +336,23 @@ struct RefineryPanelView: View {
                             } else {
                                 panel.expandItem(item.id)
                             }
-                        }
+                        },
+                        onMerge: { panel.mergeItem(item.id) },
+                        onRetry: { panel.retryItem(item.id) },
+                        onSkip: { panel.skipItem(item.id) }
                     )
 
                     if panel.selectedItemId == item.id {
                         QueueItemDetail(
                             item: item,
-                            buildLogState: panel.buildLogState
+                            buildLogState: panel.buildLogState,
+                            workspaceId: panel.workspaceId,
+                            rigId: panel.rigId,
+                            onRetry: { panel.retryItem(item.id) },
+                            onRetryClean: { panel.retryItem(item.id, clean: true) },
+                            onSkip: { panel.skipItem(item.id) },
+                            onForceMerge: { showForceMergeConfirmation = item.id },
+                            onMerge: { panel.mergeItem(item.id) }
                         )
                         .transition(.opacity)
                     }
@@ -314,12 +388,13 @@ struct RefineryPanelView: View {
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.top, GasTownSpacing.rowPaddingV)
+        .accessibilityElement(children: .contain)
     }
 
     private func historySection(_ entries: [MergeHistoryEntry]) -> some View {
         DisclosureGroup {
             ForEach(entries) { entry in
-                HistoryEntryRow(entry: entry)
+                HistoryEntryRow(entry: entry, workspaceId: panel.workspaceId)
                 if entry.id != entries.last?.id {
                     Divider()
                         .padding(.leading, GasTownSpacing.rowPaddingH)
@@ -336,6 +411,7 @@ struct RefineryPanelView: View {
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.top, GasTownSpacing.rowPaddingV)
+        .accessibilityElement(children: .contain)
     }
 
     // MARK: - Focus Flash Animation
@@ -361,6 +437,70 @@ struct RefineryPanelView: View {
             return .easeIn(duration: duration)
         case .easeOut:
             return .easeOut(duration: duration)
+        }
+    }
+}
+
+// MARK: - Keyboard Handler
+
+/// AppKit NSView-based key handler for Refinery Panel keyboard navigation.
+///
+/// Intercepts arrow keys, Return, M, R, S, Shift+M, Escape when the panel
+/// has focus. Does not interfere with terminal input — only active when
+/// the Refinery Panel is focused.
+private struct RefineryKeyHandler: NSViewRepresentable {
+    let panel: RefineryPanel
+    @Binding var showMergeAllConfirmation: Bool
+
+    func makeNSView(context: Context) -> RefineryKeyHandlerView {
+        let view = RefineryKeyHandlerView()
+        view.panel = panel
+        view.showMergeAllConfirmation = { showMergeAllConfirmation = true }
+        return view
+    }
+
+    func updateNSView(_ nsView: RefineryKeyHandlerView, context: Context) {
+        nsView.panel = panel
+        nsView.showMergeAllConfirmation = { showMergeAllConfirmation = true }
+    }
+}
+
+final class RefineryKeyHandlerView: NSView {
+    var panel: RefineryPanel?
+    var showMergeAllConfirmation: (() -> Void)?
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        guard let panel else {
+            super.keyDown(with: event)
+            return
+        }
+
+        switch event.keyCode {
+        case 125: // Down arrow
+            panel.selectNextItem()
+        case 126: // Up arrow
+            panel.selectPreviousItem()
+        case 36: // Return
+            if panel.selectedItemId != nil {
+                // Toggle expand: if already expanded, collapse
+                panel.collapseItem()
+            } else {
+                panel.selectNextItem()
+            }
+        case 53: // Escape
+            if panel.selectedItemId != nil {
+                panel.collapseItem()
+            }
+        default:
+            if let chars = event.characters {
+                if event.modifierFlags.contains(.shift) && chars.lowercased() == "m" {
+                    showMergeAllConfirmation?()
+                } else if let char = chars.first {
+                    panel.handleKeyAction(char)
+                }
+            }
         }
     }
 }
@@ -461,7 +601,7 @@ private struct FlowStageIndicator: View {
 
 // MARK: - Queue Item Card
 
-/// Compact row for a queue item with expand/collapse support.
+/// Compact row for a queue item with expand/collapse support and inline action buttons.
 ///
 /// Uses `Equatable` conformance for view efficiency — body is only
 /// re-evaluated when the item or expansion state actually changes.
@@ -469,6 +609,11 @@ private struct QueueItemCard: View, Equatable {
     let item: MergeQueueItem
     let isExpanded: Bool
     let onTap: () -> Void
+    let onMerge: () -> Void
+    let onRetry: () -> Void
+    let onSkip: () -> Void
+
+    @State private var isHovering: Bool = false
 
     static func == (lhs: QueueItemCard, rhs: QueueItemCard) -> Bool {
         lhs.item == rhs.item && lhs.isExpanded == rhs.isExpanded
@@ -481,18 +626,17 @@ private struct QueueItemCard: View, Equatable {
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {
-                        Text(item.id)
-                            .font(GasTownTypography.data)
-                            .foregroundColor(.secondary)
+                        BeadIdLink(beadId: item.id)
                         Text(item.title)
                             .font(GasTownTypography.label)
                             .lineLimit(1)
                     }
 
                     HStack(spacing: 4) {
-                        Text(item.author)
-                            .font(GasTownTypography.caption)
-                            .foregroundColor(.secondary)
+                        AgentNameLink(
+                            name: item.author,
+                            agentAddress: item.author
+                        )
                         Text("\u{2192}")
                             .font(GasTownTypography.caption)
                             .foregroundColor(.secondary.opacity(0.6))
@@ -528,6 +672,11 @@ private struct QueueItemCard: View, Equatable {
                         .frame(width: 60)
                 }
 
+                // Inline action buttons (visible on hover)
+                if isHovering && !isExpanded {
+                    inlineActionButtons
+                }
+
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
@@ -537,11 +686,63 @@ private struct QueueItemCard: View, Equatable {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovering = hovering
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(
             "\(item.title), by \(item.author), stage \(item.stage.rawValue)"
         ))
         .accessibilityAddTraits(.isButton)
+    }
+
+    @ViewBuilder
+    private var inlineActionButtons: some View {
+        HStack(spacing: 4) {
+            if item.stage == .mergeReady {
+                Button {
+                    onMerge()
+                } label: {
+                    Text(String(localized: "refineryPanel.action.merge", defaultValue: "Merge"))
+                        .font(GasTownTypography.badge)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+                .tint(GasTownColors.active)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.action.merge.label",
+                    defaultValue: "Merge \(item.id)"
+                )))
+            }
+
+            if item.stage == .failed {
+                Button {
+                    onRetry()
+                } label: {
+                    Text(String(localized: "refineryPanel.action.retry", defaultValue: "Retry"))
+                        .font(GasTownTypography.badge)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.action.retry.label",
+                    defaultValue: "Retry build for \(item.id)"
+                )))
+
+                Button {
+                    onSkip()
+                } label: {
+                    Text(String(localized: "refineryPanel.action.skip", defaultValue: "Skip"))
+                        .font(GasTownTypography.badge)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.action.skip.label",
+                    defaultValue: "Skip \(item.id)"
+                )))
+            }
+        }
     }
 
     private func elapsedTime(since date: Date) -> String {
@@ -561,15 +762,52 @@ private struct QueueItemCard: View, Equatable {
     }
 }
 
+// MARK: - Bead ID Link
+
+/// Clickable bead ID that opens the Bead Inspector.
+private struct BeadIdLink: View {
+    let beadId: String
+
+    var body: some View {
+        Button {
+            NotificationCenter.default.post(
+                name: .openBeadInspector,
+                object: nil,
+                userInfo: ["beadId": beadId]
+            )
+        } label: {
+            Text(beadId)
+                .font(GasTownTypography.data)
+                .foregroundColor(.accentColor)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+    }
+}
+
 // MARK: - Queue Item Detail
 
 /// Expanded detail view below a selected queue item card.
 ///
 /// Shows error summary, build log viewer (for failed items), rework info,
-/// and file change information. Action buttons are Phase 3.
+/// file change information, and action buttons row with cross-panel links.
 private struct QueueItemDetail: View {
     let item: MergeQueueItem
     let buildLogState: BuildLogLoadState
+    let workspaceId: UUID
+    let rigId: String
+    let onRetry: () -> Void
+    let onRetryClean: () -> Void
+    let onSkip: () -> Void
+    let onForceMerge: () -> Void
+    let onMerge: () -> Void
+
     @State private var showErrorsOnly: Bool = false
 
     var body: some View {
@@ -603,10 +841,150 @@ private struct QueueItemDetail: View {
                 .font(GasTownTypography.caption)
                 .foregroundColor(.secondary)
             }
+
+            Divider()
+
+            // Action buttons row
+            actionButtonsRow
         }
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.vertical, GasTownSpacing.rowPaddingV)
         .background(Color.secondary.opacity(0.05))
+    }
+
+    // MARK: - Action Buttons Row
+
+    private var actionButtonsRow: some View {
+        HStack(spacing: GasTownSpacing.gridGap) {
+            if item.stage == .mergeReady {
+                Button {
+                    onMerge()
+                } label: {
+                    Label(
+                        String(localized: "refineryPanel.detail.merge", defaultValue: "Merge"),
+                        systemImage: "checkmark.circle"
+                    )
+                    .font(GasTownTypography.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .tint(GasTownColors.active)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.detail.merge.label",
+                    defaultValue: "Merge \(item.id)"
+                )))
+            }
+
+            if item.stage == .failed || item.stage == .rework {
+                Button {
+                    onRetry()
+                } label: {
+                    Label(
+                        String(localized: "refineryPanel.detail.retry", defaultValue: "Retry"),
+                        systemImage: "arrow.counterclockwise"
+                    )
+                    .font(GasTownTypography.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.detail.retry.label",
+                    defaultValue: "Retry build for \(item.id)"
+                )))
+
+                Button {
+                    onRetryClean()
+                } label: {
+                    Label(
+                        String(localized: "refineryPanel.detail.retryClean", defaultValue: "Retry Clean"),
+                        systemImage: "arrow.counterclockwise.circle"
+                    )
+                    .font(GasTownTypography.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.detail.retryClean.label",
+                    defaultValue: "Retry clean build for \(item.id)"
+                )))
+
+                Button {
+                    onSkip()
+                } label: {
+                    Label(
+                        String(localized: "refineryPanel.detail.skip", defaultValue: "Skip"),
+                        systemImage: "forward.end"
+                    )
+                    .font(GasTownTypography.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.detail.skip.label",
+                    defaultValue: "Skip \(item.id)"
+                )))
+            }
+
+            if item.stage == .failed {
+                Button(role: .destructive) {
+                    onForceMerge()
+                } label: {
+                    Label(
+                        String(localized: "refineryPanel.detail.forceMerge", defaultValue: "Force Merge"),
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .font(GasTownTypography.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel(Text(String(
+                    localized: "refineryPanel.detail.forceMerge.label",
+                    defaultValue: "Force merge \(item.id) without passing build"
+                )))
+                .accessibilityHint(Text(String(
+                    localized: "refineryPanel.detail.forceMerge.hint",
+                    defaultValue: "Merges without a passing build. Use with caution."
+                )))
+            }
+
+            Spacer()
+
+            // Cross-panel link buttons
+            Button {
+                NotificationCenter.default.post(
+                    name: .openDiffPanel,
+                    object: nil,
+                    userInfo: ["commitSha": item.sourceBranch, "workspaceId": workspaceId]
+                )
+            } label: {
+                Label(
+                    String(localized: "refineryPanel.detail.viewDiff", defaultValue: "View Diff"),
+                    systemImage: "doc.text.magnifyingglass"
+                )
+                .font(GasTownTypography.caption)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .openTerminalAttach,
+                    object: nil,
+                    userInfo: [
+                        "sessionName": "refinery-\(rigId)",
+                        "workspaceId": workspaceId,
+                    ]
+                )
+            } label: {
+                Label(
+                    String(localized: "refineryPanel.detail.openTerminal", defaultValue: "Open in Terminal"),
+                    systemImage: "terminal"
+                )
+                .font(GasTownTypography.caption)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
     }
 
     // MARK: - Failed Detail
@@ -677,13 +1055,15 @@ private struct QueueItemDetail: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(GasTownSpacing.gridGap)
+                .accessibilityAddTraits(.isStaticText)
+                .accessibilityAddTraits(.allowsDirectInteraction)
         }
         .frame(maxHeight: 300)
         .background(Color.black.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .accessibilityLabel(Text(String(
             localized: "refineryPanel.detail.buildLogLabel",
-            defaultValue: "Build log, \(log.components(separatedBy: .newlines).count) lines"
+            defaultValue: "Build log for \(item.id), \(log.components(separatedBy: .newlines).count) lines"
         )))
     }
 
@@ -711,12 +1091,23 @@ private struct QueueItemDetail: View {
             .foregroundColor(.secondary)
 
             if let reworkPolecat = item.reworkPolecat {
-                Text(String(
-                    localized: "refineryPanel.detail.conflictResolution",
-                    defaultValue: "Conflict resolution by: \(reworkPolecat)"
-                ))
-                .font(GasTownTypography.caption)
-                .foregroundColor(.purple)
+                HStack(spacing: 4) {
+                    Text(String(
+                        localized: "refineryPanel.detail.conflictResolution",
+                        defaultValue: "Conflict resolution by:"
+                    ))
+                    .font(GasTownTypography.caption)
+                    .foregroundColor(.purple)
+
+                    AgentNameLink(
+                        name: reworkPolecat,
+                        agentAddress: reworkPolecat
+                    )
+                    .accessibilityHint(Text(String(
+                        localized: "refineryPanel.detail.viewAgent.hint",
+                        defaultValue: "Opens the agent profile for the polecat resolving this conflict."
+                    )))
+                }
 
                 if let conflictCount = item.conflictFileCount {
                     Text(String(
@@ -732,6 +1123,69 @@ private struct QueueItemDetail: View {
             localized: "refineryPanel.detail.reworkLabel",
             defaultValue: "\(item.id) has conflicts, being resolved by \(item.reworkPolecat ?? "unknown")"
         )))
+    }
+}
+
+// MARK: - Merge All Passed Button
+
+/// Button to merge all items with passing builds, shown in the header.
+private struct MergeAllPassedButton: View {
+    let passedCount: Int
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 11))
+                Text(String(
+                    localized: "refineryPanel.mergeAll.button",
+                    defaultValue: "Merge All Passed (\(passedCount))"
+                ))
+                .font(GasTownTypography.caption)
+            }
+            .padding(.horizontal, GasTownSpacing.gridGap)
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .tint(GasTownColors.active)
+        .accessibilityLabel(Text(String(
+            localized: "refineryPanel.mergeAll.label",
+            defaultValue: "Merge all \(passedCount) passed items"
+        )))
+    }
+}
+
+// MARK: - Rig Selector Picker
+
+/// Picker that lets the operator switch which rig's refinery is displayed.
+private struct RigSelectorPicker: View {
+    let selectedRigId: String
+    let onSelect: (String) -> Void
+
+    @ObservedObject private var gasTownService = GasTownService.shared
+
+    var body: some View {
+        if gasTownService.rigs.count > 1 {
+            Picker(selection: Binding(
+                get: { selectedRigId },
+                set: { onSelect($0) }
+            )) {
+                ForEach(gasTownService.rigs) { rig in
+                    Text(rig.name)
+                        .tag(rig.id)
+                }
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: 120)
+            .accessibilityLabel(Text(String(
+                localized: "refineryPanel.rigSelector.label",
+                defaultValue: "Select rig, currently \(selectedRigId)"
+            )))
+        }
     }
 }
 
@@ -856,17 +1310,16 @@ private struct SkippedItemRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text(item.id)
-                        .font(GasTownTypography.data)
-                        .foregroundColor(.secondary.opacity(0.6))
+                    BeadIdLink(beadId: item.id)
                     Text(item.title)
                         .font(GasTownTypography.label)
                         .foregroundColor(.secondary.opacity(0.6))
                         .lineLimit(1)
                 }
-                Text(item.author)
-                    .font(GasTownTypography.caption)
-                    .foregroundColor(.secondary.opacity(0.5))
+                AgentNameLink(
+                    name: item.author,
+                    agentAddress: item.author
+                )
             }
 
             Spacer()
@@ -880,6 +1333,7 @@ private struct SkippedItemRow: View {
 
 private struct HistoryEntryRow: View {
     let entry: MergeHistoryEntry
+    let workspaceId: UUID
 
     var body: some View {
         HStack(spacing: GasTownSpacing.gridGap) {
@@ -889,21 +1343,38 @@ private struct HistoryEntryRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text(entry.id)
-                        .font(GasTownTypography.data)
-                        .foregroundColor(.secondary)
+                    // Commit SHA as clickable link to diff panel
+                    Button {
+                        NotificationCenter.default.post(
+                            name: .openDiffPanel,
+                            object: nil,
+                            userInfo: ["commitSha": entry.id, "workspaceId": workspaceId]
+                        )
+                    } label: {
+                        Text(entry.id)
+                            .font(GasTownTypography.data)
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { hovering in
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
+
                     Text(entry.title)
                         .font(GasTownTypography.label)
                         .lineLimit(1)
                 }
                 HStack(spacing: 4) {
-                    Text(entry.author)
-                        .font(GasTownTypography.caption)
-                        .foregroundColor(.secondary)
+                    AgentNameLink(
+                        name: entry.author,
+                        agentAddress: entry.author
+                    )
                     if let beadId = entry.beadId {
-                        Text(beadId)
-                            .font(GasTownTypography.data)
-                            .foregroundColor(.secondary.opacity(0.7))
+                        BeadIdLink(beadId: beadId)
                     }
                 }
             }

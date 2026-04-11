@@ -299,10 +299,146 @@ final class RefineryPanel: Panel, ObservableObject {
 
     /// Show an action result banner that auto-dismisses after 4 seconds.
     func showActionResult(_ result: RefineryActionResult) {
-        actionResult = result
+        withAnimation(GasTownAnimation.statusChange) {
+            actionResult = result
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
             guard let self, self.actionResult == result else { return }
-            self.actionResult = nil
+            withAnimation(GasTownAnimation.statusChange) {
+                self.actionResult = nil
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    /// Merge a single passed item.
+    func mergeItem(_ id: String) {
+        runAction(label: "Merge \(id)") { adapter in
+            adapter.mergeItem(beadId: id)
+        }
+    }
+
+    /// Merge all items with passing builds.
+    func mergeAllPassed() {
+        runAction(label: "Merge all passed") { adapter in
+            adapter.mergeAllPassed()
+        }
+    }
+
+    /// Retry a failed build.
+    func retryItem(_ id: String, clean: Bool = false) {
+        runAction(label: "Retry \(id)") { adapter in
+            adapter.retryItem(beadId: id, clean: clean)
+        }
+    }
+
+    /// Skip a failed item, unblocking the queue.
+    func skipItem(_ id: String) {
+        runAction(label: "Skip \(id)") { adapter in
+            adapter.skipItem(beadId: id)
+        }
+    }
+
+    /// Force-merge despite failing build.
+    func forceMergeItem(_ id: String) {
+        runAction(label: "Force merge \(id)") { adapter in
+            adapter.forceMergeItem(beadId: id)
+        }
+    }
+
+    /// Run an adapter action on a background queue and show the result banner.
+    private func runAction(
+        label: String,
+        work: @escaping (RefineryAdapter) -> Result<String, RefineryAdapterError>
+    ) {
+        let adapter = self.adapter
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let result = work(adapter)
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                switch result {
+                case .success(let message):
+                    self.showActionResult(.success(message))
+                    // Refresh to pick up the new state
+                    self.refresh(silent: true)
+                case .failure(let error):
+                    let message: String
+                    switch error {
+                    case .cliFailure(_, _, let stderr):
+                        message = "\(label) failed: \(stderr.prefix(120))"
+                    default:
+                        message = "\(label) failed"
+                    }
+                    self.showActionResult(.failure(message))
+                }
+            }
+        }
+    }
+
+    // MARK: - Keyboard Navigation
+
+    /// Move selection to the next queue item.
+    func selectNextItem() {
+        guard case .loaded(let snapshot) = loadState else { return }
+        let items = snapshot.queue
+        guard !items.isEmpty else { return }
+
+        if let currentId = selectedItemId,
+           let currentIndex = items.firstIndex(where: { $0.id == currentId }),
+           currentIndex + 1 < items.count {
+            selectedItemId = items[currentIndex + 1].id
+        } else {
+            selectedItemId = items.first?.id
+        }
+    }
+
+    /// Move selection to the previous queue item.
+    func selectPreviousItem() {
+        guard case .loaded(let snapshot) = loadState else { return }
+        let items = snapshot.queue
+        guard !items.isEmpty else { return }
+
+        if let currentId = selectedItemId,
+           let currentIndex = items.firstIndex(where: { $0.id == currentId }),
+           currentIndex > 0 {
+            selectedItemId = items[currentIndex - 1].id
+        } else {
+            selectedItemId = items.last?.id
+        }
+    }
+
+    /// Toggle expand/collapse on the current selection.
+    func toggleSelectedItem() {
+        if selectedItemId != nil {
+            // Already selected = expanded, collapse it
+            collapseItem()
+        }
+    }
+
+    /// Handle keyboard shortcut for the selected item.
+    func handleKeyAction(_ key: Character) {
+        guard let itemId = selectedItemId,
+              case .loaded(let snapshot) = loadState,
+              let item = snapshot.queue.first(where: { $0.id == itemId }) else { return }
+
+        switch key {
+        case "m", "M":
+            if item.stage == .mergeReady {
+                mergeItem(itemId)
+            }
+        case "r", "R":
+            if item.stage == .failed {
+                retryItem(itemId)
+            }
+        case "s", "S":
+            if item.stage == .failed || item.stage == .rework {
+                skipItem(itemId)
+            }
+        default:
+            break
         }
     }
 }

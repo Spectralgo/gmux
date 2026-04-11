@@ -372,6 +372,30 @@ struct cmuxApp: App {
                 .onReceive(NotificationCenter.default.publisher(for: .openMailPanel)) { _ in
                     activeTabManager.selectedWorkspace?.openMailPanel()
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .openRefineryPanel)) { notification in
+                    let rigId = notification.userInfo?["rigId"] as? String
+                    let panel = activeTabManager.selectedWorkspace?.openRefineryPanel(rigId: rigId)
+                    if let itemId = notification.userInfo?["itemId"] as? String {
+                        panel?.expandItem(itemId)
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .openDiffPanel)) { notification in
+                    #if DEBUG
+                    let sha = notification.userInfo?["commitSha"] as? String
+                    dlog("openDiffPanel: sha=\(sha ?? "nil") (not yet implemented)")
+                    #endif
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .openTerminalAttach)) { notification in
+                    #if DEBUG
+                    let session = notification.userInfo?["sessionName"] as? String
+                    dlog("openTerminalAttach: session=\(session ?? "nil") (not yet implemented)")
+                    #endif
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .openDiagnosticsPanel)) { _ in
+                    #if DEBUG
+                    dlog("openDiagnosticsPanel (not yet implemented)")
+                    #endif
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .commands {
