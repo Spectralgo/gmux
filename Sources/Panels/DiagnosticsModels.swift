@@ -45,6 +45,7 @@ struct SystemDetails: Equatable, Sendable {
     let daemonPID: Int?
     let daemonRunning: Bool
     let bootWatchdogHealthy: Bool
+    let deaconHeartbeatFresh: Bool
     let doltCommitGap: TimeInterval?
 }
 
@@ -67,4 +68,80 @@ struct StorageDetails: Equatable, Sendable {
     let derivedDataSize: UInt64?
     let buildCacheSize: UInt64?
     let doltDataSize: UInt64?
+}
+
+// MARK: - Watchdog Chain
+
+struct WatchdogChainState: Equatable, Sendable {
+    let daemon: DaemonState
+    let boot: BootState
+    let deacon: DeaconState
+}
+
+struct DaemonState: Equatable, Sendable {
+    let pid: Int?
+    let running: Bool
+    let tickInterval: TimeInterval
+}
+
+struct BootState: Equatable, Sendable {
+    let lastFireTime: Date?
+    let lastDecision: BootDecision
+    let lastReason: String?
+}
+
+enum BootDecision: String, Equatable, Sendable {
+    case nothing
+    case nudge
+    case wake
+    case start
+    case unknown
+}
+
+struct DeaconState: Equatable, Sendable {
+    let sessionAlive: Bool
+    let lastHeartbeat: Date?
+    let heartbeatAge: TimeInterval?
+    let patrolActive: Bool
+}
+
+// MARK: - Escalation Queue
+
+struct EscalationEntry: Equatable, Identifiable, Sendable {
+    let id: String
+    let severity: EscalationSeverity
+    let category: EscalationCategory
+    let summary: String
+    let raisedBy: String
+    let raisedAt: Date
+    let acknowledged: Bool
+    let acknowledgedAt: Date?
+}
+
+enum EscalationSeverity: String, Equatable, Comparable, Sendable {
+    case medium
+    case high
+    case critical
+
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        let order: [Self] = [.medium, .high, .critical]
+        return (order.firstIndex(of: lhs) ?? 0) < (order.firstIndex(of: rhs) ?? 0)
+    }
+}
+
+enum EscalationCategory: String, Equatable, Sendable {
+    case decision
+    case help
+    case blocked
+    case failed
+    case emergency
+    case gateTimeout = "gate_timeout"
+    case lifecycle
+}
+
+// MARK: - Action Result
+
+struct ActionResult: Equatable, Sendable {
+    let success: Bool
+    let message: String
 }

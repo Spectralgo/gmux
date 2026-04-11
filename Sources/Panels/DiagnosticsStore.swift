@@ -22,6 +22,14 @@ final class DiagnosticsStore: ObservableObject {
     @Published private(set) var agentsDetails: AgentsDetails?
     @Published private(set) var storageDetails: StorageDetails?
 
+    // MARK: - Watchdog Chain
+
+    @Published private(set) var watchdogChain: WatchdogChainState?
+
+    // MARK: - Escalation Queue
+
+    @Published private(set) var escalations: [EscalationEntry] = []
+
     // MARK: - Meta
 
     @Published private(set) var isRefreshing: Bool = false
@@ -67,6 +75,9 @@ final class DiagnosticsStore: ObservableObject {
             group.addTask { await .derivedData(Self.fetchDerivedDataSize()) }
             group.addTask { await .buildCache(Self.fetchBuildCacheSize()) }
             group.addTask { await .tmux(Self.fetchTmuxSessions()) }
+            group.addTask { await .deaconHeartbeat(Self.fetchDeaconHeartbeat()) }
+            group.addTask { await .bootStatus(Self.fetchBootStatus()) }
+            group.addTask { await .escalations(Self.fetchEscalations()) }
 
             for await result in group {
                 switch result {
@@ -80,6 +91,12 @@ final class DiagnosticsStore: ObservableObject {
                     applyBuildCache(s)
                 case .tmux(let t):
                     applyTmux(t)
+                case .deaconHeartbeat(let h):
+                    applyDeaconHeartbeat(h)
+                case .bootStatus(let b):
+                    applyBootStatus(b)
+                case .escalations(let e):
+                    applyEscalations(e)
                 }
             }
         }
@@ -95,6 +112,9 @@ final class DiagnosticsStore: ObservableObject {
         case derivedData(UInt64?)
         case buildCache(UInt64?)
         case tmux(TmuxData?)
+        case deaconHeartbeat(DeaconHeartbeatData?)
+        case bootStatus(BootStatusData?)
+        case escalations([EscalationEntry])
     }
 
     // MARK: - Vitals Parsing
@@ -104,6 +124,8 @@ final class DiagnosticsStore: ObservableObject {
         let daemonPID: Int?
         let daemonRunning: Bool
         let bootWatchdogHealthy: Bool
+        let deaconHeartbeatFresh: Bool
+        let daemonTickInterval: TimeInterval
         let doltCommitGap: TimeInterval?
         let deadSessions: Int
         let zombieSessions: Int
@@ -143,6 +165,13 @@ final class DiagnosticsStore: ObservableObject {
         let watchdog = json["watchdog"] as? [String: Any]
         let bootHealthy = watchdog?["healthy"] as? Bool ?? true
 
+        // Parse daemon tick interval
+        let tickInterval = daemon?["tick_interval"] as? TimeInterval ?? 180
+
+        // Parse deacon heartbeat freshness from vitals
+        let deacon = json["deacon"] as? [String: Any]
+        let heartbeatFresh = deacon?["heartbeat_fresh"] as? Bool ?? true
+
         // Parse dolt commit gap
         let doltCommitGap = json["dolt_commit_gap"] as? TimeInterval
             ?? (json["dolt"] as? [String: Any])?["commit_gap_seconds"] as? TimeInterval
@@ -161,6 +190,8 @@ final class DiagnosticsStore: ObservableObject {
             daemonPID: daemonPID,
             daemonRunning: daemonRunning,
             bootWatchdogHealthy: bootHealthy,
+            deaconHeartbeatFresh: heartbeatFresh,
+            daemonTickInterval: tickInterval,
             doltCommitGap: doltCommitGap,
             deadSessions: deadSessions,
             zombieSessions: zombieSessions,
@@ -237,6 +268,7 @@ final class DiagnosticsStore: ObservableObject {
             daemonPID: data.daemonPID,
             daemonRunning: data.daemonRunning,
             bootWatchdogHealthy: data.bootWatchdogHealthy,
+            deaconHeartbeatFresh: data.deaconHeartbeatFresh,
             doltCommitGap: data.doltCommitGap
         )
         if systemDetails != newSystem {
@@ -253,6 +285,22 @@ final class DiagnosticsStore: ObservableObject {
         )
         if agentsDetails != newAgents {
             agentsDetails = newAgents
+        }
+
+        // Build daemon state from vitals (boot/deacon filled by file reads)
+        let daemonState = DaemonState(
+            pid: data.daemonPID,
+            running: data.daemonRunning,
+            tickInterval: data.daemonTickInterval
+        )
+        let currentChain = watchdogChain
+        let newChain = WatchdogChainState(
+            daemon: daemonState,
+            boot: currentChain?.boot ?? BootState(lastFireTime: nil, lastDecision: .unknown, lastReason: nil),
+            deacon: currentChain?.deacon ?? DeaconState(sessionAlive: false, lastHeartbeat: nil, heartbeatAge: nil, patrolActive: false)
+        )
+        if watchdogChain != newChain {
+            watchdogChain = newChain
         }
     }
 
@@ -316,6 +364,280 @@ final class DiagnosticsStore: ObservableObject {
         }
     }
 
+    // MARK: - Deacon Heartbeat
+
+    struct DeaconHeartbeatData: Sendable {
+        let sessionAlive: Bool
+        let lastHeartbeat: Date?
+        let heartbeatAge: TimeInterval?
+        let patrolActive: Bool
+    }
+
+    private static func fetchDeaconHeartbeat() async -> DeaconHeartbeatData? {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let townRoot = Self.resolveTownRoot() else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let path = (townRoot as NSString).appendingPathComponent("deacon/heartbeat.json")
+                guard let data = FileManager.default.contents(atPath: path),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let sessionAlive = json["session_alive"] as? Bool ?? false
+                let patrolActive = json["patrol_active"] as? Bool ?? false
+
+                var lastHeartbeat: Date?
+                var heartbeatAge: TimeInterval?
+                if let ts = json["timestamp"] as? String {
+                    let formatter = ISO8601DateFormatter()
+                    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                    if let date = formatter.date(from: ts) {
+                        lastHeartbeat = date
+                        heartbeatAge = -date.timeIntervalSinceNow
+                    }
+                } else if let ts = json["timestamp"] as? TimeInterval {
+                    let date = Date(timeIntervalSince1970: ts)
+                    lastHeartbeat = date
+                    heartbeatAge = -date.timeIntervalSinceNow
+                }
+
+                continuation.resume(returning: DeaconHeartbeatData(
+                    sessionAlive: sessionAlive,
+                    lastHeartbeat: lastHeartbeat,
+                    heartbeatAge: heartbeatAge,
+                    patrolActive: patrolActive
+                ))
+            }
+        }
+    }
+
+    private func applyDeaconHeartbeat(_ data: DeaconHeartbeatData?) {
+        guard let data else { return }
+        let deacon = DeaconState(
+            sessionAlive: data.sessionAlive,
+            lastHeartbeat: data.lastHeartbeat,
+            heartbeatAge: data.heartbeatAge,
+            patrolActive: data.patrolActive
+        )
+        let currentChain = watchdogChain
+        let newChain = WatchdogChainState(
+            daemon: currentChain?.daemon ?? DaemonState(pid: nil, running: false, tickInterval: 180),
+            boot: currentChain?.boot ?? BootState(lastFireTime: nil, lastDecision: .unknown, lastReason: nil),
+            deacon: deacon
+        )
+        if watchdogChain != newChain {
+            watchdogChain = newChain
+        }
+    }
+
+    // MARK: - Boot Status
+
+    struct BootStatusData: Sendable {
+        let lastFireTime: Date?
+        let lastDecision: BootDecision
+        let lastReason: String?
+    }
+
+    private static func fetchBootStatus() async -> BootStatusData? {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let townRoot = Self.resolveTownRoot() else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let path = (townRoot as NSString).appendingPathComponent("deacon/dogs/boot/.boot-status.json")
+                guard let data = FileManager.default.contents(atPath: path),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let decisionStr = json["decision"] as? String ?? "unknown"
+                let decision = BootDecision(rawValue: decisionStr) ?? .unknown
+                let reason = json["reason"] as? String
+
+                var fireTime: Date?
+                if let ts = json["timestamp"] as? String {
+                    let formatter = ISO8601DateFormatter()
+                    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                    fireTime = formatter.date(from: ts)
+                } else if let ts = json["timestamp"] as? TimeInterval {
+                    fireTime = Date(timeIntervalSince1970: ts)
+                }
+
+                continuation.resume(returning: BootStatusData(
+                    lastFireTime: fireTime,
+                    lastDecision: decision,
+                    lastReason: reason
+                ))
+            }
+        }
+    }
+
+    private func applyBootStatus(_ data: BootStatusData?) {
+        guard let data else { return }
+        let boot = BootState(
+            lastFireTime: data.lastFireTime,
+            lastDecision: data.lastDecision,
+            lastReason: data.lastReason
+        )
+        let currentChain = watchdogChain
+        let newChain = WatchdogChainState(
+            daemon: currentChain?.daemon ?? DaemonState(pid: nil, running: false, tickInterval: 180),
+            boot: boot,
+            deacon: currentChain?.deacon ?? DeaconState(sessionAlive: false, lastHeartbeat: nil, heartbeatAge: nil, patrolActive: false)
+        )
+        if watchdogChain != newChain {
+            watchdogChain = newChain
+        }
+    }
+
+    // MARK: - Escalations
+
+    private static func fetchEscalations() async -> [EscalationEntry] {
+        let result = await GastownCommandRunner.gt(["escalation", "list", "--json"], timeoutSeconds: 10)
+        guard result.succeeded,
+              let data = result.stdout.data(using: .utf8),
+              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return []
+        }
+
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        return jsonArray.compactMap { json -> EscalationEntry? in
+            guard let id = json["id"] as? String,
+                  let severityStr = json["severity"] as? String,
+                  let severity = EscalationSeverity(rawValue: severityStr),
+                  let summary = json["summary"] as? String else {
+                return nil
+            }
+
+            let categoryStr = json["category"] as? String ?? "help"
+            let category = EscalationCategory(rawValue: categoryStr) ?? .help
+            let raisedBy = json["raised_by"] as? String ?? "unknown"
+            let acknowledged = json["acknowledged"] as? Bool ?? false
+
+            var raisedAt = Date()
+            if let ts = json["raised_at"] as? String {
+                raisedAt = formatter.date(from: ts) ?? Date()
+            }
+
+            var acknowledgedAt: Date?
+            if let ts = json["acknowledged_at"] as? String {
+                acknowledgedAt = formatter.date(from: ts)
+            }
+
+            return EscalationEntry(
+                id: id,
+                severity: severity,
+                category: category,
+                summary: summary,
+                raisedBy: raisedBy,
+                raisedAt: raisedAt,
+                acknowledged: acknowledged,
+                acknowledgedAt: acknowledgedAt
+            )
+        }
+        .sorted { lhs, rhs in
+            if lhs.severity != rhs.severity {
+                return lhs.severity > rhs.severity
+            }
+            return lhs.raisedAt < rhs.raisedAt
+        }
+    }
+
+    private func applyEscalations(_ entries: [EscalationEntry]) {
+        if escalations != entries {
+            escalations = entries
+        }
+    }
+
+    // MARK: - Actions
+
+    func startDolt() async -> ActionResult {
+        let result = await GastownCommandRunner.gt(["dolt", "start"], timeoutSeconds: 30)
+        if result.succeeded {
+            await refreshNow()
+            return ActionResult(success: true, message: result.stdout.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return ActionResult(success: false, message: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    func restartDolt() async -> ActionResult {
+        let result = await GastownCommandRunner.gt(["dolt", "restart"], timeoutSeconds: 30)
+        if result.succeeded {
+            await refreshNow()
+            return ActionResult(success: true, message: result.stdout.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return ActionResult(success: false, message: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    func cleanDerivedData() async -> ActionResult {
+        let home = NSHomeDirectory()
+        let path = "\(home)/Library/Developer/Xcode/DerivedData"
+        _ = await Self.runShell("/bin/rm", arguments: ["-rf", path])
+        // Recreate the directory so Xcode doesn't complain
+        try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        await refreshNow()
+        return ActionResult(success: true, message: "DerivedData cleaned")
+    }
+
+    func cleanBuildCache() async -> ActionResult {
+        // Find and remove /tmp/cmux-* directories
+        let output = await Self.runShell("/bin/sh", arguments: ["-c", "rm -rf /tmp/cmux-*"])
+        await refreshNow()
+        _ = output
+        return ActionResult(success: true, message: "Build cache cleaned")
+    }
+
+    func restartRefinery(rig: String) async -> ActionResult {
+        let result = await GastownCommandRunner.gt(["refinery", "restart", rig], timeoutSeconds: 30)
+        if result.succeeded {
+            return ActionResult(success: true, message: result.stdout.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return ActionResult(success: false, message: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    func acknowledgeEscalation(id: String) async {
+        _ = await GastownCommandRunner.gt(["escalation", "ack", id], timeoutSeconds: 10)
+        await refreshNow()
+    }
+
+    func resolveEscalation(id: String) async {
+        _ = await GastownCommandRunner.gt(["escalation", "resolve", id], timeoutSeconds: 10)
+        await refreshNow()
+    }
+
+    // MARK: - Town Root Resolution
+
+    private static func resolveTownRoot() -> String? {
+        let env = ProcessInfo.processInfo.environment
+        if let root = env["GT_TOWN_ROOT"], !root.isEmpty {
+            return root
+        }
+        if let root = env["GT_ROOT"], !root.isEmpty {
+            return root
+        }
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser.path
+        let candidates = [
+            (home as NSString).appendingPathComponent("gt"),
+            (home as NSString).appendingPathComponent("code/spectralGasTown"),
+        ]
+        for candidate in candidates {
+            let routesPath = (candidate as NSString).appendingPathComponent(".beads/routes.jsonl")
+            if fm.fileExists(atPath: routesPath) {
+                return candidate
+            }
+        }
+        return nil
+    }
+
     // MARK: - Traffic Light Computation
 
     private func recomputeTrafficLights() {
@@ -335,10 +657,16 @@ final class DiagnosticsStore: ObservableObject {
         }
     }
 
-    /// System: worst of dolt, daemon, boot watchdog (simplified — no watchdog chain checks).
+    /// System: worst of dolt, daemon, boot, deacon.
     private func computeSystemStatus() -> TrafficLight {
         guard let d = systemDetails else { return .unknown }
         if d.doltServer == nil || !d.daemonRunning { return .red }
+        if let w = watchdogChain {
+            if !w.deacon.sessionAlive { return .red }
+            if w.boot.lastDecision == .wake || w.boot.lastDecision == .start { return .red }
+            if w.boot.lastDecision == .nudge { return .amber }
+            if let age = w.deacon.heartbeatAge, age > 300 { return .amber }
+        }
         if !d.bootWatchdogHealthy || (d.doltCommitGap ?? 0) > 3600 { return .amber }
         return .green
     }
