@@ -161,29 +161,13 @@ struct ProfileHeaderView: View {
 
     private var statusColor: Color {
         guard let health else { return GasTownColors.idle }
-        if !health.isRunning && health.hasWork {
-            return GasTownColors.error
-        } else if health.isRunning && health.hasWork {
-            return GasTownColors.active
-        } else if health.isRunning {
-            return GasTownColors.active
-        } else {
-            return GasTownColors.idle
-        }
+        return health.statusColor
     }
 
     private var statusLabel: String {
         guard let health else {
             return String(localized: "agentProfile.status.unknown", defaultValue: "unknown")
         }
-        if !health.isRunning && health.hasWork {
-            return String(localized: "agentProfile.status.stuck", defaultValue: "stuck")
-        } else if health.isRunning && health.hasWork {
-            return String(localized: "agentProfile.status.working", defaultValue: "working")
-        } else if health.isRunning {
-            return String(localized: "agentProfile.status.running", defaultValue: "running")
-        } else {
-            return String(localized: "agentProfile.status.idle", defaultValue: "idle")
-        }
+        return health.statusLabel
     }
 }

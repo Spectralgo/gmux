@@ -584,10 +584,7 @@ struct TownDashboardPanelView: View {
     }
 
     private func agentStatusColor(for agent: AgentHealthEntry) -> Color {
-        if !agent.isRunning {
-            return agent.hasWork ? GasTownColors.error : GasTownColors.idle
-        }
-        return agent.hasWork ? GasTownColors.active : GasTownColors.idle
+        agent.statusColor
     }
 
     private func severityIcon(_ severity: AttentionSeverity) -> String {

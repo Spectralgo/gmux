@@ -266,10 +266,7 @@ struct AgentHealthPanelView: View {
     }
 
     private func statusColor(for agent: AgentHealthEntry) -> Color {
-        if agent.isRunning {
-            return .green
-        }
-        return .gray
+        agent.statusColor
     }
 
     private var refreshButton: some View {
