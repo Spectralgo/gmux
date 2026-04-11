@@ -7,6 +7,7 @@ import SwiftUI
 /// grouped by status.
 struct ConvoyDetailSection: View {
     let detail: ConvoyDetail
+    var moleculeProgress: [String: MoleculeProgress] = [:]
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -160,36 +161,50 @@ struct ConvoyDetailSection: View {
     }
 
     private func issueRow(_ issue: ConvoyTrackedIssue) -> some View {
-        HStack(spacing: GasTownSpacing.gridGap) {
-            // Status indicator
-            issueStatusIcon(issue.status)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: GasTownSpacing.gridGap) {
+                // Status indicator
+                issueStatusIcon(issue.status)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(issue.title)
-                    .font(GasTownTypography.label)
-                    .lineLimit(1)
-                    .foregroundColor(issue.status == "closed" ? .secondary : .primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(issue.title)
+                        .font(GasTownTypography.label)
+                        .lineLimit(1)
+                        .foregroundColor(issue.status == "closed" ? .secondary : .primary)
 
-                HStack(spacing: 6) {
-                    Text(issue.id)
+                    HStack(spacing: 6) {
+                        Text(issue.id)
+                            .font(GasTownTypography.data)
+                            .foregroundColor(.secondary)
+
+                        if let assignee = issue.assignee, !assignee.isEmpty {
+                            AgentNameLink(
+                                name: shortAgentName(assignee),
+                                agentAddress: assignee
+                            )
+                        }
+                    }
+                }
+
+                Spacer()
+
+                if let mol = moleculeProgress[issue.id] {
+                    Text(mol.displayText)
                         .font(GasTownTypography.data)
                         .foregroundColor(.secondary)
+                }
 
-                    if let assignee = issue.assignee, !assignee.isEmpty {
-                        AgentNameLink(
-                            name: shortAgentName(assignee),
-                            agentAddress: assignee
-                        )
-                    }
+                if issue.priority > 0 {
+                    Text("P\(issue.priority)")
+                        .font(GasTownTypography.badge)
+                        .foregroundColor(priorityColor(issue.priority))
                 }
             }
 
-            Spacer()
-
-            if issue.priority > 0 {
-                Text("P\(issue.priority)")
-                    .font(GasTownTypography.badge)
-                    .foregroundColor(priorityColor(issue.priority))
+            // Molecule step progress bar
+            if let mol = moleculeProgress[issue.id] {
+                moleculeProgressBar(mol)
+                    .padding(.top, 4)
             }
         }
         .padding(.vertical, 4)
@@ -201,6 +216,20 @@ struct ConvoyDetailSection: View {
             localized: "convoyDetail.issue.a11y",
             defaultValue: "\(issue.title), status: \(issue.status)"
         ))
+    }
+
+    private func moleculeProgressBar(_ mol: MoleculeProgress) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.secondary.opacity(0.15))
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.accentColor)
+                    .frame(width: geo.size.width * min(max(mol.progress, 0), 1))
+                    .animation(GasTownAnimation.statusChange, value: mol.progress)
+            }
+        }
+        .frame(height: 3)
     }
 
     // MARK: - Empty State

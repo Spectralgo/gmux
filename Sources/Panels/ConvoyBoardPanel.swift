@@ -28,6 +28,8 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
     @Published private(set) var convoys: [ConvoySummary] = []
     /// Detail for the currently selected convoy.
     @Published private(set) var selectedDetail: ConvoyDetail?
+    /// Molecule progress keyed by bead ID for tracked issues.
+    @Published private(set) var moleculeProgress: [String: MoleculeProgress] = [:]
     /// Currently selected convoy ID.
     @Published var selectedConvoyId: String?
     /// Whether to show closed convoys.
@@ -37,16 +39,18 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
 
     let workspaceId: UUID
     private let adapter: ConvoyAdapter
+    private let beadsAdapter: BeadsAdapter
 
     /// Optional initial convoy ID to auto-select on first load.
     private var initialConvoyId: String?
     /// Optional initial filter (e.g., "ready", "in_progress") for future use.
     let initialFilter: String?
 
-    init(workspaceId: UUID, adapter: ConvoyAdapter, convoyId: String? = nil, filter: String? = nil) {
+    init(workspaceId: UUID, adapter: ConvoyAdapter, beadsAdapter: BeadsAdapter? = nil, convoyId: String? = nil, filter: String? = nil) {
         self.id = UUID()
         self.workspaceId = workspaceId
         self.adapter = adapter
+        self.beadsAdapter = beadsAdapter ?? BeadsAdapter()
         self.initialConvoyId = convoyId
         self.initialFilter = filter
     }
@@ -138,8 +142,35 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
                     if self.selectedDetail != detail {
                         self.selectedDetail = detail
                     }
+                    self.refreshMoleculeProgress(for: detail.trackedIssues)
                 case .failure:
                     self.selectedDetail = nil
+                }
+            }
+        }
+    }
+
+    // MARK: - Molecule Progress
+
+    /// Refresh molecule progress for active (non-closed) tracked issues.
+    func refreshMoleculeProgress(for issues: [ConvoyTrackedIssue]) {
+        let activeIssueIds = issues
+            .filter { $0.status != "closed" }
+            .map(\.id)
+        guard !activeIssueIds.isEmpty else { return }
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            var newProgress: [String: MoleculeProgress] = [:]
+            for beadId in activeIssueIds {
+                if case .success(let progress) = self.beadsAdapter.loadMoleculeProgress(beadId: beadId) {
+                    newProgress[beadId] = progress
+                }
+            }
+
+            DispatchQueue.main.async {
+                if self.moleculeProgress != newProgress {
+                    self.moleculeProgress = newProgress
                 }
             }
         }

@@ -43,6 +43,28 @@ struct BeadSummary: Equatable, Sendable, Identifiable {
     let dependentCount: Int
 }
 
+// MARK: - Molecule Progress
+
+/// Step progress for a bead with an attached molecule (formula workflow).
+struct MoleculeProgress: Equatable, Sendable {
+    let beadId: String
+    let currentStep: Int
+    let totalSteps: Int
+    let currentStepTitle: String?
+
+    /// Progress as a fraction in [0.0, 1.0].
+    var progress: Double {
+        guard totalSteps > 0 else { return 0.0 }
+        return Double(currentStep) / Double(totalSteps)
+    }
+
+    /// Localized display string (e.g. "Step 3/8").
+    var displayText: String {
+        String(localized: "molecule.stepProgress",
+               defaultValue: "Step \(currentStep)/\(totalSteps)")
+    }
+}
+
 // MARK: - Error Types
 
 /// Structured error describing why a Beads adapter operation failed.
@@ -150,6 +172,50 @@ final class BeadsAdapter: ObservableObject {
                 return .failure(.beadNotFound(id: id))
             }
         }
+    }
+
+    // MARK: - Molecule Progress
+
+    /// Load molecule step progress for a bead. Runs `bd mol current <id> --json`.
+    /// Must be called from a background queue.
+    nonisolated func loadMoleculeProgress(beadId: String) -> Result<MoleculeProgress, BeadsAdapterError> {
+        let result = runBdSync(arguments: ["mol", "current", beadId, "--json"])
+        switch result {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let output):
+            if let progress = parseMoleculeProgressOutput(output, beadId: beadId) {
+                return .success(progress)
+            }
+            return .failure(.parseFailure(
+                command: "bd mol current \(beadId) --json",
+                detail: String(
+                    localized: "beadsAdapter.error.molParseFailed",
+                    defaultValue: "Could not parse molecule progress for '\(beadId)'."
+                )
+            ))
+        }
+    }
+
+    /// Parse `bd mol current <id> --json` output into a MoleculeProgress.
+    private nonisolated func parseMoleculeProgressOutput(_ output: String, beadId: String) -> MoleculeProgress? {
+        guard let data = output.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+
+        let currentStep = json["current_step"] as? Int ?? json["step"] as? Int ?? 0
+        let totalSteps = json["total_steps"] as? Int ?? json["steps"] as? Int ?? 0
+        guard totalSteps > 0 else { return nil }
+
+        let stepTitle = json["current_step_title"] as? String ?? json["step_title"] as? String
+
+        return MoleculeProgress(
+            beadId: beadId,
+            currentStep: currentStep,
+            totalSteps: totalSteps,
+            currentStepTitle: stepTitle
+        )
     }
 
     // MARK: - CLI execution (async)

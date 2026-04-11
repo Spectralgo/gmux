@@ -37,6 +37,34 @@ enum ConvoyAttentionState: String, Equatable, Sendable, CaseIterable {
     case blocked
 }
 
+// MARK: - Polecat Swarm Models
+
+/// Status of a polecat within the convoy swarm visualization.
+enum PolecatSwarmStatus: String, Equatable, Sendable {
+    /// Actively working on an assigned issue.
+    case working
+    /// Has work but session appears stalled (blocked issue).
+    case stalled
+    /// Polecat in an unexpected state (no valid issue assignment).
+    case zombie
+}
+
+/// An assigned polecat within a convoy, used for the swarm visualization.
+struct AssignedPolecat: Equatable, Sendable, Identifiable {
+    var id: String { address }
+    /// Short name (e.g. "fury", "guzzle").
+    let name: String
+    /// Full address (e.g. "gmux/polecats/fury").
+    let address: String
+    /// Derived swarm status.
+    let status: PolecatSwarmStatus
+
+    /// Two-character initials for the avatar circle.
+    var initials: String {
+        String(name.prefix(2)).uppercased()
+    }
+}
+
 // MARK: - Domain Models
 
 /// Dashboard-ready summary of a convoy from `gt convoy list --json`.
@@ -56,14 +84,17 @@ struct ConvoySummary: Equatable, Sendable, Identifiable {
     let completedIssues: Int
     /// Derived attention state for operator triage.
     let attention: ConvoyAttentionState
-    /// Number of polecats currently assigned to tracked issues.
-    let assignedPolecats: Int
+    /// Assigned polecats with their swarm status for visualization.
+    let polecatDetails: [AssignedPolecat]
     /// Rig IDs that have tracked issues in this convoy.
     let rigIds: [String]
     /// When the convoy was created (ISO 8601 string from upstream).
     let createdAt: String?
     /// When the convoy was last updated (ISO 8601 string from upstream).
     let updatedAt: String?
+
+    /// Number of polecats currently assigned to tracked issues.
+    var assignedPolecats: Int { polecatDetails.count }
 
     /// Progress as a fraction in [0.0, 1.0].
     var progress: Double {
@@ -344,7 +375,7 @@ struct ConvoyAdapter {
         let completedIssues = (json["completed_issues"] as? Int)
             ?? trackedIssues.filter { ($0["status"] as? String) == "closed" }.count
 
-        let assignedPolecats = deriveAssignedPolecatCount(from: trackedIssues)
+        let polecatDetails = deriveAssignedPolecats(from: trackedIssues)
         let rigIds = deriveRigIds(from: trackedIssues)
         let attention = deriveAttentionState(
             status: json["status"] as? String ?? "open",
@@ -360,7 +391,7 @@ struct ConvoyAdapter {
             totalIssues: totalIssues,
             completedIssues: completedIssues,
             attention: attention,
-            assignedPolecats: assignedPolecats,
+            polecatDetails: polecatDetails,
             rigIds: rigIds,
             createdAt: json["created_at"] as? String,
             updatedAt: json["updated_at"] as? String
@@ -471,16 +502,32 @@ struct ConvoyAdapter {
         return .normal
     }
 
-    /// Count distinct polecats assigned to tracked issues.
-    private func deriveAssignedPolecatCount(from issues: [[String: Any]]) -> Int {
-        var polecats: Set<String> = []
+    /// Extract assigned polecats with swarm status from tracked issues.
+    private func deriveAssignedPolecats(from issues: [[String: Any]]) -> [AssignedPolecat] {
+        var seen: Set<String> = []
+        var polecats: [AssignedPolecat] = []
+
         for issue in issues {
-            if let assignee = issue["assignee"] as? String,
-               assignee.contains("/polecats/") {
-                polecats.insert(assignee)
+            guard let assignee = issue["assignee"] as? String,
+                  assignee.contains("/polecats/"),
+                  !seen.contains(assignee) else { continue }
+            seen.insert(assignee)
+
+            let name = assignee.split(separator: "/").last.map(String.init) ?? assignee
+            let issueStatus = issue["status"] as? String ?? "open"
+            let swarmStatus: PolecatSwarmStatus = switch issueStatus {
+            case "blocked": .stalled
+            case "in_progress", "hooked", "open": .working
+            default: .zombie
             }
+
+            polecats.append(AssignedPolecat(
+                name: name,
+                address: assignee,
+                status: swarmStatus
+            ))
         }
-        return polecats.count
+        return polecats
     }
 
     /// Extract unique rig IDs from tracked issues.

@@ -35,7 +35,7 @@ struct ConvoyCardView: View {
                 HStack(spacing: GasTownSpacing.gridGap) {
                     issueCount
                     Spacer()
-                    polecatCount
+                    swarmAvatars
                 }
             }
             .padding(GasTownSpacing.cardPadding)
@@ -135,16 +135,37 @@ struct ConvoyCardView: View {
     }
 
     @ViewBuilder
-    private var polecatCount: some View {
-        if convoy.assignedPolecats > 0 {
-            HStack(spacing: 3) {
-                Image(systemName: GasTownRoleIcons.polecat)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-                Text("\(convoy.assignedPolecats)")
-                    .font(GasTownTypography.data)
-                    .foregroundColor(.secondary)
+    private var swarmAvatars: some View {
+        if !convoy.polecatDetails.isEmpty {
+            HStack(spacing: -4) {
+                ForEach(convoy.polecatDetails) { polecat in
+                    polecatAvatar(polecat)
+                }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(String(
+                localized: "convoyCard.swarm.a11y",
+                defaultValue: "\(convoy.assignedPolecats) assigned polecat\(convoy.assignedPolecats == 1 ? "" : "s")"
+            ))
+        }
+    }
+
+    private func polecatAvatar(_ polecat: AssignedPolecat) -> some View {
+        Text(polecat.initials)
+            .font(.system(size: 8, weight: .bold))
+            .foregroundColor(.white)
+            .frame(width: 16, height: 16)
+            .background(swarmStatusColor(polecat.status))
+            .clipShape(Circle())
+            .overlay(Circle().stroke(cardBackground, lineWidth: 1))
+            .help(polecat.name)
+    }
+
+    private func swarmStatusColor(_ status: PolecatSwarmStatus) -> Color {
+        switch status {
+        case .working: return GasTownColors.active
+        case .stalled: return GasTownColors.attention
+        case .zombie: return GasTownColors.error
         }
     }
 

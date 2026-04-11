@@ -58,6 +58,10 @@ struct ConvoyBoardPanelView: View {
             switch panel.loadState {
             case .loaded, .failed:
                 panel.refresh(silent: true)
+                // Also refresh molecule progress for selected detail
+                if let detail = panel.selectedDetail {
+                    panel.refreshMoleculeProgress(for: detail.trackedIssues)
+                }
             default:
                 break
             }
@@ -123,7 +127,10 @@ struct ConvoyBoardPanelView: View {
                         .frame(minWidth: 260, idealWidth: 300)
 
                     if let detail = panel.selectedDetail {
-                        ConvoyDetailSection(detail: detail)
+                        ConvoyDetailSection(
+                            detail: detail,
+                            moleculeProgress: panel.moleculeProgress
+                        )
                     } else {
                         emptyDetailPlaceholder
                     }
