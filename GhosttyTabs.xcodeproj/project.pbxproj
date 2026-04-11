@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DG00000000000001 /* DiagnosticsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DG00000000000011 /* DiagnosticsModels.swift */; };
+		DG00000000000002 /* DiagnosticsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DG00000000000012 /* DiagnosticsStore.swift */; };
+		DG00000000000003 /* DiagnosticsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DG00000000000013 /* DiagnosticsPanel.swift */; };
+		DG00000000000004 /* DiagnosticsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DG00000000000014 /* DiagnosticsPanelView.swift */; };
 		RF00000000000001 /* RefineryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = RF00000000000011 /* RefineryPanel.swift */; };
 		RF00000000000002 /* RefineryPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RF00000000000012 /* RefineryPanelView.swift */; };
 		RF00000000000003 /* RefineryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = RF00000000000013 /* RefineryAdapter.swift */; };
@@ -306,6 +310,10 @@
 		MP00000000000017 /* FilterBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FilterBarView.swift; sourceTree = "<group>"; };
 		MP00000000000018 /* ThreadView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThreadView.swift; sourceTree = "<group>"; };
 		MP00000000000019 /* MailToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MailToolbarView.swift; sourceTree = "<group>"; };
+		DG00000000000011 /* DiagnosticsModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiagnosticsModels.swift; sourceTree = "<group>"; };
+		DG00000000000012 /* DiagnosticsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiagnosticsStore.swift; sourceTree = "<group>"; };
+		DG00000000000013 /* DiagnosticsPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiagnosticsPanel.swift; sourceTree = "<group>"; };
+		DG00000000000014 /* DiagnosticsPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiagnosticsPanelView.swift; sourceTree = "<group>"; };
 		RF00000000000011 /* RefineryPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefineryPanel.swift; sourceTree = "<group>"; };
 		RF00000000000012 /* RefineryPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefineryPanelView.swift; sourceTree = "<group>"; };
 		RF00000000000013 /* RefineryAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefineryAdapter.swift; sourceTree = "<group>"; };
@@ -793,6 +801,10 @@
 				CB0000000000001A /* ConvoyBoardSections */,
 				RF00000000000011 /* RefineryPanel.swift */,
 				RF00000000000012 /* RefineryPanelView.swift */,
+				DG00000000000011 /* DiagnosticsModels.swift */,
+				DG00000000000012 /* DiagnosticsStore.swift */,
+				DG00000000000013 /* DiagnosticsPanel.swift */,
+				DG00000000000014 /* DiagnosticsPanelView.swift */,
 			);
 			name = Panels;
 			path = Panels;
@@ -1261,6 +1273,10 @@
 				RF00000000000001 /* RefineryPanel.swift in Sources */,
 				RF00000000000002 /* RefineryPanelView.swift in Sources */,
 				RF00000000000003 /* RefineryAdapter.swift in Sources */,
+				DG00000000000001 /* DiagnosticsModels.swift in Sources */,
+				DG00000000000002 /* DiagnosticsStore.swift in Sources */,
+				DG00000000000003 /* DiagnosticsPanel.swift in Sources */,
+				DG00000000000004 /* DiagnosticsPanelView.swift in Sources */,
 				CB00000000000003 /* ConvoyCardView.swift in Sources */,
 				CB00000000000004 /* ConvoyDetailSection.swift in Sources */,
 				CB00000000000005 /* ConvoyBoardToolbar.swift in Sources */,

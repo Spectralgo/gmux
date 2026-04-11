@@ -155,6 +155,16 @@ struct PanelContentView: View {
                     onRequestPanelFocus: onRequestPanelFocus
                 )
             }
+        case .diagnostics:
+            if let diagnosticsPanel = panel as? DiagnosticsPanel {
+                DiagnosticsPanelView(
+                    panel: diagnosticsPanel,
+                    isFocused: isFocused,
+                    isVisibleInUI: isVisibleInUI,
+                    portalPriority: portalPriority,
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+            }
         }
     }
 }
