@@ -47,6 +47,9 @@ struct ProfileHeaderView: View {
                                 .cornerRadius(4)
                         }
                     }
+
+                    // Three-layer architecture badges
+                    architectureBadgeRow
                 }
 
                 Spacer()
@@ -82,20 +85,7 @@ struct ProfileHeaderView: View {
                 ))
             }
 
-            // Row 3: Current task
-            if let task = health?.currentTask {
-                HStack(spacing: 4) {
-                    Image(systemName: "bolt.fill")
-                        .font(.caption2)
-                        .foregroundColor(GasTownColors.active)
-                    Text(task)
-                        .font(GasTownTypography.data)
-                        .foregroundColor(.primary)
-                        .lineLimit(2)
-                }
-            }
-
-            // Row 4: Session info
+            // Row 3: Session info
             if let elapsed = health?.elapsed {
                 HStack(spacing: 4) {
                     Image(systemName: "clock")
@@ -118,6 +108,75 @@ struct ProfileHeaderView: View {
             localized: "agentProfile.header.a11y",
             defaultValue: "Agent profile header"
         ))
+    }
+
+    // MARK: - Architecture Badges
+
+    @ViewBuilder
+    private var architectureBadgeRow: some View {
+        if let health {
+            HStack(spacing: 4) {
+                // Session status badge
+                architectureBadge(
+                    icon: "terminal",
+                    text: health.isRunning
+                        ? String(localized: "agentProfile.session.active", defaultValue: "Session active")
+                        : String(localized: "agentProfile.session.inactive", defaultValue: "No session"),
+                    color: health.isRunning ? GasTownColors.active : GasTownColors.idle
+                )
+
+                // Sandbox path badge
+                architectureBadge(
+                    icon: "folder",
+                    text: sandboxPath,
+                    color: .secondary
+                )
+
+                // Slot name badge
+                if let slotName = slotNameFromAddress {
+                    architectureBadge(
+                        icon: "square.grid.2x2",
+                        text: slotName,
+                        color: .secondary
+                    )
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(
+                localized: "agentProfile.architecture.a11y",
+                defaultValue: "Agent architecture"
+            ))
+        }
+    }
+
+    private func architectureBadge(icon: String, text: String, color: Color) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.system(size: 8))
+            Text(text)
+                .font(GasTownTypography.badge)
+        }
+        .foregroundColor(color)
+        .padding(.horizontal, 5)
+        .padding(.vertical, 2)
+        .background(color.opacity(0.1))
+        .clipShape(Capsule())
+    }
+
+    private var sandboxPath: String {
+        // Derive sandbox path from agent address (e.g., "gmux/polecats/rust" → "polecats/rust")
+        let components = agentAddress.split(separator: "/")
+        if components.count >= 2 {
+            return components.dropFirst().joined(separator: "/")
+        }
+        return agentAddress
+    }
+
+    private var slotNameFromAddress: String? {
+        // Slot name is the last component of the address (e.g., "gmux/polecats/rust" → "rust")
+        let components = agentAddress.split(separator: "/")
+        guard components.count >= 3 else { return nil }
+        return String(components.last!)
     }
 
     // MARK: - Computed Properties

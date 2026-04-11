@@ -116,6 +116,12 @@ struct AgentProfilePanelView: View {
                         agentAddress: panel.agentAddress
                     )
 
+                    HookBeadCardView(
+                        health: panel.currentHealth,
+                        beadHistory: panel.beadHistory,
+                        workspaceId: panel.workspaceId
+                    )
+
                     StatsGridView(stats: panel.stats)
 
                     SkillsSection(skills: panel.skills, roleColor: roleColor)

@@ -39,6 +39,7 @@
 		AP00000000000009 /* AgentStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP00000000000019 /* AgentStats.swift */; };
 		AP0000000000000A /* AgentSkill.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP0000000000001A /* AgentSkill.swift */; };
 		AP0000000000000B /* AgentProfileAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP0000000000001B /* AgentProfileAdapter.swift */; };
+		AP0000000000000C /* HookBeadCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP0000000000001D /* HookBeadCardView.swift */; };
 		0596CF174447681CAFA46CBC /* HooksAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2162863184D54DE84087CB8 /* HooksAdapter.swift */; };
 		063BC42CEE257D6213A2E30C /* WindowAndDragTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE83F8394D90ACACD8E19DD /* WindowAndDragTests.swift */; };
 		0D433DCC03263E4C565547C2 /* GmuxProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFCF7BB79AF8F0DD6627CAD /* GmuxProfile.swift */; };
@@ -333,6 +334,7 @@
 		AP00000000000019 /* AgentStats.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentStats.swift; sourceTree = "<group>"; };
 		AP0000000000001A /* AgentSkill.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentSkill.swift; sourceTree = "<group>"; };
 		AP0000000000001B /* AgentProfileAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AgentProfileAdapter.swift; sourceTree = "<group>"; };
+		AP0000000000001D /* HookBeadCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HookBeadCardView.swift; sourceTree = "<group>"; };
 		02FC74F2C27127CC565B3E8C /* TerminalAndGhosttyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalAndGhosttyTests.swift; sourceTree = "<group>"; };
 		10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSessionSnapshotTests.swift; sourceTree = "<group>"; };
 		14A7DC53B9CA33BE2A421711 /* WorkspacePullRequestSidebarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePullRequestSidebarTests.swift; sourceTree = "<group>"; };
@@ -867,6 +869,7 @@
 				AP00000000000015 /* SkillsSection.swift */,
 				AP00000000000016 /* MemorySection.swift */,
 				AP00000000000017 /* CVChainSection.swift */,
+				AP0000000000001D /* HookBeadCardView.swift */,
 				AP00000000000018 /* ActionsBarView.swift */,
 			);
 			name = AgentProfileSections;
@@ -1291,6 +1294,7 @@
 				AP00000000000009 /* AgentStats.swift in Sources */,
 				AP0000000000000A /* AgentSkill.swift in Sources */,
 				AP0000000000000B /* AgentProfileAdapter.swift in Sources */,
+				AP0000000000000C /* HookBeadCardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
