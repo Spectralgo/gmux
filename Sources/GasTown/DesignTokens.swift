@@ -16,8 +16,10 @@ enum GasTownColors {
     static let attention = Color(red: 0xFB / 255.0, green: 0xBF / 255.0, blue: 0x24 / 255.0)
     /// Stuck agents, failed builds, critical.
     static let error = Color(red: 0xEF / 255.0, green: 0x44 / 255.0, blue: 0x44 / 255.0)
-    /// Not running, no work.
+    /// Not running, no work (non-polecat roles only — polecats don't idle).
     static let idle = Color(red: 0x6B / 255.0, green: 0x72 / 255.0, blue: 0x80 / 255.0)
+    /// Polecat stalled: has work but session not running (needs intervention).
+    static let stalled = Color(red: 0xFB / 255.0, green: 0xBF / 255.0, blue: 0x24 / 255.0)
 
     /// Section background (subtle elevation) for dark mode.
     static let sectionBackgroundDark = Color(nsColor: NSColor(white: 0.15, alpha: 1.0))

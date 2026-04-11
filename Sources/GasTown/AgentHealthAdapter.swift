@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Agent Health Adapter
 //
@@ -34,6 +35,53 @@ struct AgentHealthEntry: Equatable, Sendable, Identifiable {
     let contextPercent: Double?
     /// How long the agent has been on current task (e.g. "45m"), if reported.
     let elapsed: String?
+
+
+    /// Whether this agent is a polecat (worker). Polecats have exactly 3 states:
+    /// Working, Stalled, Zombie — they never "idle" because non-working polecats are nuked.
+    var isPolecat: Bool {
+        let r = role.lowercased()
+        return r == "polecat" || r == "worker"
+    }
+
+    /// Role-aware status color. Polecats use Working/Stalled/Zombie semantics
+    /// (never idle). Other roles keep the existing Running/Idle model.
+    var statusColor: Color {
+        if isPolecat {
+            if isRunning && hasWork { return GasTownColors.active }      // Working
+            if !isRunning && hasWork { return GasTownColors.stalled }    // Stalled (amber)
+            // Polecat with no work shouldn't exist — show as zombie (red)
+            return GasTownColors.error
+        }
+        // Non-polecat roles
+        if !isRunning && hasWork { return GasTownColors.error }
+        if isRunning { return GasTownColors.active }
+        return GasTownColors.idle
+    }
+
+    /// Role-aware status label. Polecats use Working/Stalled/Zombie semantics.
+    var statusLabel: String {
+        if isPolecat {
+            if isRunning && hasWork {
+                return String(localized: "agent.status.working", defaultValue: "working")
+            }
+            if !isRunning && hasWork {
+                return String(localized: "agent.status.stalled", defaultValue: "stalled")
+            }
+            return String(localized: "agent.status.zombie", defaultValue: "zombie")
+        }
+        // Non-polecat roles
+        if !isRunning && hasWork {
+            return String(localized: "agent.status.stuck", defaultValue: "stuck")
+        }
+        if isRunning && hasWork {
+            return String(localized: "agent.status.working", defaultValue: "working")
+        }
+        if isRunning {
+            return String(localized: "agent.status.running", defaultValue: "running")
+        }
+        return String(localized: "agent.status.idle", defaultValue: "idle")
+    }
 }
 
 // MARK: - Error

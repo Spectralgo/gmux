@@ -195,26 +195,10 @@ struct RigTeamSection: View {
     // MARK: - Helpers
 
     private func agentStatusColor(_ agent: AgentHealthEntry) -> Color {
-        if !agent.isRunning && agent.hasWork {
-            return GasTownColors.error
-        } else if agent.isRunning && agent.hasWork {
-            return GasTownColors.active
-        } else if agent.isRunning {
-            return GasTownColors.active
-        } else {
-            return GasTownColors.idle
-        }
+        agent.statusColor
     }
 
     private func agentStatusLabel(_ agent: AgentHealthEntry) -> String {
-        if !agent.isRunning && agent.hasWork {
-            return String(localized: "rigPanel.team.stuck", defaultValue: "stuck")
-        } else if agent.isRunning && agent.hasWork {
-            return String(localized: "rigPanel.team.working", defaultValue: "working")
-        } else if agent.isRunning {
-            return String(localized: "rigPanel.team.running", defaultValue: "running")
-        } else {
-            return String(localized: "rigPanel.team.idle", defaultValue: "idle")
-        }
+        agent.statusLabel
     }
 }
