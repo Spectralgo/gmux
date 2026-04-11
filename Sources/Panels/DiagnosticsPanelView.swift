@@ -94,6 +94,15 @@ struct DiagnosticsPanelView: View {
             }
         }
     }
+
+    private func focusFlashAnimation(for curve: FocusFlashCurve, duration: TimeInterval) -> Animation {
+        switch curve {
+        case .easeIn:
+            return .easeIn(duration: duration)
+        case .easeOut:
+            return .easeOut(duration: duration)
+        }
+    }
 }
 
 // MARK: - Diagnostics Domain

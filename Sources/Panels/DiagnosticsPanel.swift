@@ -26,10 +26,10 @@ final class DiagnosticsPanel: Panel, ObservableObject {
     /// Workspace that owns this panel.
     let workspaceId: UUID
 
-    init(workspaceId: UUID, store: DiagnosticsStore = DiagnosticsStore()) {
+    init(workspaceId: UUID, store: DiagnosticsStore? = nil) {
         self.id = UUID()
         self.workspaceId = workspaceId
-        self.store = store
+        self.store = store ?? DiagnosticsStore()
         self.displayTitle = String(
             localized: "diagnostics.title",
             defaultValue: "Engine Room"
