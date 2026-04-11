@@ -184,8 +184,7 @@ struct TownDashboardPanelView: View {
             // Name + rig + current task (H1) + context bar (H2)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text(agent.name)
-                        .font(GasTownTypography.label)
+                    AgentNameLink(name: agent.name, agentAddress: agent.address)
                     // Time elapsed (H3)
                     if let elapsed = agent.elapsed {
                         Text(elapsed)
@@ -442,9 +441,7 @@ struct TownDashboardPanelView: View {
                 Image(systemName: "person.circle")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
-                Text(agentName)
-                    .font(GasTownTypography.badge)
-                    .foregroundColor(.secondary)
+                AgentNameLink(name: agentName, agentAddress: agentName)
                     .frame(minWidth: 60, alignment: .leading)
             }
 

@@ -392,9 +392,7 @@ struct cmuxApp: App {
                     #endif
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openDiagnosticsPanel)) { _ in
-                    #if DEBUG
-                    dlog("openDiagnosticsPanel (not yet implemented)")
-                    #endif
+                    activeTabManager.selectedWorkspace?.openDiagnosticsPanel()
                 }
         }
         .windowStyle(.hiddenTitleBar)
@@ -473,6 +471,26 @@ struct cmuxApp: App {
 
                     Button(String(localized: "menu.gastown.agentHealth", defaultValue: "Agent Health")) {
                         activeTabManager.selectedWorkspace?.newAgentHealthSurface()
+                    }
+                    .disabled(!isConnected)
+
+                    Button(String(localized: "menu.gastown.mail", defaultValue: "Mail")) {
+                        activeTabManager.selectedWorkspace?.openMailPanel()
+                    }
+                    .disabled(!isConnected)
+
+                    Button(String(localized: "menu.gastown.convoyBoard", defaultValue: "Convoy Board")) {
+                        activeTabManager.selectedWorkspace?.openConvoyBoard()
+                    }
+                    .disabled(!isConnected)
+
+                    Button(String(localized: "menu.gastown.refinery", defaultValue: "Refinery")) {
+                        activeTabManager.selectedWorkspace?.openRefineryPanel(rigId: gasTownService.rigs.first?.id ?? "")
+                    }
+                    .disabled(!isConnected)
+
+                    Button(String(localized: "menu.gastown.diagnostics", defaultValue: "Diagnostics")) {
+                        activeTabManager.selectedWorkspace?.openDiagnosticsPanel()
                     }
                     .disabled(!isConnected)
 
