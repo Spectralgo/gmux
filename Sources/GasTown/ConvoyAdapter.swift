@@ -75,6 +75,11 @@ struct ConvoySummary: Equatable, Sendable, Identifiable {
     var needsAttention: Bool {
         attention != .normal
     }
+
+    /// Whether this convoy is stranded (has ready work but no assigned polecats).
+    var isStranded: Bool {
+        attention == .stranded
+    }
 }
 
 /// A tracked issue within a convoy, from `gt convoy show <id> --json`.

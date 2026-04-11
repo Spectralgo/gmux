@@ -94,9 +94,24 @@ struct ConvoyBoardPanelView: View {
 
     // MARK: - Content
 
+    private var strandedConvoys: [ConvoySummary] {
+        panel.convoys.filter { $0.isStranded }
+    }
+
     private var boardContent: some View {
         VStack(spacing: 0) {
             ConvoyBoardToolbar(panel: panel)
+
+            if !strandedConvoys.isEmpty {
+                StrandedConvoyBanner(
+                    count: strandedConvoys.count,
+                    onSlingNow: {
+                        if let first = strandedConvoys.first {
+                            panel.selectConvoy(first.id)
+                        }
+                    }
+                )
+            }
 
             Divider()
 
@@ -228,6 +243,55 @@ struct ConvoyBoardPanelView: View {
         case .easeOut:
             return .easeOut(duration: duration)
         }
+    }
+}
+
+// MARK: - Stranded Convoy Banner
+
+private struct StrandedConvoyBanner: View {
+    let count: Int
+    let onSlingNow: () -> Void
+
+    @State private var isPulsing = false
+
+    var body: some View {
+        HStack(spacing: GasTownSpacing.gridGap) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(GasTownColors.error)
+                .opacity(isPulsing ? 0.5 : 1.0)
+                .animation(
+                    .easeInOut(duration: 1.0).repeatForever(autoreverses: true),
+                    value: isPulsing
+                )
+                .onAppear { isPulsing = true }
+
+            Text(String(
+                localized: "convoyBoard.stranded.message",
+                defaultValue: "\(count) stranded convoy\(count == 1 ? "" : "s") \u{2014} ready work with no polecats assigned"
+            ))
+            .font(GasTownTypography.label)
+            .foregroundColor(GasTownColors.error)
+
+            Spacer()
+
+            Button(String(
+                localized: "convoyBoard.stranded.slingNow",
+                defaultValue: "Sling Now"
+            )) {
+                onSlingNow()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .tint(GasTownColors.error)
+        }
+        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+        .padding(.vertical, GasTownSpacing.rowPaddingV)
+        .background(GasTownColors.error.opacity(0.15))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(
+            localized: "convoyBoard.stranded.a11y",
+            defaultValue: "\(count) stranded convoys need attention"
+        ))
     }
 }
 
