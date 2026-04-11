@@ -505,7 +505,7 @@ extension Workspace {
                 repositoryPath: repoPath,
                 baseRevision: diffPanel.baseRevision
             )
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard, .refinery:
             terminalSnapshot = nil
             browserSnapshot = nil
             markdownSnapshot = nil
@@ -713,7 +713,7 @@ extension Workspace {
             }
             applySessionPanelMetadata(snapshot, toPanelId: diffPanel.id)
             return diffPanel.id
-        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard:
+        case .beadInspector, .readyWork, .agentHealth, .townDashboard, .agentProfile, .rigPanel, .mailPanel, .convoyBoard, .refinery:
             return nil
         }
     }
@@ -7313,6 +7313,8 @@ final class Workspace: Identifiable, ObservableObject {
             return "mailPanel"
         case .convoyBoard:
             return "convoyBoard"
+        case .refinery:
+            return "refinery"
         }
     }
 
@@ -9785,6 +9787,59 @@ final class Workspace: Identifiable, ObservableObject {
             title: panel.displayTitle,
             icon: panel.displayIcon,
             kind: "convoyBoard",
+            isDirty: panel.isDirty,
+            isLoading: false,
+            isPinned: false,
+            inPane: paneId
+        ) else {
+            panels.removeValue(forKey: panel.id)
+            panelTitles.removeValue(forKey: panel.id)
+            return nil
+        }
+
+        surfaceIdToPanelId[newTabId] = panel.id
+        if focus {
+            bonsplitController.focusPane(paneId)
+            bonsplitController.selectTab(newTabId)
+            applyTabSelection(tabId: newTabId, inPane: paneId)
+        } else {
+            preserveFocusAfterNonFocusSplit(
+                preferredPanelId: previousFocusedPanelId,
+                splitPanelId: panel.id,
+                previousHostedView: previousHostedView
+            )
+        }
+
+        panel.refresh()
+        return panel
+    }
+
+    /// Open a Refinery Panel in the focused pane.
+    ///
+    /// Creates a ``RefineryPanel`` and inserts it as a new tab. Uses
+    /// ``RefineryAdapter`` for data fetching.
+    @discardableResult
+    func openRefineryPanel(rigId: String? = nil, focus: Bool = true) -> RefineryPanel? {
+        guard let paneId = bonsplitController.focusedPaneId else { return nil }
+        let previousFocusedPanelId = focusedPanelId
+        let previousHostedView = focusedTerminalPanel?.hostedView
+
+        let resolvedRigId = rigId ?? GasTownService.shared.rigs.first?.id ?? "unknown"
+
+        let adapter: RefineryAdapter
+        if let townPath = GasTownService.shared.townRoot?.path {
+            adapter = RefineryAdapter(townRootPath: townPath)
+        } else {
+            adapter = RefineryAdapter()
+        }
+        let panel = RefineryPanel(rigId: resolvedRigId, workspaceId: id, adapter: adapter)
+        panels[panel.id] = panel
+        panelTitles[panel.id] = panel.displayTitle
+
+        guard let newTabId = bonsplitController.createTab(
+            title: panel.displayTitle,
+            icon: panel.displayIcon,
+            kind: "refinery",
             isDirty: panel.isDirty,
             isLoading: false,
             isPinned: false,

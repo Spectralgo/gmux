@@ -6043,6 +6043,8 @@ struct ContentView: View {
             return String(localized: "commandPalette.kind.mailPanel", defaultValue: "Mail")
         case .convoyBoard:
             return String(localized: "commandPalette.kind.convoyBoard", defaultValue: "Convoys")
+        case .refinery:
+            return String(localized: "commandPalette.kind.refinery", defaultValue: "Merge Pipeline")
         }
     }
 
@@ -6072,6 +6074,8 @@ struct ContentView: View {
             return ["mail", "inbox", "message", "compose", "send"]
         case .convoyBoard:
             return ["convoy", "convoys", "board", "progress", "work"]
+        case .refinery:
+            return ["refinery", "merge", "pipeline", "queue", "mq"]
         }
     }
 

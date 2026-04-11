@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		RF00000000000001 /* RefineryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = RF00000000000011 /* RefineryPanel.swift */; };
+		RF00000000000002 /* RefineryPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RF00000000000012 /* RefineryPanelView.swift */; };
+		RF00000000000003 /* RefineryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = RF00000000000013 /* RefineryAdapter.swift */; };
 		MP00000000000001 /* MailPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000011 /* MailPanel.swift */; };
 		MP00000000000002 /* MailPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000012 /* MailPanelView.swift */; };
 		MP00000000000003 /* InboxListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MP00000000000013 /* InboxListView.swift */; };
@@ -303,6 +306,9 @@
 		MP00000000000017 /* FilterBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FilterBarView.swift; sourceTree = "<group>"; };
 		MP00000000000018 /* ThreadView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThreadView.swift; sourceTree = "<group>"; };
 		MP00000000000019 /* MailToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MailToolbarView.swift; sourceTree = "<group>"; };
+		RF00000000000011 /* RefineryPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefineryPanel.swift; sourceTree = "<group>"; };
+		RF00000000000012 /* RefineryPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefineryPanelView.swift; sourceTree = "<group>"; };
+		RF00000000000013 /* RefineryAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefineryAdapter.swift; sourceTree = "<group>"; };
 		CB00000000000011 /* ConvoyBoardPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyBoardPanel.swift; sourceTree = "<group>"; };
 		CB00000000000012 /* ConvoyBoardPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyBoardPanelView.swift; sourceTree = "<group>"; };
 		CB00000000000013 /* ConvoyCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConvoyCardView.swift; sourceTree = "<group>"; };
@@ -592,6 +598,7 @@
 				71DECFF5A80DD6E707C63FBD /* GastownSocketHandlers.swift */,
 				9244DAD85136CA2A3902C468 /* NotificationRouter.swift */,
 				38005F2FE18948D6631EE491 /* ConvoyAdapter.swift */,
+				RF00000000000013 /* RefineryAdapter.swift */,
 				25C0735554C2F441093D33BD /* RigConfig.swift */,
 				9617CE0267D2D42333750CE0 /* OpenRouter.swift */,
 				262BE52AE0C513863BEB8F21 /* ResolvedWorktree.swift */,
@@ -784,6 +791,8 @@
 				CB00000000000011 /* ConvoyBoardPanel.swift */,
 				CB00000000000012 /* ConvoyBoardPanelView.swift */,
 				CB0000000000001A /* ConvoyBoardSections */,
+				RF00000000000011 /* RefineryPanel.swift */,
+				RF00000000000012 /* RefineryPanelView.swift */,
 			);
 			name = Panels;
 			path = Panels;
@@ -1249,6 +1258,9 @@
 				MP00000000000009 /* MailToolbarView.swift in Sources */,
 				CB00000000000001 /* ConvoyBoardPanel.swift in Sources */,
 				CB00000000000002 /* ConvoyBoardPanelView.swift in Sources */,
+				RF00000000000001 /* RefineryPanel.swift in Sources */,
+				RF00000000000002 /* RefineryPanelView.swift in Sources */,
+				RF00000000000003 /* RefineryAdapter.swift in Sources */,
 				CB00000000000003 /* ConvoyCardView.swift in Sources */,
 				CB00000000000004 /* ConvoyDetailSection.swift in Sources */,
 				CB00000000000005 /* ConvoyBoardToolbar.swift in Sources */,
