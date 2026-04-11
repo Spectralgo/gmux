@@ -4,14 +4,19 @@ import Combine
 
 /// Panel showing the merge pipeline queue for a rig's refinery.
 ///
-/// Phase 1: Read-only queue list with load state, silent auto-refresh,
-/// and basic queue item cards. No action commands, no socket events,
-/// no build log viewer.
+/// Phase 2: Real-time socket events, expand/collapse detail, build log
+/// lazy loading, hybrid refresh strategy, and PipelineFlowBar.
 ///
 /// Follows the same load/refresh pattern as ``RigPanel``:
 /// - Initial load on `.onAppear`
 /// - Auto-refresh via `GasTownService.shared.$refreshTick` (8s)
 /// - Silent refresh skips `.loading` state and only publishes on change
+///
+/// Phase 2 additions:
+/// - Observes ``MailInboxStore`` for pipeline events (POLECAT_DONE, etc.)
+/// - Immediate stage transitions on socket events, polling as fallback
+/// - Build log lazy loading with 50k char truncation and in-memory cache
+/// - Expand/collapse queue items with detail view
 @MainActor
 final class RefineryPanel: Panel, ObservableObject {
     let id: UUID
@@ -23,16 +28,22 @@ final class RefineryPanel: Panel, ObservableObject {
     )
     @Published private(set) var loadState: RefineryLoadState = .idle
 
-    /// Currently selected queue item (for future expansion).
+    /// Currently selected queue item for expanded detail view.
     @Published var selectedItemId: String?
+
+    /// Build log loading state for the expanded item.
+    @Published private(set) var buildLogState: BuildLogLoadState = .idle
+
+    /// Action result banner (auto-dismisses after 4s).
+    @Published var actionResult: RefineryActionResult?
 
     /// Token incremented to trigger focus flash animation.
     @Published private(set) var focusFlashToken: Int = 0
 
     var displayIcon: String? { GasTownRoleIcons.refinery }
 
-    /// The rig this panel displays.
-    let rigId: String
+    /// The rig this panel displays. Mutable for rig selector switching.
+    var rigId: String
 
     /// Workspace that owns this panel.
     let workspaceId: UUID
@@ -43,11 +54,22 @@ final class RefineryPanel: Panel, ObservableObject {
     /// Tick counter for refresh cadence.
     private var tickCounter: Int = 0
 
+    /// Build log cache: itemId → log text. Cleared on refresh.
+    private var buildLogCache: [String: String] = [:]
+
+    /// Cancellables for Combine subscriptions.
+    private var cancellables = Set<AnyCancellable>()
+
+    /// Last processed mail message count, for incremental event processing.
+    private var lastMailCount: Int = 0
+
     init(rigId: String, workspaceId: UUID, adapter: RefineryAdapter) {
         self.id = UUID()
         self.rigId = rigId
         self.workspaceId = workspaceId
         self.adapter = adapter
+
+        subscribeToMailEvents()
     }
 
     // MARK: - Panel protocol
@@ -80,6 +102,8 @@ final class RefineryPanel: Panel, ObservableObject {
             tickCounter += 1
         } else {
             tickCounter = 0
+            // Clear build log cache on manual refresh (logs may change after retry)
+            buildLogCache.removeAll()
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
@@ -100,6 +124,185 @@ final class RefineryPanel: Panel, ObservableObject {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Rig Switching
+
+    /// Switch to a different rig, clearing all state and refreshing.
+    func switchRig(_ newRigId: String) {
+        rigId = newRigId
+        selectedItemId = nil
+        buildLogCache.removeAll()
+        buildLogState = .idle
+        actionResult = nil
+        loadState = .loading
+        refresh()
+    }
+
+    // MARK: - Detail Expansion
+
+    /// Expand a queue item to show its detail view.
+    func expandItem(_ itemId: String) {
+        selectedItemId = itemId
+        loadBuildLog(for: itemId)
+    }
+
+    /// Collapse the currently expanded item.
+    func collapseItem() {
+        selectedItemId = nil
+        buildLogState = .idle
+    }
+
+    // MARK: - Build Log Loading
+
+    /// Lazy-load build log for a queue item.
+    ///
+    /// Uses in-memory cache. Cache is cleared on every `refresh()` call
+    /// (logs may change after retry).
+    func loadBuildLog(for itemId: String) {
+        // Check cache first
+        if let cached = buildLogCache[itemId] {
+            buildLogState = .loaded(cached)
+            return
+        }
+
+        buildLogState = .loading
+        let adapter = self.adapter
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let result = adapter.loadBuildLog(itemId: itemId)
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                switch result {
+                case .success(let log):
+                    self.buildLogCache[itemId] = log
+                    self.buildLogState = .loaded(log)
+                case .failure(let error):
+                    self.buildLogState = .failed(error)
+                }
+            }
+        }
+    }
+
+    // MARK: - Mail Event Observation
+
+    /// Subscribe to ``MailInboxStore`` for pipeline-relevant mail events.
+    ///
+    /// When a POLECAT_DONE, MERGE_READY, MERGED, MERGE_FAILED, or
+    /// REWORK_REQUEST mail arrives, apply the stage transition immediately
+    /// with animation. The 8s polling fallback catches anything missed.
+    private func subscribeToMailEvents() {
+        MailInboxStore.shared.$messages
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] messages in
+                self?.processNewMailEvents(messages)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func processNewMailEvents(_ messages: [MailMessage]) {
+        // Only process new messages since last check
+        guard messages.count > lastMailCount else {
+            lastMailCount = messages.count
+            return
+        }
+
+        let newMessages = messages.prefix(messages.count - lastMailCount)
+        lastMailCount = messages.count
+
+        guard case .loaded(let snapshot) = loadState else { return }
+        var updatedQueue = snapshot.queue
+        var changed = false
+
+        for message in newMessages {
+            guard let event = RefineryAdapter.parseMailEvent(message) else { continue }
+
+            switch event {
+            case .polecatDone(let beadId, _, _):
+                if let index = updatedQueue.firstIndex(where: { $0.id == beadId }) {
+                    if updatedQueue[index].stage != .polecatDone {
+                        updatedQueue[index].stage = .polecatDone
+                        changed = true
+                    }
+                }
+                // New item may appear on next poll
+
+            case .mergeReady(let beadId):
+                if let index = updatedQueue.firstIndex(where: { $0.id == beadId }) {
+                    updatedQueue[index].stage = .mergeReady
+                    changed = true
+                }
+
+            case .merged(let beadId):
+                if let index = updatedQueue.firstIndex(where: { $0.id == beadId }) {
+                    updatedQueue[index].stage = .merged
+                    changed = true
+                }
+
+            case .mergeFailed(let beadId, let error):
+                if let index = updatedQueue.firstIndex(where: { $0.id == beadId }) {
+                    updatedQueue[index].stage = .failed
+                    changed = true
+                    // Clear cached build log for this item since it may have new output
+                    buildLogCache.removeValue(forKey: beadId)
+                    _ = error  // Error detail available on next poll/expand
+                }
+
+            case .reworkRequest(let beadId, _):
+                if let index = updatedQueue.firstIndex(where: { $0.id == beadId }) {
+                    updatedQueue[index].stage = .rework
+                    changed = true
+                }
+            }
+        }
+
+        if changed {
+            // Recompute stage counts from updated queue
+            let allItems = updatedQueue + snapshot.skipped
+            var polecatDone = 0, mergeReady = 0, building = 0, merged = 0, failed = 0, rework = 0
+            for item in allItems {
+                switch item.stage {
+                case .polecatDone: polecatDone += 1
+                case .mergeReady: mergeReady += 1
+                case .building: building += 1
+                case .merged: merged += 1
+                case .failed: failed += 1
+                case .rework: rework += 1
+                case .skipped: break
+                }
+            }
+            let newCounts = PipelineStageCounts(
+                polecatDone: polecatDone,
+                mergeReady: mergeReady,
+                building: building,
+                merged: merged,
+                failed: failed,
+                rework: rework
+            )
+            let updatedSnapshot = RefinerySnapshot(
+                health: snapshot.health,
+                rigId: snapshot.rigId,
+                queue: updatedQueue,
+                skipped: snapshot.skipped,
+                history: snapshot.history,
+                stageCounts: newCounts
+            )
+            withAnimation(GasTownAnimation.statusChange) {
+                loadState = .loaded(updatedSnapshot)
+            }
+        }
+    }
+
+    // MARK: - Action Result Banner
+
+    /// Show an action result banner that auto-dismisses after 4 seconds.
+    func showActionResult(_ result: RefineryActionResult) {
+        actionResult = result
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.actionResult == result else { return }
+            self.actionResult = nil
         }
     }
 }

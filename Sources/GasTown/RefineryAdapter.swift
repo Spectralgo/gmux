@@ -101,6 +101,33 @@ enum RefineryLoadState: Equatable, Sendable {
     case failed(RefineryAdapterError)
 }
 
+// MARK: - Build Log Load State
+
+enum BuildLogLoadState: Equatable, Sendable {
+    case idle
+    case loading
+    case loaded(String)
+    case failed(RefineryAdapterError)
+}
+
+// MARK: - Action Result
+
+enum RefineryActionResult: Equatable, Sendable {
+    case success(String)
+    case failure(String)
+}
+
+// MARK: - Refinery Mail Event
+
+/// Typed event derived from a ``MailMessage`` that maps to a pipeline stage transition.
+enum RefineryMailEvent: Equatable, Sendable {
+    case polecatDone(beadId: String, polecat: String?, branch: String?)
+    case mergeReady(beadId: String)
+    case merged(beadId: String)
+    case mergeFailed(beadId: String, error: String?)
+    case reworkRequest(beadId: String, reworkPolecat: String?)
+}
+
 // MARK: - Adapter
 
 struct RefineryAdapter: Sendable {
@@ -184,6 +211,60 @@ struct RefineryAdapter: Sendable {
 
         case .failure(let error):
             return .failure(error)
+        }
+    }
+
+    /// Load a build log for a specific queue item. Call from a background queue.
+    ///
+    /// Truncates at 50,000 characters per spec Section 4.3.
+    func loadBuildLog(itemId: String) -> Result<String, RefineryAdapterError> {
+        guard let gtPath = environment.whichGT() else {
+            return .failure(.gtCLINotFound)
+        }
+
+        let result = environment.runCLI(gtPath, ["mq", "log", itemId])
+
+        guard result.exitCode == 0 else {
+            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+            return .failure(.cliFailure(
+                command: "gt mq log \(itemId)",
+                exitCode: result.exitCode,
+                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+
+        var log = String(data: result.stdout, encoding: .utf8) ?? ""
+        let maxLength = 50_000
+        if log.count > maxLength {
+            log = String(log.prefix(maxLength)) + "\n\n(log truncated)"
+        }
+        return .success(log)
+    }
+
+    /// Parse a ``MailMessage`` into a typed ``RefineryMailEvent``, if applicable.
+    static func parseMailEvent(_ message: MailMessage) -> RefineryMailEvent? {
+        switch message.type {
+        case .polecatDone:
+            guard let beadId = message.provenance.beadId else { return nil }
+            return .polecatDone(
+                beadId: beadId,
+                polecat: message.provenance.polecatName,
+                branch: message.provenance.branch
+            )
+        case .mergeReady:
+            guard let beadId = message.provenance.beadId else { return nil }
+            return .mergeReady(beadId: beadId)
+        case .merged:
+            guard let beadId = message.provenance.beadId else { return nil }
+            return .merged(beadId: beadId)
+        case .mergeFailed:
+            guard let beadId = message.provenance.beadId else { return nil }
+            return .mergeFailed(beadId: beadId, error: message.body.isEmpty ? nil : message.body)
+        case .reworkRequest:
+            guard let beadId = message.provenance.beadId else { return nil }
+            return .reworkRequest(beadId: beadId, reworkPolecat: message.provenance.polecatName)
+        case .info:
+            return nil
         }
     }
 

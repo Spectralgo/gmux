@@ -13095,7 +13095,7 @@ class TerminalController {
     private func sendMail(_ args: String) -> String {
         let parsed = parseOptions(args)
         guard let typeRaw = parsed.options["type"] else {
-            return "ERROR: --type is required (POLECAT_DONE, MERGE_READY, MERGED, INFO)"
+            return "ERROR: --type is required (POLECAT_DONE, MERGE_READY, MERGED, MERGE_FAILED, REWORK_REQUEST, INFO)"
         }
         let workspaceId = parsed.options["workspace"].flatMap { UUID(uuidString: $0) }
         guard let message = MailInboxStore.createFromOptions(
@@ -13109,7 +13109,7 @@ class TerminalController {
             branch: parsed.options["branch"],
             workspaceId: workspaceId
         ) else {
-            return "ERROR: Invalid --type. Must be one of: POLECAT_DONE, MERGE_READY, MERGED, INFO"
+            return "ERROR: Invalid --type. Must be one of: POLECAT_DONE, MERGE_READY, MERGED, MERGE_FAILED, REWORK_REQUEST, INFO"
         }
         DispatchQueue.main.async {
             MailInboxStore.shared.add(message)
@@ -13146,7 +13146,7 @@ class TerminalController {
         let parsed = parseOptions(trimmed)
         if let typeRaw = parsed.options["type"] {
             guard let type = MailMessageType(rawValue: typeRaw.uppercased()) else {
-                return "ERROR: Invalid --type. Must be one of: POLECAT_DONE, MERGE_READY, MERGED, INFO"
+                return "ERROR: Invalid --type. Must be one of: POLECAT_DONE, MERGE_READY, MERGED, MERGE_FAILED, REWORK_REQUEST, INFO"
             }
             DispatchQueue.main.async {
                 MailInboxStore.shared.clearByType(type)

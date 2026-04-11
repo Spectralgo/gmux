@@ -5,6 +5,8 @@ enum MailMessageType: String, Codable, CaseIterable {
     case polecatDone = "POLECAT_DONE"
     case mergeReady = "MERGE_READY"
     case merged = "MERGED"
+    case mergeFailed = "MERGE_FAILED"
+    case reworkRequest = "REWORK_REQUEST"
     case info = "INFO"
 
     var displayLabel: String {
@@ -12,6 +14,8 @@ enum MailMessageType: String, Codable, CaseIterable {
         case .polecatDone: return String(localized: "inbox.messageType.polecatDone", defaultValue: "Polecat Done")
         case .mergeReady: return String(localized: "inbox.messageType.mergeReady", defaultValue: "Merge Ready")
         case .merged: return String(localized: "inbox.messageType.merged", defaultValue: "Merged")
+        case .mergeFailed: return String(localized: "inbox.messageType.mergeFailed", defaultValue: "Merge Failed")
+        case .reworkRequest: return String(localized: "inbox.messageType.reworkRequest", defaultValue: "Rework Request")
         case .info: return String(localized: "inbox.messageType.info", defaultValue: "Info")
         }
     }
@@ -21,16 +25,20 @@ enum MailMessageType: String, Codable, CaseIterable {
         case .polecatDone: return "checkmark.circle.fill"
         case .mergeReady: return "arrow.triangle.merge"
         case .merged: return "arrow.triangle.pull"
+        case .mergeFailed: return "xmark.circle.fill"
+        case .reworkRequest: return "arrow.triangle.2.circlepath"
         case .info: return "info.circle"
         }
     }
 
     var groupOrder: Int {
         switch self {
-        case .mergeReady: return 0
-        case .polecatDone: return 1
-        case .merged: return 2
-        case .info: return 3
+        case .mergeFailed: return 0
+        case .reworkRequest: return 1
+        case .mergeReady: return 2
+        case .polecatDone: return 3
+        case .merged: return 4
+        case .info: return 5
         }
     }
 }
