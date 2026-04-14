@@ -49,6 +49,7 @@
 		1F14445B9627DE9D3AF4FD2E /* BrowserPanelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C7B1B978620BE162CC057E /* BrowserPanelTests.swift */; };
 		2BB56A710BB1FC50367E5BCF /* TabManagerSessionSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */; };
 		2D0F5737562FAC22379E073B /* GastownCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F242E023B23AC8A0718A93CC /* GastownCommandRunner.swift */; };
+		SA00000000000001 /* GasTownSocketAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = SA00000000000011 /* GasTownSocketAdapter.swift */; };
 		32DD4165FE021B9E51FE16FC /* Rig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2495A51A4A0FFDB6457FFE /* Rig.swift */; };
 		40B35468B942BDEF9AAE9173 /* NotificationJumpTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41834C5148A83E5B8DE3D664 /* NotificationJumpTarget.swift */; };
 		4378399A7C0245EF8186F306 /* OmnibarAndToolsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09C007F42697761B5F1A2AB /* OmnibarAndToolsTests.swift */; };
@@ -514,6 +515,7 @@
 		F2000001A1B2C3D4E5F60718 /* UpdatePillReleaseVisibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatePillReleaseVisibilityTests.swift; sourceTree = "<group>"; };
 		F2162863184D54DE84087CB8 /* HooksAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HooksAdapter.swift; sourceTree = "<group>"; };
 		F242E023B23AC8A0718A93CC /* GastownCommandRunner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GastownCommandRunner.swift; sourceTree = "<group>"; };
+		SA00000000000011 /* GasTownSocketAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GasTownSocketAdapter.swift; sourceTree = "<group>"; };
 		F3000001A1B2C3D4E5F60718 /* CJKIMEInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CJKIMEInputTests.swift; sourceTree = "<group>"; };
 		F4000001A1B2C3D4E5F60718 /* GhosttyConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyConfigTests.swift; sourceTree = "<group>"; };
 		F5000001A1B2C3D4E5F60718 /* SessionPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPersistenceTests.swift; sourceTree = "<group>"; };
@@ -604,6 +606,7 @@
 				77175C9155612DE22A957DCD /* RoleDirectory.swift */,
 				B69A2FDA7C044EF45024A456 /* ConvoyWriteService.swift */,
 				F242E023B23AC8A0718A93CC /* GastownCommandRunner.swift */,
+				SA00000000000011 /* GasTownSocketAdapter.swift */,
 				4F7106DB2DA287964BDCC5E4 /* WorktreeClassifier.swift */,
 				71DECFF5A80DD6E707C63FBD /* GastownSocketHandlers.swift */,
 				9244DAD85136CA2A3902C468 /* NotificationRouter.swift */,
@@ -1225,6 +1228,7 @@
 				EF792F3F490B2A3F98E7976E /* RoleDirectory.swift in Sources */,
 				1687BBC15C6A2BB648A89A36 /* ConvoyWriteService.swift in Sources */,
 				2D0F5737562FAC22379E073B /* GastownCommandRunner.swift in Sources */,
+				SA00000000000001 /* GasTownSocketAdapter.swift in Sources */,
 				58015DD1423D39A9FFAE729F /* WorktreeClassifier.swift in Sources */,
 				A4000DE1637D21E784235F1B /* GastownSocketHandlers.swift in Sources */,
 				A7BC717CADDBB186AA525A77 /* NotificationRouter.swift in Sources */,

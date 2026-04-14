@@ -60,7 +60,8 @@ final class TownDashboardPanel: Panel, ObservableObject {
 
     // MARK: - Data Loading
 
-    /// Load all dashboard data. Runs CLI calls off-main, publishes on main.
+    /// Load all dashboard data. Tries the socket adapter (direct Dolt query)
+    /// first, then falls back to CLI subprocesses.
     ///
     /// - Parameter silent: When `true` (auto-refresh), skips `.loading` state
     ///   and only publishes if data changed.
@@ -69,6 +70,17 @@ final class TownDashboardPanel: Panel, ObservableObject {
             loadState = .loading
         }
 
+        // Try socket adapter first (no subprocess, direct Dolt query)
+        let socketAdapter = GasTownSocketAdapter.shared
+        if let snapshot = TownDashboardAdapter.loadSnapshotFromSocket(socketAdapter) {
+            let newState = TownDashboardLoadState.loaded(snapshot)
+            if loadState != newState {
+                loadState = newState
+            }
+            return
+        }
+
+        // Fall back to CLI subprocess
         let adapter = self.adapter
         DispatchQueue.global(qos: .userInitiated).async {
             let result = adapter.loadSnapshot()

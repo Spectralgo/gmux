@@ -139,6 +139,17 @@ struct AgentHealthAdapter: Sendable {
         )
     }
 
+    /// Load agents from the socket adapter's cached Dolt data.
+    ///
+    /// This bypasses CLI subprocess calls entirely, reading from the
+    /// centralized GasTownSocketAdapter which queries Dolt directly.
+    /// Falls back to `loadAgents()` (CLI) if socket adapter has no data.
+    @MainActor
+    static func loadAgentsFromSocket(_ adapter: GasTownSocketAdapter) -> [AgentHealthEntry]? {
+        guard adapter.isConnected, !adapter.agents.isEmpty else { return nil }
+        return adapter.toAgentHealthEntries()
+    }
+
     /// Load all agents from `gt status --json`.
     func loadAgents() -> Result<[AgentHealthEntry], AgentHealthAdapterError> {
         guard let gtPath = environment.whichGT() else {

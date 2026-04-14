@@ -95,6 +95,45 @@ struct TownDashboardAdapter: Sendable {
         self.bdPath = GasTownCLIRunner.resolveBDCLI()
     }
 
+    /// Load dashboard snapshot from the socket adapter's cached Dolt data.
+    ///
+    /// This bypasses CLI subprocess calls entirely, reading from the
+    /// centralized GasTownSocketAdapter which queries Dolt directly.
+    /// Returns nil if socket adapter has no data (caller should fall back to CLI).
+    @MainActor
+    static func loadSnapshotFromSocket(_ adapter: GasTownSocketAdapter) -> TownDashboardSnapshot? {
+        guard adapter.isConnected else { return nil }
+
+        let agents = adapter.toAgentHealthEntries()
+        let beadCounts = adapter.toBeadCountSummary()
+
+        // Derive attention items from agents (convoys not yet mapped from Dolt)
+        var attentionItems: [AttentionItem] = []
+        for agent in agents {
+            if !agent.isRunning && agent.hasWork {
+                attentionItems.append(AttentionItem(
+                    id: "stuck-\(agent.address)",
+                    severity: .critical,
+                    message: String(
+                        localized: "dashboard.attention.agentStuck",
+                        defaultValue: "\(agent.name) has hooked work but is not running"
+                    ),
+                    timestamp: nil,
+                    actionLabel: String(localized: "dashboard.attention.nudge", defaultValue: "Nudge"),
+                    agentAddress: agent.address
+                ))
+            }
+        }
+        attentionItems.sort { $0.severity > $1.severity }
+
+        return TownDashboardSnapshot(
+            agents: agents,
+            attentionItems: attentionItems,
+            beadCounts: beadCounts,
+            activityFeed: []  // Activity feed still requires git log (not in Dolt)
+        )
+    }
+
     /// Load all dashboard data. Call from a background queue.
     func loadSnapshot() -> Result<TownDashboardSnapshot, TownDashboardAdapterError> {
         // 1. Load agents

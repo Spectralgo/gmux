@@ -66,6 +66,9 @@ final class GasTownService: ObservableObject {
                     self.rigs = discoveryResult.rigs
                     self.gtCLIPath = discoveryResult.gtCLIPath
                     self.startRefreshTimer()
+                    // Start the centralized Dolt socket adapter for
+                    // direct-query data fetching (replaces CLI subprocesses).
+                    GasTownSocketAdapter.shared.startWatching()
                     #if DEBUG
                     dlog("GasTownService: detected \(discoveryResult.town.path) with \(discoveryResult.rigs.count) rigs")
                     #endif
@@ -74,6 +77,7 @@ final class GasTownService: ObservableObject {
                     self.rigs = []
                     self.gtCLIPath = nil
                     self.stopRefreshTimer()
+                    GasTownSocketAdapter.shared.stopWatching()
                     #if DEBUG
                     dlog("GasTownService: discovery failed — \(error)")
                     #endif

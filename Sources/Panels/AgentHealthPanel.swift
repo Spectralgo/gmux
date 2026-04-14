@@ -45,8 +45,8 @@ final class AgentHealthPanel: Panel, ObservableObject {
 
     // MARK: - Data Loading
 
-    /// Load agent health data from `gt status --json`. Runs CLI off-main
-    /// to avoid blocking UI, then publishes the result on main.
+    /// Load agent health data. Tries the socket adapter (direct Dolt query)
+    /// first, then falls back to `gt status --json` via CLI subprocess.
     ///
     /// - Parameter silent: When `true` (used by auto-refresh), skips the
     ///   `.loading` transition and only publishes if the result differs from
@@ -56,6 +56,17 @@ final class AgentHealthPanel: Panel, ObservableObject {
             loadState = .loading
         }
 
+        // Try socket adapter first (no subprocess, direct Dolt query)
+        let socketAdapter = GasTownSocketAdapter.shared
+        if let entries = AgentHealthAdapter.loadAgentsFromSocket(socketAdapter) {
+            let newState = AgentHealthLoadState.loaded(entries)
+            if loadState != newState {
+                loadState = newState
+            }
+            return
+        }
+
+        // Fall back to CLI subprocess
         let adapter = self.adapter
         DispatchQueue.global(qos: .userInitiated).async {
             let result = adapter.loadAgents()
