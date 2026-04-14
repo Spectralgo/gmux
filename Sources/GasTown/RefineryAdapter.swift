@@ -170,10 +170,10 @@ struct RefineryAdapter: Sendable {
     /// Load a complete refinery snapshot for the merge queue.
     func loadSnapshot(rigId: String) async -> Result<RefinerySnapshot, RefineryAdapterError> {
         // 1. Load merge queue items
-        let queueResult = await loadMergeQueue()
+        let queueResult = await loadMergeQueue(rigId: rigId)
 
         // 2. Load refinery status
-        let health = await loadRefineryHealth()
+        let health = await loadRefineryHealth(rigId: rigId)
 
         // 3. Load recent merge history from git log
         let history = await loadMergeHistory()
@@ -250,8 +250,8 @@ struct RefineryAdapter: Sendable {
 
     // MARK: - CLI Commands
 
-    private func loadMergeQueue() async -> Result<[MergeQueueItem], RefineryAdapterError> {
-        let result = await environment.runGT(["mq", "list", "--json"])
+    private func loadMergeQueue(rigId: String) async -> Result<[MergeQueueItem], RefineryAdapterError> {
+        let result = await environment.runGT(["mq", "list", rigId, "--json"])
 
         if !result.succeeded {
             // Empty queue is not an error — some gt versions exit 0 with empty array,
@@ -263,7 +263,7 @@ struct RefineryAdapter: Sendable {
                 return .failure(.gtCLINotFound)
             }
             return .failure(.cliFailure(
-                command: "gt mq list --json",
+                command: "gt mq list \(rigId) --json",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -278,10 +278,10 @@ struct RefineryAdapter: Sendable {
         guard let data = trimmed.data(using: .utf8),
               let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return .failure(.parseFailure(
-                command: "gt mq list --json",
+                command: "gt mq list \(rigId) --json",
                 detail: String(
                     localized: "refinery.mqList.parseFailed",
-                    defaultValue: "Expected JSON array from 'gt mq list --json'. Got: \(trimmed.prefix(200))"
+                    defaultValue: "Expected JSON array from 'gt mq list \(rigId) --json'. Got: \(trimmed.prefix(200))"
                 )
             ))
         }
@@ -290,8 +290,8 @@ struct RefineryAdapter: Sendable {
         return .success(items)
     }
 
-    private func loadRefineryHealth() async -> RefineryHealth {
-        let result = await environment.runGT(["refinery", "status"])
+    private func loadRefineryHealth(rigId: String) async -> RefineryHealth {
+        let result = await environment.runGT(["refinery", "status", rigId])
 
         guard result.succeeded else {
             return .error
