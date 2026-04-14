@@ -32,17 +32,30 @@ struct DiagnosticsPanelView: View {
                 EscalationQueueView(
                     escalations: panel.store.escalations,
                     onAcknowledge: { id in
-                        Task { await panel.store.acknowledgeEscalation(id: id) }
+                        Task {
+                            await panel.store.acknowledgeEscalation(id: id)
+                            panel.showActionResult(.success(String(
+                                localized: "diagnostics.escalation.acknowledged",
+                                defaultValue: "Escalation acknowledged"
+                            )))
+                        }
                     },
                     onResolve: { id in
-                        Task { await panel.store.resolveEscalation(id: id) }
+                        Task {
+                            await panel.store.resolveEscalation(id: id)
+                            panel.showActionResult(.success(String(
+                                localized: "diagnostics.escalation.resolved",
+                                defaultValue: "Escalation resolved"
+                            )))
+                        }
                     }
                 )
 
                 if expandedSection == .system {
                     SystemDetailSection(
                         details: panel.store.systemDetails,
-                        store: panel.store
+                        store: panel.store,
+                        onActionResult: { panel.showActionResult($0) }
                     )
                 }
 
@@ -53,7 +66,8 @@ struct DiagnosticsPanelView: View {
                 if expandedSection == .storage {
                     StorageDetailSection(
                         details: panel.store.storageDetails,
-                        store: panel.store
+                        store: panel.store,
+                        onActionResult: { panel.showActionResult($0) }
                     )
                 }
 
@@ -79,6 +93,11 @@ struct DiagnosticsPanelView: View {
             .padding(GasTownSpacing.cardPadding)
         }
         .background(GasTownColors.panelBackground(for: colorScheme))
+        .overlay(alignment: .top) {
+            if let result = panel.actionResult {
+                GasTownActionToast(result: result)
+            }
+        }
         .overlay {
             RoundedRectangle(cornerRadius: FocusFlashPattern.ringCornerRadius)
                 .stroke(cmuxAccentColor().opacity(focusFlashOpacity), lineWidth: 3)
@@ -230,6 +249,7 @@ private struct TrafficLightIndicator: View {
 private struct SystemDetailSection: View {
     let details: SystemDetails?
     let store: DiagnosticsStore
+    var onActionResult: ((GasTownActionResult) -> Void)?
     @Environment(\.colorScheme) private var colorScheme
     @State private var doltActionInProgress = false
 
@@ -250,12 +270,17 @@ private struct SystemDetailSection: View {
                 ) {
                     doltActionInProgress = true
                     Task {
+                        let result: ActionResult
                         if d.doltServer != nil {
-                            _ = await store.restartDolt()
+                            result = await store.restartDolt()
                         } else {
-                            _ = await store.startDolt()
+                            result = await store.startDolt()
                         }
                         doltActionInProgress = false
+                        let toast: GasTownActionResult = result.success
+                            ? .success(result.message.isEmpty ? "Dolt operation succeeded" : result.message)
+                            : .failure(result.message.isEmpty ? "Dolt operation failed" : result.message)
+                        onActionResult?(toast)
                     }
                 }
 
@@ -402,6 +427,7 @@ private struct AgentsDetailSection: View {
 private struct StorageDetailSection: View {
     let details: StorageDetails?
     let store: DiagnosticsStore
+    var onActionResult: ((GasTownActionResult) -> Void)?
     @Environment(\.colorScheme) private var colorScheme
     @State private var cleanDDInProgress = false
     @State private var cleanBCInProgress = false
@@ -445,8 +471,11 @@ private struct StorageDetailSection: View {
                     ) {
                         cleanDDInProgress = true
                         Task {
-                            _ = await store.cleanDerivedData()
+                            let result = await store.cleanDerivedData()
                             cleanDDInProgress = false
+                            onActionResult?(result.success
+                                ? .success(result.message)
+                                : .failure(result.message))
                         }
                     }
                 }
@@ -463,8 +492,11 @@ private struct StorageDetailSection: View {
                     ) {
                         cleanBCInProgress = true
                         Task {
-                            _ = await store.cleanBuildCache()
+                            let result = await store.cleanBuildCache()
                             cleanBCInProgress = false
+                            onActionResult?(result.success
+                                ? .success(result.message)
+                                : .failure(result.message))
                         }
                     }
                 }

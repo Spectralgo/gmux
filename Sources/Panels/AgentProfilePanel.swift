@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Panel displaying an RPG-style character sheet for an AI agent.
 ///
@@ -13,6 +14,9 @@ final class AgentProfilePanel: Panel, ObservableObject {
     @Published private(set) var displayTitle: String
     @Published private(set) var loadState: AgentProfileLoadState = .idle
     @Published private(set) var focusFlashToken: Int = 0
+
+    /// Action result toast (auto-dismisses after 4s).
+    @Published var actionResult: GasTownActionResult?
 
     var displayIcon: String? {
         if let role = currentHealth?.role {
@@ -148,10 +152,35 @@ final class AgentProfilePanel: Panel, ObservableObject {
     /// Add a memory via socket handler.
     func addMemory(_ text: String) {
         Task { [weak self] in
-            _ = await GastownSocketHandlers.gastownRemember(params: ["text": text])
+            let result = await GastownSocketHandlers.gastownRemember(params: ["text": text])
 
             await MainActor.run {
-                self?.refreshBeadHistory()
+                guard let self else { return }
+                switch result {
+                case .ok:
+                    self.showActionResult(.success(String(
+                        localized: "agentProfile.action.remembered",
+                        defaultValue: "Memory saved"
+                    )))
+                    self.refreshBeadHistory()
+                case .err(_, let message):
+                    self.showActionResult(.failure(message))
+                }
+            }
+        }
+    }
+
+    // MARK: - Action Result Toast
+
+    /// Show an action result toast that auto-dismisses after 4 seconds.
+    func showActionResult(_ result: GasTownActionResult) {
+        withAnimation(GasTownAnimation.statusChange) {
+            actionResult = result
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.actionResult == result else { return }
+            withAnimation(GasTownAnimation.statusChange) {
+                self.actionResult = nil
             }
         }
     }

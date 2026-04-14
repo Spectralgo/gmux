@@ -183,3 +183,43 @@ enum GasTownStatusDot {
     /// Standard status dot diameter.
     static let size: CGFloat = 8
 }
+
+// MARK: - Action Toast
+
+/// Shared action result type for Gas Town panel feedback toasts.
+enum GasTownActionResult: Equatable {
+    case success(String)
+    case failure(String)
+}
+
+/// Reusable action-result toast banner for Gas Town panels.
+///
+/// Matches the existing Refinery panel banner pattern:
+/// success → green checkmark, failure → red X, auto-dismiss slide-in.
+struct GasTownActionToast: View {
+    let result: GasTownActionResult
+
+    var body: some View {
+        HStack(spacing: GasTownSpacing.gridGap) {
+            switch result {
+            case .success(let message):
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(GasTownColors.active)
+                Text(message)
+                    .font(GasTownTypography.caption)
+            case .failure(let message):
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(GasTownColors.error)
+                Text(message)
+                    .font(GasTownTypography.caption)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.horizontal, GasTownSpacing.rowPaddingH)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .padding(.top, GasTownSpacing.rowPaddingV)
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+}

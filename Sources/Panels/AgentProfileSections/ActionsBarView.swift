@@ -10,6 +10,7 @@ import SwiftUI
 struct ActionsBarView: View {
     let agentAddress: String
     let role: String?
+    var onActionResult: ((GasTownActionResult) -> Void)?
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -108,46 +109,79 @@ struct ActionsBarView: View {
 
     private func attachAction() {
         Task {
-            _ = await GastownSocketHandlers.gastownAgentAttach(params: ["address": agentAddress])
+            let result = await GastownSocketHandlers.gastownAgentAttach(params: ["address": agentAddress])
+            reportResult(result, successLabel: String(
+                localized: "agentProfile.action.attached",
+                defaultValue: "Attached to \(agentAddress)"
+            ))
         }
     }
 
     private func sendMailAction() {
         Task {
-            _ = await GastownSocketHandlers.gastownMailSend(params: [
+            let result = await GastownSocketHandlers.gastownMailSend(params: [
                 "address": agentAddress,
                 "subject": "Message from profile",
                 "body": "",
             ])
+            reportResult(result, successLabel: String(
+                localized: "agentProfile.action.mailSent",
+                defaultValue: "Mail sent to \(agentAddress)"
+            ))
         }
     }
 
     private func nudgeAction() {
         Task {
-            _ = await GastownSocketHandlers.gastownAgentNudge(params: [
+            let result = await GastownSocketHandlers.gastownAgentNudge(params: [
                 "address": agentAddress,
                 "message": "Check in from profile",
             ])
+            reportResult(result, successLabel: String(
+                localized: "agentProfile.action.nudged",
+                defaultValue: "Nudged \(agentAddress)"
+            ))
         }
     }
 
     private func handoffAction() {
         Task {
-            _ = await GastownSocketHandlers.gastownAgentHandoff(params: [
+            let result = await GastownSocketHandlers.gastownAgentHandoff(params: [
                 "subject": "Handoff from profile",
             ])
+            reportResult(result, successLabel: String(
+                localized: "agentProfile.action.handoffSent",
+                defaultValue: "Handoff initiated"
+            ))
         }
     }
 
     private func assignAction() {
         Task {
-            _ = await GastownSocketHandlers.gastownAgentSling(params: ["address": agentAddress])
+            let result = await GastownSocketHandlers.gastownAgentSling(params: ["address": agentAddress])
+            reportResult(result, successLabel: String(
+                localized: "agentProfile.action.assigned",
+                defaultValue: "Work assigned to \(agentAddress)"
+            ))
         }
     }
 
     private func nukeAction() {
         Task {
-            _ = await GastownSocketHandlers.gastownAgentNuke(params: ["address": agentAddress])
+            let result = await GastownSocketHandlers.gastownAgentNuke(params: ["address": agentAddress])
+            reportResult(result, successLabel: String(
+                localized: "agentProfile.action.nuked",
+                defaultValue: "Nuked \(agentAddress)"
+            ))
+        }
+    }
+
+    private func reportResult(_ result: GastownSocketHandlers.Result, successLabel: String) {
+        switch result {
+        case .ok:
+            onActionResult?(.success(successLabel))
+        case .err(_, let message):
+            onActionResult?(.failure(message))
         }
     }
 }

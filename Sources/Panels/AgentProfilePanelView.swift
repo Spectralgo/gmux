@@ -30,6 +30,11 @@ struct AgentProfilePanelView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(GasTownColors.panelBackground(for: colorScheme))
+        .overlay(alignment: .top) {
+            if let result = panel.actionResult {
+                GasTownActionToast(result: result)
+            }
+        }
         .overlay {
             RoundedRectangle(cornerRadius: FocusFlashPattern.ringCornerRadius)
                 .stroke(cmuxAccentColor().opacity(focusFlashOpacity), lineWidth: 3)
@@ -144,7 +149,8 @@ struct AgentProfilePanelView: View {
 
             ActionsBarView(
                 agentAddress: panel.agentAddress,
-                role: panel.currentHealth?.role
+                role: panel.currentHealth?.role,
+                onActionResult: { panel.showActionResult($0) }
             )
         }
     }

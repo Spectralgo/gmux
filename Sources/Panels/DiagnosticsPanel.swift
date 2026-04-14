@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 
 /// Engine Room panel — diagnostics dashboard for Gas Town health.
 ///
@@ -22,6 +23,9 @@ final class DiagnosticsPanel: Panel, ObservableObject {
 
     /// Token incremented to trigger focus flash animation.
     @Published private(set) var focusFlashToken: Int = 0
+
+    /// Action result toast (auto-dismisses after 4s).
+    @Published var actionResult: GasTownActionResult?
 
     /// Workspace that owns this panel.
     let workspaceId: UUID
@@ -48,5 +52,20 @@ final class DiagnosticsPanel: Panel, ObservableObject {
         _ = reason
         guard NotificationPaneFlashSettings.isEnabled() else { return }
         focusFlashToken += 1
+    }
+
+    // MARK: - Action Result Toast
+
+    /// Show an action result toast that auto-dismisses after 4 seconds.
+    func showActionResult(_ result: GasTownActionResult) {
+        withAnimation(GasTownAnimation.statusChange) {
+            actionResult = result
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.actionResult == result else { return }
+            withAnimation(GasTownAnimation.statusChange) {
+                self.actionResult = nil
+            }
+        }
     }
 }

@@ -26,6 +26,9 @@ final class RigPanel: Panel, ObservableObject {
     /// Token incremented to trigger focus flash animation.
     @Published private(set) var focusFlashToken: Int = 0
 
+    /// Action result toast (auto-dismisses after 4s).
+    @Published var actionResult: GasTownActionResult?
+
     var displayIcon: String? { "folder.badge.gearshape" }
 
     /// The rig this panel displays.
@@ -135,7 +138,32 @@ final class RigPanel: Panel, ObservableObject {
     func spawnPolecat() {
         let rigId = self.rigId
         Task {
-            _ = await GastownSocketHandlers.gastownPolecatSpawn(params: ["rig": rigId])
+            let result = await GastownSocketHandlers.gastownPolecatSpawn(params: ["rig": rigId])
+            switch result {
+            case .ok:
+                showActionResult(.success(String(
+                    localized: "rigPanel.action.spawnSuccess",
+                    defaultValue: "Polecat spawned in \(rigId)"
+                )))
+                refresh(silent: true)
+            case .err(_, let message):
+                showActionResult(.failure(message))
+            }
+        }
+    }
+
+    // MARK: - Action Result Toast
+
+    /// Show an action result toast that auto-dismisses after 4 seconds.
+    func showActionResult(_ result: GasTownActionResult) {
+        withAnimation(GasTownAnimation.statusChange) {
+            actionResult = result
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.actionResult == result else { return }
+            withAnimation(GasTownAnimation.statusChange) {
+                self.actionResult = nil
+            }
         }
     }
 

@@ -24,6 +24,9 @@ final class MailPanel: Panel, ObservableObject {
     @Published private(set) var loadState: MailPanelLoadState = .idle
     @Published private(set) var focusFlashToken: Int = 0
 
+    /// Action result toast (auto-dismisses after 4s).
+    @Published var actionResult: GasTownActionResult?
+
     @Published var selectedMessageID: UUID?
     @Published var searchQuery: String = ""
     @Published var activeFilter: MailFilter = .empty
@@ -182,7 +185,31 @@ final class MailPanel: Panel, ObservableObject {
         }
 
         Task {
-            _ = await GastownSocketHandlers.gastownMailSend(params: params)
+            let result = await GastownSocketHandlers.gastownMailSend(params: params)
+            switch result {
+            case .ok:
+                showActionResult(.success(String(
+                    localized: "mailPanel.action.sent",
+                    defaultValue: "Mail sent to \(recipient)"
+                )))
+            case .err(_, let message):
+                showActionResult(.failure(message))
+            }
+        }
+    }
+
+    // MARK: - Action Result Toast
+
+    /// Show an action result toast that auto-dismisses after 4 seconds.
+    func showActionResult(_ result: GasTownActionResult) {
+        withAnimation(GasTownAnimation.statusChange) {
+            actionResult = result
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.actionResult == result else { return }
+            withAnimation(GasTownAnimation.statusChange) {
+                self.actionResult = nil
+            }
         }
     }
 }

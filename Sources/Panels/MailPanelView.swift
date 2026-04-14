@@ -30,6 +30,11 @@ struct MailPanelView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(GasTownColors.panelBackground(for: colorScheme))
+        .overlay(alignment: .top) {
+            if let result = panel.actionResult {
+                GasTownActionToast(result: result)
+            }
+        }
         .overlay {
             RoundedRectangle(cornerRadius: FocusFlashPattern.ringCornerRadius)
                 .stroke(cmuxAccentColor().opacity(focusFlashOpacity), lineWidth: 3)
