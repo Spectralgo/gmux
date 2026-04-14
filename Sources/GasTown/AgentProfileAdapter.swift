@@ -36,7 +36,7 @@ enum AgentProfileLoadState: Equatable, Sendable {
 /// Adapter that fetches all data needed for an agent profile.
 ///
 /// Composes AgentHealthAdapter with bead and memory CLI calls.
-/// All methods are synchronous and must be called off-main.
+/// All methods are async.
 struct AgentProfileAdapter: Sendable {
     private let townRootPath: String?
     private let agentAdapter: AgentHealthAdapter
@@ -51,10 +51,10 @@ struct AgentProfileAdapter: Sendable {
     }
 
     /// Load the full profile snapshot for an agent.
-    func loadProfile(agentAddress: String) -> Result<AgentProfileSnapshot, AgentProfileAdapterError> {
+    func loadProfile(agentAddress: String) async -> Result<AgentProfileSnapshot, AgentProfileAdapterError> {
         // 1. Load health (from gt status --json)
         let healthEntry: AgentHealthEntry?
-        switch agentAdapter.loadAgents() {
+        switch await agentAdapter.loadAgents() {
         case .success(let entries):
             healthEntry = entries.first { $0.address == agentAddress }
         case .failure:
@@ -62,10 +62,10 @@ struct AgentProfileAdapter: Sendable {
         }
 
         // 2. Load bead history (from bd list --json --assignee <address>)
-        let beadHistory = loadBeadHistory(assignee: agentAddress)
+        let beadHistory = await loadBeadHistory(assignee: agentAddress)
 
         // 3. Load memories (from gt memories <address>)
-        let memories = loadMemories(agentAddress: agentAddress)
+        let memories = await loadMemories(agentAddress: agentAddress)
 
         return .success(AgentProfileSnapshot(
             health: healthEntry,
@@ -75,8 +75,8 @@ struct AgentProfileAdapter: Sendable {
     }
 
     /// Light refresh: only health data.
-    func loadHealthOnly(agentAddress: String) -> AgentHealthEntry? {
-        switch agentAdapter.loadAgents() {
+    func loadHealthOnly(agentAddress: String) async -> AgentHealthEntry? {
+        switch await agentAdapter.loadAgents() {
         case .success(let entries):
             return entries.first { $0.address == agentAddress }
         case .failure:
@@ -86,18 +86,13 @@ struct AgentProfileAdapter: Sendable {
 
     // MARK: - Bead History
 
-    private func loadBeadHistory(assignee: String) -> [BeadSummary] {
-        guard let bdPath = GasTownCLIRunner.resolveBDCLI() else { return [] }
-
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: bdPath,
-            arguments: ["list", "--json", "--assignee", assignee],
+    private func loadBeadHistory(assignee: String) async -> [BeadSummary] {
+        let result = await GastownCommandRunner.bd(
+            ["list", "--json", "--assignee", assignee],
             townRootPath: townRootPath
         )
-        guard result.exitCode == 0 else { return [] }
-
-        let output = String(data: result.stdout, encoding: .utf8) ?? ""
-        return parseBeadListOutput(output)
+        guard result.succeeded else { return [] }
+        return parseBeadListOutput(result.stdout)
     }
 
     private func parseBeadListOutput(_ output: String) -> [BeadSummary] {
@@ -128,18 +123,13 @@ struct AgentProfileAdapter: Sendable {
 
     // MARK: - Memories
 
-    private func loadMemories(agentAddress: String) -> [String] {
-        guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return [] }
-
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: gtPath,
-            arguments: ["remember", "--list", agentAddress],
+    private func loadMemories(agentAddress: String) async -> [String] {
+        let result = await GastownCommandRunner.gt(
+            ["remember", "--list", agentAddress],
             townRootPath: townRootPath
         )
-        guard result.exitCode == 0 else { return [] }
-
-        let output = String(data: result.stdout, encoding: .utf8) ?? ""
-        return output
+        guard result.succeeded else { return [] }
+        return result.stdout
             .components(separatedBy: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }

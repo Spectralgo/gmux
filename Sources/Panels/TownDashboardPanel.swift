@@ -80,23 +80,20 @@ final class TownDashboardPanel: Panel, ObservableObject {
             return
         }
 
-        // Fall back to CLI subprocess
+        // Fall back to async CLI command
         let adapter = self.adapter
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = adapter.loadSnapshot()
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                switch result {
-                case .success(let snapshot):
-                    let newState = TownDashboardLoadState.loaded(snapshot)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
-                case .failure(let error):
-                    let newState = TownDashboardLoadState.failed(error)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
+        Task {
+            let result = await adapter.loadSnapshot()
+            switch result {
+            case .success(let snapshot):
+                let newState = TownDashboardLoadState.loaded(snapshot)
+                if self.loadState != newState {
+                    self.loadState = newState
+                }
+            case .failure(let error):
+                let newState = TownDashboardLoadState.failed(error)
+                if self.loadState != newState {
+                    self.loadState = newState
                 }
             }
         }

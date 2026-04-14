@@ -106,22 +106,18 @@ final class RefineryPanel: Panel, ObservableObject {
             buildLogCache.removeAll()
         }
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = adapter.loadSnapshot(rigId: rigId)
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                switch result {
-                case .success(let snapshot):
-                    let newState = RefineryLoadState.loaded(snapshot)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
-                case .failure(let error):
-                    let newState = RefineryLoadState.failed(error)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
+        Task {
+            let result = await adapter.loadSnapshot(rigId: rigId)
+            switch result {
+            case .success(let snapshot):
+                let newState = RefineryLoadState.loaded(snapshot)
+                if self.loadState != newState {
+                    self.loadState = newState
+                }
+            case .failure(let error):
+                let newState = RefineryLoadState.failed(error)
+                if self.loadState != newState {
+                    self.loadState = newState
                 }
             }
         }
@@ -170,18 +166,14 @@ final class RefineryPanel: Panel, ObservableObject {
         buildLogState = .loading
         let adapter = self.adapter
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = adapter.loadBuildLog(itemId: itemId)
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                switch result {
-                case .success(let log):
-                    self.buildLogCache[itemId] = log
-                    self.buildLogState = .loaded(log)
-                case .failure(let error):
-                    self.buildLogState = .failed(error)
-                }
+        Task {
+            let result = await adapter.loadBuildLog(itemId: itemId)
+            switch result {
+            case .success(let log):
+                self.buildLogCache[itemId] = log
+                self.buildLogState = .loaded(log)
+            case .failure(let error):
+                self.buildLogState = .failed(error)
             }
         }
     }
@@ -347,33 +339,29 @@ final class RefineryPanel: Panel, ObservableObject {
         }
     }
 
-    /// Run an adapter action on a background queue and show the result banner.
+    /// Run an adapter action asynchronously and show the result banner.
     private func runAction(
         label: String,
-        work: @escaping (RefineryAdapter) -> Result<String, RefineryAdapterError>
+        work: @escaping (RefineryAdapter) async -> Result<String, RefineryAdapterError>
     ) {
         let adapter = self.adapter
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = work(adapter)
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                switch result {
-                case .success(let message):
-                    self.showActionResult(.success(message))
-                    // Refresh to pick up the new state
-                    self.refresh(silent: true)
-                case .failure(let error):
-                    let message: String
-                    switch error {
-                    case .cliFailure(_, _, let stderr):
-                        message = "\(label) failed: \(stderr.prefix(120))"
-                    default:
-                        message = "\(label) failed"
-                    }
-                    self.showActionResult(.failure(message))
+        Task {
+            let result = await work(adapter)
+            switch result {
+            case .success(let message):
+                self.showActionResult(.success(message))
+                // Refresh to pick up the new state
+                self.refresh(silent: true)
+            case .failure(let error):
+                let message: String
+                switch error {
+                case .cliFailure(_, _, let stderr):
+                    message = "\(label) failed: \(String(stderr.prefix(120)))"
+                default:
+                    message = "\(label) failed"
                 }
+                self.showActionResult(.failure(message))
             }
         }
     }

@@ -97,33 +97,31 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
             loadState = .loading
         }
 
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
             let result = self.showClosed
-                ? self.adapter.loadAllConvoys()
-                : self.adapter.loadActiveConvoys()
+                ? await self.adapter.loadAllConvoys()
+                : await self.adapter.loadActiveConvoys()
 
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let summaries):
-                    // Diff before publish to avoid unnecessary SwiftUI churn.
-                    if self.convoys != summaries {
-                        self.convoys = summaries
-                    }
-                    if self.loadState != .loaded {
-                        self.loadState = .loaded
-                    }
+            switch result {
+            case .success(let summaries):
+                // Diff before publish to avoid unnecessary SwiftUI churn.
+                if self.convoys != summaries {
+                    self.convoys = summaries
+                }
+                if self.loadState != .loaded {
+                    self.loadState = .loaded
+                }
 
-                    // Auto-select initial convoy on first load.
-                    if let initial = self.initialConvoyId {
-                        self.initialConvoyId = nil
-                        self.selectConvoy(initial)
-                    }
+                // Auto-select initial convoy on first load.
+                if let initial = self.initialConvoyId {
+                    self.initialConvoyId = nil
+                    self.selectConvoy(initial)
+                }
 
-                case .failure(let error):
-                    if !silent {
-                        self.loadState = .failed(self.errorMessage(error))
-                    }
+            case .failure(let error):
+                if !silent {
+                    self.loadState = .failed(self.errorMessage(error))
                 }
             }
         }
@@ -132,20 +130,18 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
     // MARK: - Detail Loading
 
     private func loadDetail(convoyId: String) {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
-            let result = self.adapter.loadConvoyDetail(id: convoyId)
+            let result = await self.adapter.loadConvoyDetail(id: convoyId)
 
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let detail):
-                    if self.selectedDetail != detail {
-                        self.selectedDetail = detail
-                    }
-                    self.refreshMoleculeProgress(for: detail.trackedIssues)
-                case .failure:
-                    self.selectedDetail = nil
+            switch result {
+            case .success(let detail):
+                if self.selectedDetail != detail {
+                    self.selectedDetail = detail
                 }
+                self.refreshMoleculeProgress(for: detail.trackedIssues)
+            case .failure:
+                self.selectedDetail = nil
             }
         }
     }

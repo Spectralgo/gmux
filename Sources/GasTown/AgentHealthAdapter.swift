@@ -106,15 +106,17 @@ enum AgentHealthLoadState: Equatable, Sendable {
 
 struct AgentHealthAdapter: Sendable {
     struct Environment: Sendable {
-        let whichGT: @Sendable () -> String?
-        let runCLI: @Sendable (_ path: String, _ args: [String]) -> GasTownCLIRunner.CLIResult
+        let runGT: @Sendable (_ args: [String]) async -> GastownCommandResult
 
         static let live = Environment(
-            whichGT: { GasTownCLIRunner.resolveGTCLI() },
-            runCLI: { path, args in
-                GasTownCLIRunner.runProcess(executablePath: path, arguments: args)
-            }
+            runGT: { args in await GastownCommandRunner.gt(args) }
         )
+
+        static func withTownRoot(_ townRootPath: String) -> Environment {
+            Environment(
+                runGT: { args in await GastownCommandRunner.gt(args, townRootPath: townRootPath) }
+            )
+        }
     }
 
     let environment: Environment
@@ -127,16 +129,7 @@ struct AgentHealthAdapter: Sendable {
     /// the CLI environment so child processes get GT_TOWN_ROOT and BEADS_DIR
     /// even when running inside a GUI app (where env vars are not inherited).
     init(townRootPath: String) {
-        self.environment = Environment(
-            whichGT: { GasTownCLIRunner.resolveGTCLI() },
-            runCLI: { path, args in
-                GasTownCLIRunner.runProcess(
-                    executablePath: path,
-                    arguments: args,
-                    townRootPath: townRootPath
-                )
-            }
-        )
+        self.environment = .withTownRoot(townRootPath)
     }
 
     /// Load agents from the socket adapter's cached Dolt data.
@@ -151,23 +144,22 @@ struct AgentHealthAdapter: Sendable {
     }
 
     /// Load all agents from `gt status --json`.
-    func loadAgents() -> Result<[AgentHealthEntry], AgentHealthAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
-
-        let result = environment.runCLI(gtPath, ["status", "--json"])
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+    func loadAgents() async -> Result<[AgentHealthEntry], AgentHealthAdapterError> {
+        let result = await environment.runGT(["status", "--json"])
+        guard result.succeeded else {
+            if result.exitCode == -1 && result.stderr.contains("not found") {
+                return .failure(.gtCLINotFound)
+            }
             return .failure(.cliFailure(
                 command: "gt status --json",
                 exitCode: result.exitCode,
-                stderr: stderr
+                stderr: result.stderr
             ))
         }
 
         do {
-            guard let json = try JSONSerialization.jsonObject(with: result.stdout) as? [String: Any] else {
+            guard let data = result.stdout.data(using: .utf8),
+                  let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                 return .failure(.parseFailure(detail: "Root is not a JSON object"))
             }
             var entries: [AgentHealthEntry] = []

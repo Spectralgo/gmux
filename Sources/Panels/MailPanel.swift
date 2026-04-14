@@ -141,26 +141,21 @@ final class MailPanel: Panel, ObservableObject {
             return
         }
 
-        guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return }
         let townRoot = GasTownService.shared.townRoot?.path
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = GasTownCLIRunner.runProcess(
-                executablePath: gtPath,
-                arguments: ["mail", "directory"],
+        Task {
+            let result = await GastownCommandRunner.gt(
+                ["mail", "directory"],
                 townRootPath: townRoot
             )
 
-            let outputString = String(data: result.stdout, encoding: .utf8) ?? ""
-            let lines = outputString
+            let lines = result.stdout
                 .split(separator: "\n")
                 .map { String($0).trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty }
 
-            DispatchQueue.main.async { [weak self] in
-                self?.recipientDirectory = lines
-                self?.recipientCacheDate = Date()
-            }
+            self.recipientDirectory = lines
+            self.recipientCacheDate = Date()
         }
     }
 

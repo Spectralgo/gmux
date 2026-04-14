@@ -66,23 +66,20 @@ final class AgentHealthPanel: Panel, ObservableObject {
             return
         }
 
-        // Fall back to CLI subprocess
+        // Fall back to async CLI command
         let adapter = self.adapter
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = adapter.loadAgents()
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                switch result {
-                case .success(let entries):
-                    let newState = AgentHealthLoadState.loaded(entries)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
-                case .failure(let error):
-                    let newState = AgentHealthLoadState.failed(error)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
+        Task {
+            let result = await adapter.loadAgents()
+            switch result {
+            case .success(let entries):
+                let newState = AgentHealthLoadState.loaded(entries)
+                if self.loadState != newState {
+                    self.loadState = newState
+                }
+            case .failure(let error):
+                let newState = AgentHealthLoadState.failed(error)
+                if self.loadState != newState {
+                    self.loadState = newState
                 }
             }
         }

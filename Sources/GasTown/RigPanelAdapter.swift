@@ -7,7 +7,7 @@ import Foundation
 // single RigPanelSnapshot. Same value-oriented pattern as
 // TownDashboardAdapter.
 //
-// All CLI calls run synchronously — callers dispatch to a background queue.
+// All methods are async — callers use Task {} for background execution.
 
 // MARK: - Domain Models
 
@@ -44,8 +44,6 @@ struct RigPanelAdapter: Sendable {
     let agentAdapter: AgentHealthAdapter
     let convoyAdapter: ConvoyAdapter
     private let townRootPath: String?
-    private let bdPath: String?
-    private let gtPath: String?
 
     init(townRootPath: String? = nil) {
         self.townRootPath = townRootPath
@@ -56,12 +54,10 @@ struct RigPanelAdapter: Sendable {
             self.agentAdapter = AgentHealthAdapter()
             self.convoyAdapter = ConvoyAdapter()
         }
-        self.bdPath = GasTownCLIRunner.resolveBDCLI()
-        self.gtPath = GasTownCLIRunner.resolveGTCLI()
     }
 
-    /// Load all rig panel data for the given rig. Call from a background queue.
-    func loadSnapshot(rigId: String) -> Result<RigPanelSnapshot, RigPanelAdapterError> {
+    /// Load all rig panel data for the given rig.
+    func loadSnapshot(rigId: String) async -> Result<RigPanelSnapshot, RigPanelAdapterError> {
         guard let townRootPath else {
             return .failure(.townRootNotAvailable)
         }
@@ -75,7 +71,7 @@ struct RigPanelAdapter: Sendable {
 
         // Load agents, filtered to this rig
         var agents: [AgentHealthEntry]
-        switch agentAdapter.loadAgents() {
+        switch await agentAdapter.loadAgents() {
         case .success(let all):
             agents = all.filter { $0.rig == rigId }
         case .failure:
@@ -83,11 +79,11 @@ struct RigPanelAdapter: Sendable {
         }
 
         // Resolve bead titles for agents with hook beads
-        resolveBeadTitles(agents: &agents)
+        await resolveBeadTitles(agents: &agents)
 
         // Load convoys, filtered to this rig
         let convoys: [ConvoySummary]
-        switch convoyAdapter.loadActiveConvoys() {
+        switch await convoyAdapter.loadActiveConvoys() {
         case .success(let all):
             convoys = all.filter { $0.rigIds.contains(rigId) }
         case .failure:
@@ -95,10 +91,10 @@ struct RigPanelAdapter: Sendable {
         }
 
         // Load bead counts filtered by rig prefix
-        let beadCounts = loadBeadCounts(prefix: rig.config.beads.prefix)
+        let beadCounts = await loadBeadCounts(prefix: rig.config.beads.prefix)
 
         // Load health indicators
-        let health = loadHealthIndicators(rig: rig)
+        let health = await loadHealthIndicators(rig: rig)
 
         let snapshot = RigPanelSnapshot(
             rig: rig,
@@ -111,7 +107,7 @@ struct RigPanelAdapter: Sendable {
     }
 
     /// Load a lightweight snapshot without health indicators (for fast refresh).
-    func loadLightSnapshot(rigId: String) -> Result<RigPanelSnapshot, RigPanelAdapterError> {
+    func loadLightSnapshot(rigId: String) async -> Result<RigPanelSnapshot, RigPanelAdapterError> {
         guard let townRootPath else {
             return .failure(.townRootNotAvailable)
         }
@@ -123,7 +119,7 @@ struct RigPanelAdapter: Sendable {
         }
 
         var agents: [AgentHealthEntry]
-        switch agentAdapter.loadAgents() {
+        switch await agentAdapter.loadAgents() {
         case .success(let all):
             agents = all.filter { $0.rig == rigId }
         case .failure:
@@ -131,17 +127,17 @@ struct RigPanelAdapter: Sendable {
         }
 
         // Resolve bead titles for agents with hook beads
-        resolveBeadTitles(agents: &agents)
+        await resolveBeadTitles(agents: &agents)
 
         let convoys: [ConvoySummary]
-        switch convoyAdapter.loadActiveConvoys() {
+        switch await convoyAdapter.loadActiveConvoys() {
         case .success(let all):
             convoys = all.filter { $0.rigIds.contains(rigId) }
         case .failure:
             convoys = []
         }
 
-        let beadCounts = loadBeadCounts(prefix: rig.config.beads.prefix)
+        let beadCounts = await loadBeadCounts(prefix: rig.config.beads.prefix)
 
         // Lightweight: skip health indicators
         let health = RigHealthIndicators(
@@ -166,9 +162,7 @@ struct RigPanelAdapter: Sendable {
 
     /// Resolve bead titles for agents that have a hook bead ID.
     /// Calls `bd show <id> --json` for each unique bead ID and caches results.
-    private func resolveBeadTitles(agents: inout [AgentHealthEntry]) {
-        guard let bdPath else { return }
-
+    private func resolveBeadTitles(agents: inout [AgentHealthEntry]) async {
         // Collect unique bead IDs
         var beadIds: Set<String> = []
         for agent in agents {
@@ -179,13 +173,13 @@ struct RigPanelAdapter: Sendable {
         // Resolve each bead ID → title
         var titleCache: [String: String] = [:]
         for beadId in beadIds {
-            let result = GasTownCLIRunner.runProcess(
-                executablePath: bdPath,
-                arguments: ["show", beadId, "--json"],
+            let result = await GastownCommandRunner.bd(
+                ["show", beadId, "--json"],
                 townRootPath: townRootPath
             )
-            guard result.exitCode == 0,
-                  let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any],
+            guard result.succeeded,
+                  let data = result.stdout.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let title = json["title"] as? String
             else { continue }
             titleCache[beadId] = title
@@ -201,19 +195,15 @@ struct RigPanelAdapter: Sendable {
 
     // MARK: - Bead Counts (filtered by prefix)
 
-    private func loadBeadCounts(prefix: String) -> BeadCountSummary {
-        guard let bdPath else {
-            return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
-        }
-
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: bdPath,
-            arguments: ["list", "--json", "--all", "-n", "0"],
+    private func loadBeadCounts(prefix: String) async -> BeadCountSummary {
+        let result = await GastownCommandRunner.bd(
+            ["list", "--json", "--all", "-n", "0"],
             townRootPath: townRootPath
         )
 
-        guard result.exitCode == 0,
-              let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]]
+        guard result.succeeded,
+              let data = result.stdout.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
         else {
             return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
         }
@@ -251,12 +241,12 @@ struct RigPanelAdapter: Sendable {
 
     // MARK: - Health Indicators
 
-    private func loadHealthIndicators(rig: Rig) -> RigHealthIndicators {
-        let build = loadBuildStatus(rig: rig)
-        let ci = loadCIStatus(rig: rig)
-        let dolt = loadDoltStatus()
+    private func loadHealthIndicators(rig: Rig) async -> RigHealthIndicators {
+        let build = await loadBuildStatus(rig: rig)
+        let ci = await loadCIStatus(rig: rig)
+        let dolt = await loadDoltStatus()
         let disk = loadDiskStatus(rig: rig)
-        let doctor = loadDoctorSummary(rigId: rig.id)
+        let doctor = await loadDoctorSummary(rigId: rig.id)
 
         return RigHealthIndicators(
             build: build,
@@ -267,67 +257,56 @@ struct RigPanelAdapter: Sendable {
         )
     }
 
-    private func loadBuildStatus(rig: Rig) -> HealthSignal {
+    private func loadBuildStatus(rig: Rig) async -> HealthSignal {
         // Get last commit info from the rig's repo
         let gitURL = rig.config.git_url
         guard !gitURL.isEmpty else {
             return .unknown(String(localized: "rigPanel.health.noGitUrl", defaultValue: "no git URL configured"))
         }
 
-        // Try to get last commit from the rig repo path if available
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", rig.path.path, "log", "-1", "--format=%H %ar"]
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
+        let gitResult = await GastownCommandRunner.exec(
+            "git",
+            arguments: ["-C", rig.path.path, "log", "-1", "--format=%H %ar"]
+        )
 
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return .unknown(String(localized: "rigPanel.health.gitError", defaultValue: "git not available"))
-        }
-
-        guard process.terminationStatus == 0 else {
+        guard gitResult.succeeded else {
             return .unknown(String(localized: "rigPanel.health.notARepo", defaultValue: "not a git repository"))
         }
 
-        let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let parts = output.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: " ")
+        let output = gitResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = output.components(separatedBy: " ")
         let shortHash = parts.first.map { String($0.prefix(7)) } ?? "unknown"
         let relativeTime = parts.dropFirst().joined(separator: " ")
 
         // Try gh for CI status
-        if let ghPath = GasTownCLIRunner.resolveExecutable("gh") {
-            let ghResult = GasTownCLIRunner.runProcess(
-                executablePath: ghPath,
-                arguments: ["run", "list", "--repo", gitURL, "--limit", "1", "--json", "status,conclusion"],
-                townRootPath: townRootPath
-            )
+        let ghResult = await GastownCommandRunner.exec(
+            "gh",
+            arguments: ["run", "list", "--repo", gitURL, "--limit", "1", "--json", "status,conclusion"],
+            townRootPath: townRootPath
+        )
 
-            if ghResult.exitCode == 0,
-               let runs = try? JSONSerialization.jsonObject(with: ghResult.stdout) as? [[String: Any]],
-               let latest = runs.first {
-                let conclusion = latest["conclusion"] as? String ?? ""
-                let status = latest["status"] as? String ?? ""
+        if ghResult.succeeded,
+           let data = ghResult.stdout.data(using: .utf8),
+           let runs = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+           let latest = runs.first {
+            let conclusion = latest["conclusion"] as? String ?? ""
+            let status = latest["status"] as? String ?? ""
 
-                if conclusion == "success" {
-                    return .green(String(
-                        localized: "rigPanel.health.buildPassing",
-                        defaultValue: "passing (\(shortHash), \(relativeTime))"
-                    ))
-                } else if status == "in_progress" || status == "queued" {
-                    return .amber(String(
-                        localized: "rigPanel.health.buildRunning",
-                        defaultValue: "running (\(shortHash), \(relativeTime))"
-                    ))
-                } else if conclusion == "failure" {
-                    return .red(String(
-                        localized: "rigPanel.health.buildFailing",
-                        defaultValue: "failing (\(shortHash), \(relativeTime))"
-                    ))
-                }
+            if conclusion == "success" {
+                return .green(String(
+                    localized: "rigPanel.health.buildPassing",
+                    defaultValue: "passing (\(shortHash), \(relativeTime))"
+                ))
+            } else if status == "in_progress" || status == "queued" {
+                return .amber(String(
+                    localized: "rigPanel.health.buildRunning",
+                    defaultValue: "running (\(shortHash), \(relativeTime))"
+                ))
+            } else if conclusion == "failure" {
+                return .red(String(
+                    localized: "rigPanel.health.buildFailing",
+                    defaultValue: "failing (\(shortHash), \(relativeTime))"
+                ))
             }
         }
 
@@ -338,22 +317,21 @@ struct RigPanelAdapter: Sendable {
         ))
     }
 
-    private func loadCIStatus(rig: Rig) -> HealthSignal {
+    private func loadCIStatus(rig: Rig) async -> HealthSignal {
         let gitURL = rig.config.git_url
-        guard !gitURL.isEmpty,
-              let ghPath = GasTownCLIRunner.resolveExecutable("gh")
-        else {
+        guard !gitURL.isEmpty else {
             return .unknown(String(localized: "rigPanel.health.ciNotAvailable", defaultValue: "not available"))
         }
 
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: ghPath,
+        let result = await GastownCommandRunner.exec(
+            "gh",
             arguments: ["run", "list", "--repo", gitURL, "--limit", "5", "--json", "status,conclusion,name"],
             townRootPath: townRootPath
         )
 
-        guard result.exitCode == 0,
-              let runs = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]]
+        guard result.succeeded,
+              let data = result.stdout.data(using: .utf8),
+              let runs = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
         else {
             return .unknown(String(localized: "rigPanel.health.ciNotAvailable", defaultValue: "not available"))
         }
@@ -380,26 +358,20 @@ struct RigPanelAdapter: Sendable {
         }
     }
 
-    private func loadDoltStatus() -> HealthSignal {
-        guard let gtPath else {
-            return .unknown(String(localized: "rigPanel.health.doltNotAvailable", defaultValue: "not available"))
-        }
-
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: gtPath,
-            arguments: ["dolt", "status"],
+    private func loadDoltStatus() async -> HealthSignal {
+        let result = await GastownCommandRunner.gt(
+            ["dolt", "status"],
             townRootPath: townRootPath
         )
 
-        if result.exitCode == 0 {
-            let output = String(data: result.stdout, encoding: .utf8) ?? ""
-            if output.lowercased().contains("healthy") || output.lowercased().contains("ok") {
+        if result.succeeded {
+            let output = result.stdout.lowercased()
+            if output.contains("healthy") || output.contains("ok") {
                 return .green(String(localized: "rigPanel.health.doltHealthy", defaultValue: "healthy"))
             }
             return .green(String(localized: "rigPanel.health.doltConnected", defaultValue: "connected"))
         } else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
-            if stderr.contains("connection refused") || stderr.contains("timeout") {
+            if result.stderr.contains("connection refused") || result.stderr.contains("timeout") {
                 return .red(String(localized: "rigPanel.health.doltUnreachable", defaultValue: "unreachable"))
             }
             return .amber(String(localized: "rigPanel.health.doltDegraded", defaultValue: "degraded"))
@@ -439,19 +411,15 @@ struct RigPanelAdapter: Sendable {
         return .unknown(String(localized: "rigPanel.health.diskUnknown", defaultValue: "unknown"))
     }
 
-    private func loadDoctorSummary(rigId: String) -> DoctorSummary {
-        guard let gtPath else {
-            return DoctorSummary(passCount: 0, warnCount: 0, failCount: 0, details: [])
-        }
-
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: gtPath,
-            arguments: ["doctor", "--json", "--rig", rigId],
+    private func loadDoctorSummary(rigId: String) async -> DoctorSummary {
+        let result = await GastownCommandRunner.gt(
+            ["doctor", "--json", "--rig", rigId],
             townRootPath: townRootPath
         )
 
-        guard result.exitCode == 0 || result.exitCode == 1,
-              let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any]
+        guard (result.exitCode == 0 || result.exitCode == 1),
+              let data = result.stdout.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else {
             return DoctorSummary(passCount: 0, warnCount: 0, failCount: 0, details: [])
         }

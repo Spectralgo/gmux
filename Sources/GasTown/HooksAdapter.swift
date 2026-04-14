@@ -162,17 +162,17 @@ struct HooksAdapter {
 
     /// Abstraction over CLI access for testability.
     struct Environment: Sendable {
-        var whichGT: @Sendable () -> String?
-        var runCLI: @Sendable (_ executablePath: String, _ arguments: [String]) -> GasTownCLIRunner.CLIResult
+        var runGT: @Sendable (_ arguments: [String]) async -> GastownCommandResult
 
         static let live = Environment(
-            whichGT: {
-                GasTownCLIRunner.resolveGTCLI()
-            },
-            runCLI: { executablePath, arguments in
-                GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments)
-            }
+            runGT: { args in await GastownCommandRunner.gt(args) }
         )
+
+        static func withTownRoot(_ townRootPath: String) -> Environment {
+            Environment(
+                runGT: { args in await GastownCommandRunner.gt(args, townRootPath: townRootPath) }
+            )
+        }
     }
 
     let environment: Environment
@@ -185,16 +185,7 @@ struct HooksAdapter {
     /// the CLI environment so child processes get GT_TOWN_ROOT and BEADS_DIR
     /// even when running inside a GUI app (where env vars are not inherited).
     init(townRootPath: String) {
-        self.environment = Environment(
-            whichGT: { GasTownCLIRunner.resolveGTCLI() },
-            runCLI: { executablePath, arguments in
-                GasTownCLIRunner.runProcess(
-                    executablePath: executablePath,
-                    arguments: arguments,
-                    townRootPath: townRootPath
-                )
-            }
-        )
+        self.environment = .withTownRoot(townRootPath)
     }
 
     // MARK: - Public API
@@ -205,29 +196,27 @@ struct HooksAdapter {
     /// `HooksSnapshot`. This is the primary entry point for hooks
     /// ingestion — it provides everything needed for status display and
     /// later write flows.
-    func loadHooks() -> Result<HooksSnapshot, HooksAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    func loadHooks() async -> Result<HooksSnapshot, HooksAdapterError> {
+        let result = await environment.runGT(["hooks", "list", "--json"])
 
-        let result = environment.runCLI(gtPath, ["hooks", "list", "--json"])
-
-        if result.exitCode != 0 {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        if !result.succeeded {
+            if result.exitCode == -1 && result.stderr.contains("not found") {
+                return .failure(.gtCLINotFound)
+            }
             return .failure(.cliFailure(
                 command: "gt hooks list --json",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        guard let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any] else {
-            let raw = String(data: result.stdout, encoding: .utf8) ?? "<binary>"
+        guard let data = result.stdout.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return .failure(.parseFailure(
                 command: "gt hooks list --json",
                 detail: String(
                     localized: "hooks.list.parseFailed",
-                    defaultValue: "Expected JSON object from 'gt hooks list --json'. Got: \(raw.prefix(200))"
+                    defaultValue: "Expected JSON object from 'gt hooks list --json'. Got: \(result.stdout.prefix(200))"
                 )
             ))
         }

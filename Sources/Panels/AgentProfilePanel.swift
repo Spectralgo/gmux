@@ -80,15 +80,11 @@ final class AgentProfilePanel: Panel, ObservableObject {
             let adapter = self.adapter
             let address = self.agentAddress
 
-            DispatchQueue.global(qos: .userInitiated).async {
-                let newHealth = adapter.loadHealthOnly(agentAddress: address)
-
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    if let newHealth, self.currentHealth != newHealth {
-                        self.currentHealth = newHealth
-                        self.displayTitle = newHealth.name
-                    }
+            Task {
+                let newHealth = await adapter.loadHealthOnly(agentAddress: address)
+                if let newHealth, self.currentHealth != newHealth {
+                    self.currentHealth = newHealth
+                    self.displayTitle = newHealth.name
                 }
             }
 
@@ -102,25 +98,21 @@ final class AgentProfilePanel: Panel, ObservableObject {
             let adapter = self.adapter
             let address = self.agentAddress
 
-            DispatchQueue.global(qos: .userInitiated).async {
-                let result = adapter.loadProfile(agentAddress: address)
-
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    switch result {
-                    case .success(let snapshot):
-                        self.currentHealth = snapshot.health
-                        self.beadHistory = snapshot.beadHistory
-                        self.memories = snapshot.memories
-                        if let name = snapshot.health?.name {
-                            self.displayTitle = name
-                        }
-                        self.loadState = .loaded(snapshot)
-                    case .failure(let error):
-                        let newState = AgentProfileLoadState.failed(error)
-                        if self.loadState != newState {
-                            self.loadState = newState
-                        }
+            Task {
+                let result = await adapter.loadProfile(agentAddress: address)
+                switch result {
+                case .success(let snapshot):
+                    self.currentHealth = snapshot.health
+                    self.beadHistory = snapshot.beadHistory
+                    self.memories = snapshot.memories
+                    if let name = snapshot.health?.name {
+                        self.displayTitle = name
+                    }
+                    self.loadState = .loaded(snapshot)
+                case .failure(let error):
+                    let newState = AgentProfileLoadState.failed(error)
+                    if self.loadState != newState {
+                        self.loadState = newState
                     }
                 }
             }
@@ -132,18 +124,14 @@ final class AgentProfilePanel: Panel, ObservableObject {
         let adapter = self.adapter
         let address = self.agentAddress
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = adapter.loadProfile(agentAddress: address)
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                if case .success(let snapshot) = result {
-                    if self.beadHistory != snapshot.beadHistory {
-                        self.beadHistory = snapshot.beadHistory
-                    }
-                    if self.memories != snapshot.memories {
-                        self.memories = snapshot.memories
-                    }
+        Task {
+            let result = await adapter.loadProfile(agentAddress: address)
+            if case .success(let snapshot) = result {
+                if self.beadHistory != snapshot.beadHistory {
+                    self.beadHistory = snapshot.beadHistory
+                }
+                if self.memories != snapshot.memories {
+                    self.memories = snapshot.memories
                 }
             }
         }

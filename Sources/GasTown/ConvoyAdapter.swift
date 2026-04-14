@@ -213,17 +213,17 @@ struct ConvoyAdapter {
 
     /// Abstraction over environment and CLI access for testability.
     struct Environment: Sendable {
-        var whichGT: @Sendable () -> String?
-        var runCLI: @Sendable (_ executablePath: String, _ arguments: [String]) -> GasTownCLIRunner.CLIResult
+        var runGT: @Sendable (_ arguments: [String]) async -> GastownCommandResult
 
         static let live = Environment(
-            whichGT: {
-                GasTownCLIRunner.resolveGTCLI()
-            },
-            runCLI: { executablePath, arguments in
-                GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments)
-            }
+            runGT: { args in await GastownCommandRunner.gt(args) }
         )
+
+        static func withTownRoot(_ townRootPath: String) -> Environment {
+            Environment(
+                runGT: { args in await GastownCommandRunner.gt(args, townRootPath: townRootPath) }
+            )
+        }
     }
 
     let environment: Environment
@@ -236,16 +236,7 @@ struct ConvoyAdapter {
     /// the CLI environment so child processes get GT_TOWN_ROOT and BEADS_DIR
     /// even when running inside a GUI app (where env vars are not inherited).
     init(townRootPath: String) {
-        self.environment = Environment(
-            whichGT: { GasTownCLIRunner.resolveGTCLI() },
-            runCLI: { executablePath, arguments in
-                GasTownCLIRunner.runProcess(
-                    executablePath: executablePath,
-                    arguments: arguments,
-                    townRootPath: townRootPath
-                )
-            }
-        )
+        self.environment = .withTownRoot(townRootPath)
     }
 
     // MARK: - Public API
@@ -254,29 +245,27 @@ struct ConvoyAdapter {
     ///
     /// Invokes `gt convoy list --json` and maps each entry into a
     /// `ConvoySummary` with a derived attention state.
-    func loadActiveConvoys() -> Result<[ConvoySummary], ConvoyAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    func loadActiveConvoys() async -> Result<[ConvoySummary], ConvoyAdapterError> {
+        let result = await environment.runGT(["convoy", "list", "--json"])
 
-        let result = environment.runCLI(gtPath, ["convoy", "list", "--json"])
-
-        if result.exitCode != 0 {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        if !result.succeeded {
+            if result.exitCode == -1 && result.stderr.contains("not found") {
+                return .failure(.gtCLINotFound)
+            }
             return .failure(.cliFailure(
                 command: "gt convoy list --json",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        guard let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]] else {
-            let raw = String(data: result.stdout, encoding: .utf8) ?? "<binary>"
+        guard let data = result.stdout.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return .failure(.parseFailure(
                 command: "gt convoy list --json",
                 detail: String(
                     localized: "convoy.list.parseFailed",
-                    defaultValue: "Expected JSON array from 'gt convoy list --json'. Got: \(raw.prefix(200))"
+                    defaultValue: "Expected JSON array from 'gt convoy list --json'. Got: \(result.stdout.prefix(200))"
                 )
             ))
         }
@@ -288,29 +277,27 @@ struct ConvoyAdapter {
     /// Load all convoys (including closed) for historical views.
     ///
     /// Invokes `gt convoy list --all --json`.
-    func loadAllConvoys() -> Result<[ConvoySummary], ConvoyAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    func loadAllConvoys() async -> Result<[ConvoySummary], ConvoyAdapterError> {
+        let result = await environment.runGT(["convoy", "list", "--all", "--json"])
 
-        let result = environment.runCLI(gtPath, ["convoy", "list", "--all", "--json"])
-
-        if result.exitCode != 0 {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        if !result.succeeded {
+            if result.exitCode == -1 && result.stderr.contains("not found") {
+                return .failure(.gtCLINotFound)
+            }
             return .failure(.cliFailure(
                 command: "gt convoy list --all --json",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        guard let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]] else {
-            let raw = String(data: result.stdout, encoding: .utf8) ?? "<binary>"
+        guard let data = result.stdout.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return .failure(.parseFailure(
                 command: "gt convoy list --all --json",
                 detail: String(
                     localized: "convoy.listAll.parseFailed",
-                    defaultValue: "Expected JSON array from 'gt convoy list --all --json'. Got: \(raw.prefix(200))"
+                    defaultValue: "Expected JSON array from 'gt convoy list --all --json'. Got: \(result.stdout.prefix(200))"
                 )
             ))
         }
@@ -323,43 +310,50 @@ struct ConvoyAdapter {
     ///
     /// Invokes `gt convoy show <id> --json` and parses the result into
     /// a `ConvoyDetail` with tracked issues and derived attention state.
-    func loadConvoyDetail(id: String) -> Result<ConvoyDetail, ConvoyAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    func loadConvoyDetail(id: String) async -> Result<ConvoyDetail, ConvoyAdapterError> {
+        let result = await environment.runGT(["convoy", "show", id, "--json"])
 
-        let result = environment.runCLI(gtPath, ["convoy", "show", id, "--json"])
-
-        if result.exitCode != 0 {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
-            if stderr.contains("not found") || stderr.contains("no such") {
+        if !result.succeeded {
+            if result.stderr.contains("not found") || result.stderr.contains("no such") {
                 return .failure(.convoyNotFound(id: id))
+            }
+            if result.exitCode == -1 && result.stderr.contains("not found") {
+                return .failure(.gtCLINotFound)
             }
             return .failure(.cliFailure(
                 command: "gt convoy show \(id) --json",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        guard let json = try? JSONSerialization.jsonObject(with: result.stdout) as? [String: Any] else {
-            // Some commands return a single-element array.
-            if let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]],
-               let first = array.first {
-                return parseConvoyDetailResult(first, id: id)
-            }
-
-            let raw = String(data: result.stdout, encoding: .utf8) ?? "<binary>"
+        guard let data = result.stdout.data(using: .utf8) else {
             return .failure(.parseFailure(
                 command: "gt convoy show \(id) --json",
                 detail: String(
                     localized: "convoy.detail.parseFailed",
-                    defaultValue: "Expected JSON from 'gt convoy show'. Got: \(raw.prefix(200))"
+                    defaultValue: "Could not decode stdout as UTF-8"
                 )
             ))
         }
 
-        return parseConvoyDetailResult(json, id: id)
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            return parseConvoyDetailResult(json, id: id)
+        }
+
+        // Some commands return a single-element array.
+        if let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+           let first = array.first {
+            return parseConvoyDetailResult(first, id: id)
+        }
+
+        return .failure(.parseFailure(
+            command: "gt convoy show \(id) --json",
+            detail: String(
+                localized: "convoy.detail.parseFailed",
+                defaultValue: "Expected JSON from 'gt convoy show'. Got: \(result.stdout.prefix(200))"
+            )
+        ))
     }
 
     // MARK: - JSON Parsing

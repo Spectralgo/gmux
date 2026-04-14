@@ -3,11 +3,11 @@ import Foundation
 // MARK: - Town Dashboard Adapter
 //
 // Aggregates data from multiple Gas Town CLI sources into a single
-// snapshot for the Town Dashboard. Runs all CLI calls off-main.
+// snapshot for the Town Dashboard.
 //
 // Data sources:
 //   - Agent roster: `gt status --json` (via AgentHealthAdapter)
-//   - Bead counts: `bd list --json --all -n 0` (parsed for status counts)
+//   - Bead counts: `bd list --json --all -n 0` (via GastownCommandRunner)
 //   - Convoys: `gt convoy list --json` (via ConvoyAdapter)
 //   - Activity: `git log --oneline -20` (v1 simple)
 
@@ -81,7 +81,6 @@ struct TownDashboardAdapter: Sendable {
     let agentAdapter: AgentHealthAdapter
     let convoyAdapter: ConvoyAdapter
     private let townRootPath: String?
-    private let bdPath: String?
 
     init(townRootPath: String? = nil) {
         self.townRootPath = townRootPath
@@ -92,7 +91,6 @@ struct TownDashboardAdapter: Sendable {
             self.agentAdapter = AgentHealthAdapter()
             self.convoyAdapter = ConvoyAdapter()
         }
-        self.bdPath = GasTownCLIRunner.resolveBDCLI()
     }
 
     /// Load dashboard snapshot from the socket adapter's cached Dolt data.
@@ -134,11 +132,11 @@ struct TownDashboardAdapter: Sendable {
         )
     }
 
-    /// Load all dashboard data. Call from a background queue.
-    func loadSnapshot() -> Result<TownDashboardSnapshot, TownDashboardAdapterError> {
+    /// Load all dashboard data.
+    func loadSnapshot() async -> Result<TownDashboardSnapshot, TownDashboardAdapterError> {
         // 1. Load agents
         let agents: [AgentHealthEntry]
-        switch agentAdapter.loadAgents() {
+        switch await agentAdapter.loadAgents() {
         case .success(let entries):
             agents = entries
         case .failure:
@@ -147,7 +145,7 @@ struct TownDashboardAdapter: Sendable {
 
         // 2. Load convoy data for attention items
         let convoys: [ConvoySummary]
-        switch convoyAdapter.loadActiveConvoys() {
+        switch await convoyAdapter.loadActiveConvoys() {
         case .success(let summaries):
             convoys = summaries
         case .failure:
@@ -158,10 +156,10 @@ struct TownDashboardAdapter: Sendable {
         let attentionItems = deriveAttentionItems(agents: agents, convoys: convoys)
 
         // 4. Load bead counts
-        let beadCounts = loadBeadCounts()
+        let beadCounts = await loadBeadCounts()
 
         // 5. Load activity feed
-        let activityFeed = loadActivityFeed()
+        let activityFeed = await loadActivityFeed()
 
         let snapshot = TownDashboardSnapshot(
             agents: agents,
@@ -249,20 +247,15 @@ struct TownDashboardAdapter: Sendable {
 
     // MARK: - Bead Counts
 
-    private func loadBeadCounts() -> BeadCountSummary {
-        guard let bdPath else {
-            return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
-        }
-
-        // Use bd list --json to get all beads and count by status
-        let result = GasTownCLIRunner.runProcess(
-            executablePath: bdPath,
-            arguments: ["list", "--json", "--all", "-n", "0"],
+    private func loadBeadCounts() async -> BeadCountSummary {
+        let result = await GastownCommandRunner.bd(
+            ["list", "--json", "--all", "-n", "0"],
             townRootPath: townRootPath
         )
 
-        guard result.exitCode == 0,
-              let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]]
+        guard result.succeeded,
+              let data = result.stdout.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
         else {
             return BeadCountSummary(ready: 0, inProgress: 0, closed: 0)
         }
@@ -297,29 +290,19 @@ struct TownDashboardAdapter: Sendable {
 
     // MARK: - Activity Feed
 
-    private func loadActivityFeed() -> [ActivityEntry] {
+    private func loadActivityFeed() async -> [ActivityEntry] {
         // V1: parse git log from the town root
         guard let townRootPath else { return [] }
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", townRootPath, "log", "--oneline", "--all", "-20",
-                             "--format=%h %ar %s"]
+        let result = await GastownCommandRunner.exec(
+            "git",
+            arguments: ["-C", townRootPath, "log", "--oneline", "--all", "-20",
+                        "--format=%h %ar %s"]
+        )
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
+        guard result.succeeded else { return [] }
 
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return []
-        }
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8) ?? ""
-        let lines = output.components(separatedBy: "\n").filter { !$0.isEmpty }
+        let lines = result.stdout.components(separatedBy: "\n").filter { !$0.isEmpty }
 
         return lines.enumerated().compactMap { index, line in
             // Format: "<hash> <N unit(s) ago> <message>"

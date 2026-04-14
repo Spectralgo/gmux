@@ -8,7 +8,6 @@ import Foundation
 //
 // Design: stateless, value-oriented, injectable environment (same pattern
 // as ConvoyAdapter and BeadsAdapter). All models are Equatable + Sendable.
-// All CLI calls run synchronously — callers dispatch to a background queue.
 
 // MARK: - Pipeline Stage
 
@@ -140,22 +139,20 @@ struct RefineryAdapter: Sendable {
     // MARK: - Configuration
 
     struct Environment: Sendable {
-        var whichGT: @Sendable () -> String?
-        var runCLI: @Sendable (_ executablePath: String, _ arguments: [String]) -> GasTownCLIRunner.CLIResult
-        var runGit: @Sendable (_ arguments: [String]) -> GasTownCLIRunner.CLIResult
+        var runGT: @Sendable (_ arguments: [String]) async -> GastownCommandResult
+        var runGit: @Sendable (_ arguments: [String]) async -> GastownCommandResult
 
         static let live = Environment(
-            whichGT: {
-                GasTownCLIRunner.resolveGTCLI()
-            },
-            runCLI: { executablePath, arguments in
-                GasTownCLIRunner.runProcess(executablePath: executablePath, arguments: arguments)
-            },
-            runGit: { arguments in
-                let gitPath = GasTownCLIRunner.resolveExecutable("git") ?? "/usr/bin/git"
-                return GasTownCLIRunner.runProcess(executablePath: gitPath, arguments: arguments)
-            }
+            runGT: { args in await GastownCommandRunner.gt(args) },
+            runGit: { args in await GastownCommandRunner.exec("git", arguments: args) }
         )
+
+        static func withTownRoot(_ townRootPath: String) -> Environment {
+            Environment(
+                runGT: { args in await GastownCommandRunner.gt(args, townRootPath: townRootPath) },
+                runGit: { args in await GastownCommandRunner.exec("git", arguments: args) }
+            )
+        }
     }
 
     let environment: Environment
@@ -165,38 +162,21 @@ struct RefineryAdapter: Sendable {
     }
 
     init(townRootPath: String) {
-        self.environment = Environment(
-            whichGT: { GasTownCLIRunner.resolveGTCLI() },
-            runCLI: { executablePath, arguments in
-                GasTownCLIRunner.runProcess(
-                    executablePath: executablePath,
-                    arguments: arguments,
-                    townRootPath: townRootPath
-                )
-            },
-            runGit: { arguments in
-                let gitPath = GasTownCLIRunner.resolveExecutable("git") ?? "/usr/bin/git"
-                return GasTownCLIRunner.runProcess(executablePath: gitPath, arguments: arguments)
-            }
-        )
+        self.environment = .withTownRoot(townRootPath)
     }
 
     // MARK: - Public API
 
-    /// Load a complete refinery snapshot for the merge queue. Call from a background queue.
-    func loadSnapshot(rigId: String) -> Result<RefinerySnapshot, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
-
+    /// Load a complete refinery snapshot for the merge queue.
+    func loadSnapshot(rigId: String) async -> Result<RefinerySnapshot, RefineryAdapterError> {
         // 1. Load merge queue items
-        let queueResult = loadMergeQueue(gtPath: gtPath)
+        let queueResult = await loadMergeQueue()
 
         // 2. Load refinery status
-        let health = loadRefineryHealth(gtPath: gtPath)
+        let health = await loadRefineryHealth()
 
         // 3. Load recent merge history from git log
-        let history = loadMergeHistory()
+        let history = await loadMergeHistory()
 
         switch queueResult {
         case .success(let allItems):
@@ -219,26 +199,21 @@ struct RefineryAdapter: Sendable {
         }
     }
 
-    /// Load a build log for a specific queue item. Call from a background queue.
+    /// Load a build log for a specific queue item.
     ///
     /// Truncates at 50,000 characters per spec Section 4.3.
-    func loadBuildLog(itemId: String) -> Result<String, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    func loadBuildLog(itemId: String) async -> Result<String, RefineryAdapterError> {
+        let result = await environment.runGT(["mq", "log", itemId])
 
-        let result = environment.runCLI(gtPath, ["mq", "log", itemId])
-
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        guard result.succeeded else {
             return .failure(.cliFailure(
                 command: "gt mq log \(itemId)",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        var log = String(data: result.stdout, encoding: .utf8) ?? ""
+        var log = result.stdout
         let maxLength = 50_000
         if log.count > maxLength {
             log = String(log.prefix(maxLength)) + "\n\n(log truncated)"
@@ -275,31 +250,33 @@ struct RefineryAdapter: Sendable {
 
     // MARK: - CLI Commands
 
-    private func loadMergeQueue(gtPath: String) -> Result<[MergeQueueItem], RefineryAdapterError> {
-        let result = environment.runCLI(gtPath, ["mq", "list", "--json"])
+    private func loadMergeQueue() async -> Result<[MergeQueueItem], RefineryAdapterError> {
+        let result = await environment.runGT(["mq", "list", "--json"])
 
-        if result.exitCode != 0 {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        if !result.succeeded {
             // Empty queue is not an error — some gt versions exit 0 with empty array,
             // others exit 1 with "no items" message.
-            if stderr.contains("no items") || stderr.contains("empty") {
+            if result.stderr.contains("no items") || result.stderr.contains("empty") {
                 return .success([])
+            }
+            if result.exitCode == -1 && result.stderr.contains("not found") {
+                return .failure(.gtCLINotFound)
             }
             return .failure(.cliFailure(
                 command: "gt mq list --json",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
         // Handle empty output
-        let rawString = String(data: result.stdout, encoding: .utf8) ?? ""
-        let trimmed = rawString.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty || trimmed == "[]" {
             return .success([])
         }
 
-        guard let array = try? JSONSerialization.jsonObject(with: result.stdout) as? [[String: Any]] else {
+        guard let data = trimmed.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return .failure(.parseFailure(
                 command: "gt mq list --json",
                 detail: String(
@@ -313,14 +290,14 @@ struct RefineryAdapter: Sendable {
         return .success(items)
     }
 
-    private func loadRefineryHealth(gtPath: String) -> RefineryHealth {
-        let result = environment.runCLI(gtPath, ["refinery", "status"])
+    private func loadRefineryHealth() async -> RefineryHealth {
+        let result = await environment.runGT(["refinery", "status"])
 
-        guard result.exitCode == 0 else {
+        guard result.succeeded else {
             return .error
         }
 
-        let output = (String(data: result.stdout, encoding: .utf8) ?? "")
+        let output = result.stdout
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
 
@@ -337,15 +314,14 @@ struct RefineryAdapter: Sendable {
         return .idle
     }
 
-    private func loadMergeHistory() -> [MergeHistoryEntry] {
-        let result = environment.runGit(["log", "--oneline", "-20", "main"])
+    private func loadMergeHistory() async -> [MergeHistoryEntry] {
+        let result = await environment.runGit(["log", "--oneline", "-20", "main"])
 
-        guard result.exitCode == 0 else {
+        guard result.succeeded else {
             return []
         }
 
-        let output = String(data: result.stdout, encoding: .utf8) ?? ""
-        let lines = output.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        let lines = result.stdout.components(separatedBy: .newlines).filter { !$0.isEmpty }
 
         return lines.prefix(20).compactMap { line -> MergeHistoryEntry? in
             // Format: "abc1234 commit message (issue-id)"
@@ -454,112 +430,87 @@ struct RefineryAdapter: Sendable {
 
     // MARK: - Action Commands
 
-    /// Retry a failed build. Call from a background queue.
-    func retryItem(beadId: String, clean: Bool = false) -> Result<String, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
-
+    /// Retry a failed build.
+    func retryItem(beadId: String, clean: Bool = false) async -> Result<String, RefineryAdapterError> {
         var args = ["refinery", "retry", beadId]
         if clean {
             args.append("--clean")
         }
-        let result = environment.runCLI(gtPath, args)
+        let result = await environment.runGT(args)
 
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        guard result.succeeded else {
             return .failure(.cliFailure(
                 command: "gt refinery retry \(beadId)",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         return .success(output.isEmpty ? "Retry queued for \(beadId)" : output)
     }
 
-    /// Skip a failed item, unblocking the queue. Call from a background queue.
-    func skipItem(beadId: String) -> Result<String, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    /// Skip a failed item, unblocking the queue.
+    func skipItem(beadId: String) async -> Result<String, RefineryAdapterError> {
+        let result = await environment.runGT(["refinery", "skip", beadId])
 
-        let result = environment.runCLI(gtPath, ["refinery", "skip", beadId])
-
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        guard result.succeeded else {
             return .failure(.cliFailure(
                 command: "gt refinery skip \(beadId)",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         return .success(output.isEmpty ? "Skipped \(beadId)" : output)
     }
 
-    /// Merge a single passed item. Call from a background queue.
-    func mergeItem(beadId: String) -> Result<String, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    /// Merge a single passed item.
+    func mergeItem(beadId: String) async -> Result<String, RefineryAdapterError> {
+        let result = await environment.runGT(["refinery", "merge", beadId])
 
-        let result = environment.runCLI(gtPath, ["refinery", "merge", beadId])
-
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        guard result.succeeded else {
             return .failure(.cliFailure(
                 command: "gt refinery merge \(beadId)",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         return .success(output.isEmpty ? "Merge started for \(beadId)" : output)
     }
 
-    /// Merge all items with passing builds. Call from a background queue.
-    func mergeAllPassed() -> Result<String, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    /// Merge all items with passing builds.
+    func mergeAllPassed() async -> Result<String, RefineryAdapterError> {
+        let result = await environment.runGT(["refinery", "merge-all"])
 
-        let result = environment.runCLI(gtPath, ["refinery", "merge-all"])
-
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        guard result.succeeded else {
             return .failure(.cliFailure(
                 command: "gt refinery merge-all",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         return .success(output.isEmpty ? "Merge all passed items queued" : output)
     }
 
-    /// Force-merge despite failing build. Call from a background queue.
-    func forceMergeItem(beadId: String) -> Result<String, RefineryAdapterError> {
-        guard let gtPath = environment.whichGT() else {
-            return .failure(.gtCLINotFound)
-        }
+    /// Force-merge despite failing build.
+    func forceMergeItem(beadId: String) async -> Result<String, RefineryAdapterError> {
+        let result = await environment.runGT(["refinery", "force-merge", beadId])
 
-        let result = environment.runCLI(gtPath, ["refinery", "force-merge", beadId])
-
-        guard result.exitCode == 0 else {
-            let stderr = String(data: result.stderr, encoding: .utf8) ?? ""
+        guard result.succeeded else {
             return .failure(.cliFailure(
                 command: "gt refinery force-merge \(beadId)",
                 exitCode: result.exitCode,
-                stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+                stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
         }
 
-        let output = (String(data: result.stdout, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         return .success(output.isEmpty ? "Force merge started for \(beadId)" : output)
     }
 

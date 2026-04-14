@@ -98,37 +98,34 @@ final class RigPanel: Panel, ObservableObject {
             includeHealth = true
         }
 
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task {
             let result: Result<RigPanelSnapshot, RigPanelAdapterError>
             if includeHealth {
-                result = adapter.loadSnapshot(rigId: rigId)
+                result = await adapter.loadSnapshot(rigId: rigId)
             } else {
-                result = adapter.loadLightSnapshot(rigId: rigId)
+                result = await adapter.loadLightSnapshot(rigId: rigId)
             }
 
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                switch result {
-                case .success(var snapshot):
-                    // On light refresh, preserve existing health indicators
-                    if !includeHealth, case .loaded(let existing) = self.loadState {
-                        snapshot = RigPanelSnapshot(
-                            rig: snapshot.rig,
-                            agents: snapshot.agents,
-                            beadCounts: snapshot.beadCounts,
-                            convoys: snapshot.convoys,
-                            healthIndicators: existing.healthIndicators
-                        )
-                    }
-                    let newState = RigPanelLoadState.loaded(snapshot)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
-                case .failure(let error):
-                    let newState = RigPanelLoadState.failed(error)
-                    if self.loadState != newState {
-                        self.loadState = newState
-                    }
+            switch result {
+            case .success(var snapshot):
+                // On light refresh, preserve existing health indicators
+                if !includeHealth, case .loaded(let existing) = self.loadState {
+                    snapshot = RigPanelSnapshot(
+                        rig: snapshot.rig,
+                        agents: snapshot.agents,
+                        beadCounts: snapshot.beadCounts,
+                        convoys: snapshot.convoys,
+                        healthIndicators: existing.healthIndicators
+                    )
+                }
+                let newState = RigPanelLoadState.loaded(snapshot)
+                if self.loadState != newState {
+                    self.loadState = newState
+                }
+            case .failure(let error):
+                let newState = RigPanelLoadState.failed(error)
+                if self.loadState != newState {
+                    self.loadState = newState
                 }
             }
         }
