@@ -161,7 +161,7 @@ final class MailPanel: Panel, ObservableObject {
         }
     }
 
-    /// Send a mail message via gt CLI.
+    /// Send a mail message via socket handler.
     func sendMail(
         to recipient: String,
         subject: String,
@@ -169,23 +169,20 @@ final class MailPanel: Panel, ObservableObject {
         pinned: Bool = false,
         replyTo: UUID? = nil
     ) {
-        guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return }
-        let townRoot = GasTownService.shared.townRoot?.path
-
-        var args = ["mail", "send", recipient, "-s", subject, "-m", body]
+        var params: [String: Any] = [
+            "address": recipient,
+            "subject": subject,
+            "body": body,
+        ]
         if pinned {
-            args.append("--pinned")
+            params["pinned"] = true
         }
         if let replyId = replyTo {
-            args.append(contentsOf: ["--reply-to", replyId.uuidString])
+            params["reply_to"] = replyId.uuidString
         }
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let _ = GasTownCLIRunner.runProcess(
-                executablePath: gtPath,
-                arguments: args,
-                townRootPath: townRoot
-            )
+        Task {
+            _ = await GastownSocketHandlers.gastownMailSend(params: params)
         }
     }
 }

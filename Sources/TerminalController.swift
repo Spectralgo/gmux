@@ -2449,6 +2449,24 @@ class TerminalController {
         case "gastown.vitals":
             return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownVitals(params: params) })
 
+        // Gastown action commands (agent operations)
+        case "gastown.agent.attach":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownAgentAttach(params: params) })
+        case "gastown.agent.nudge":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownAgentNudge(params: params) })
+        case "gastown.agent.nuke":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownAgentNuke(params: params) })
+        case "gastown.mail.send":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownMailSend(params: params) })
+        case "gastown.agent.handoff":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownAgentHandoff(params: params) })
+        case "gastown.agent.sling":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownAgentSling(params: params) })
+        case "gastown.polecat.spawn":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownPolecatSpawn(params: params) })
+        case "gastown.remember":
+            return v2Result(id: id, self.v2GastownAsync { await GastownSocketHandlers.gastownRemember(params: params) })
+
 #if DEBUG
         // Debug / test-only
         case "debug.shortcut.set":
@@ -2693,6 +2711,14 @@ class TerminalController {
             "gastown.convoy.add",
             "gastown.peek",
             "gastown.vitals",
+            "gastown.agent.attach",
+            "gastown.agent.nudge",
+            "gastown.agent.nuke",
+            "gastown.mail.send",
+            "gastown.agent.handoff",
+            "gastown.agent.sling",
+            "gastown.polecat.spawn",
+            "gastown.remember",
         ]
 #if DEBUG
         methods.append(contentsOf: [

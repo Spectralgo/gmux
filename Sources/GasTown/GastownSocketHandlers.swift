@@ -504,6 +504,203 @@ enum GastownSocketHandlers {
         return .ok(json)
     }
 
+    // MARK: - gastown.agent.attach
+
+    /// Attach to an agent's terminal session.
+    ///
+    /// Params:
+    ///   - `address` (String, required): Agent address (e.g. `"gmux/polecats/chrome"`).
+    ///
+    /// Focus-intent: NO.
+    static func gastownAgentAttach(params: [String: Any]) async -> Result {
+        guard let address = trimmedString(params, "address") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
+        }
+
+        let cmdResult = await GastownCommandRunner.gt(["attach", address])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt attach failed" : msg)
+        }
+
+        return .ok(["address": address, "attached": true])
+    }
+
+    // MARK: - gastown.agent.nudge
+
+    /// Nudge an agent with an ephemeral message (zero Dolt overhead).
+    ///
+    /// Params:
+    ///   - `address` (String, required): Agent address.
+    ///   - `message` (String, optional): Message text. Defaults to `"Check in"`.
+    ///
+    /// Focus-intent: NO.
+    static func gastownAgentNudge(params: [String: Any]) async -> Result {
+        guard let address = trimmedString(params, "address") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
+        }
+
+        let message = trimmedString(params, "message") ?? "Check in"
+
+        let cmdResult = await GastownCommandRunner.gt(["nudge", address, message])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt nudge failed" : msg)
+        }
+
+        return .ok(["address": address, "nudged": true])
+    }
+
+    // MARK: - gastown.agent.nuke
+
+    /// Nuke (destroy) a polecat agent.
+    ///
+    /// Params:
+    ///   - `address` (String, required): Agent address to nuke.
+    ///
+    /// Focus-intent: NO.
+    static func gastownAgentNuke(params: [String: Any]) async -> Result {
+        guard let address = trimmedString(params, "address") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
+        }
+
+        let cmdResult = await GastownCommandRunner.gt(["nuke", address])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt nuke failed" : msg)
+        }
+
+        return .ok(["address": address, "nuked": true])
+    }
+
+    // MARK: - gastown.mail.send
+
+    /// Send mail to an agent (creates a permanent Dolt commit).
+    ///
+    /// Params:
+    ///   - `address` (String, required): Recipient agent address.
+    ///   - `subject` (String, required): Mail subject line.
+    ///   - `body` (String, optional): Mail body text.
+    ///   - `pinned` (Bool, optional): Whether the message is pinned.
+    ///   - `reply_to` (String, optional): UUID of message being replied to.
+    ///
+    /// Focus-intent: NO.
+    static func gastownMailSend(params: [String: Any]) async -> Result {
+        guard let address = trimmedString(params, "address") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
+        }
+        guard let subject = trimmedString(params, "subject") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'subject' parameter")
+        }
+
+        var args = ["mail", "send", address, "-s", subject]
+        if let body = trimmedString(params, "body") {
+            args.append(contentsOf: ["-m", body])
+        } else {
+            args.append(contentsOf: ["-m", ""])
+        }
+        if let pinned = params["pinned"] as? Bool, pinned {
+            args.append("--pinned")
+        }
+        if let replyTo = trimmedString(params, "reply_to") {
+            args.append(contentsOf: ["--reply-to", replyTo])
+        }
+
+        let cmdResult = await GastownCommandRunner.gt(args)
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt mail send failed" : msg)
+        }
+
+        return .ok(["address": address, "subject": subject, "sent": true])
+    }
+
+    // MARK: - gastown.agent.handoff
+
+    /// Trigger a handoff from the mayor.
+    ///
+    /// Params:
+    ///   - `subject` (String, optional): Handoff subject. Defaults to `"Handoff from profile"`.
+    ///
+    /// Focus-intent: NO.
+    static func gastownAgentHandoff(params: [String: Any]) async -> Result {
+        let subject = trimmedString(params, "subject") ?? "Handoff from profile"
+
+        let cmdResult = await GastownCommandRunner.gt(["handoff", "-s", subject])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt handoff failed" : msg)
+        }
+
+        return .ok(["subject": subject, "handed_off": true])
+    }
+
+    // MARK: - gastown.agent.sling
+
+    /// Sling (assign) ready work to a crew agent.
+    ///
+    /// Params:
+    ///   - `address` (String, required): Crew agent address.
+    ///
+    /// Focus-intent: NO.
+    static func gastownAgentSling(params: [String: Any]) async -> Result {
+        guard let address = trimmedString(params, "address") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
+        }
+
+        let cmdResult = await GastownCommandRunner.gt(["sling", "ready", address])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt sling failed" : msg)
+        }
+
+        return .ok(["address": address, "slung": true])
+    }
+
+    // MARK: - gastown.polecat.spawn
+
+    /// Spawn a new polecat worker in a rig.
+    ///
+    /// Params:
+    ///   - `rig` (String, required): Rig name to spawn in.
+    ///
+    /// Focus-intent: NO.
+    static func gastownPolecatSpawn(params: [String: Any]) async -> Result {
+        guard let rig = trimmedString(params, "rig") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'rig' parameter")
+        }
+
+        let cmdResult = await GastownCommandRunner.gt(["polecat", "spawn", rig])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt polecat spawn failed" : msg)
+        }
+
+        return .ok(["rig": rig, "spawned": true])
+    }
+
+    // MARK: - gastown.remember
+
+    /// Store a persistent agent memory.
+    ///
+    /// Params:
+    ///   - `text` (String, required): Memory text to store.
+    ///
+    /// Focus-intent: NO.
+    static func gastownRemember(params: [String: Any]) async -> Result {
+        guard let text = trimmedString(params, "text") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'text' parameter")
+        }
+
+        let cmdResult = await GastownCommandRunner.gt(["remember", text])
+        guard cmdResult.succeeded else {
+            let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt remember failed" : msg)
+        }
+
+        return .ok(["remembered": true])
+    }
+
     // MARK: - Private Helpers
 
     private static func trimmedString(_ params: [String: Any], _ key: String) -> String? {

@@ -104,42 +104,50 @@ struct ActionsBarView: View {
         role?.lowercased() == "crew"
     }
 
-    // MARK: - Actions
+    // MARK: - Actions (via socket handlers)
 
     private func attachAction() {
-        runGTCommand(["attach", agentAddress])
+        Task {
+            _ = await GastownSocketHandlers.gastownAgentAttach(params: ["address": agentAddress])
+        }
     }
 
     private func sendMailAction() {
-        runGTCommand(["mail", "send", agentAddress, "-s", "Message from profile", "-m", ""])
+        Task {
+            _ = await GastownSocketHandlers.gastownMailSend(params: [
+                "address": agentAddress,
+                "subject": "Message from profile",
+                "body": "",
+            ])
+        }
     }
 
     private func nudgeAction() {
-        runGTCommand(["nudge", agentAddress, "Check in from profile"])
+        Task {
+            _ = await GastownSocketHandlers.gastownAgentNudge(params: [
+                "address": agentAddress,
+                "message": "Check in from profile",
+            ])
+        }
     }
 
     private func handoffAction() {
-        runGTCommand(["handoff", "-s", "Handoff from profile"])
+        Task {
+            _ = await GastownSocketHandlers.gastownAgentHandoff(params: [
+                "subject": "Handoff from profile",
+            ])
+        }
     }
 
     private func assignAction() {
-        runGTCommand(["sling", "ready", agentAddress])
+        Task {
+            _ = await GastownSocketHandlers.gastownAgentSling(params: ["address": agentAddress])
+        }
     }
 
     private func nukeAction() {
-        runGTCommand(["nuke", agentAddress])
-    }
-
-    private func runGTCommand(_ arguments: [String]) {
-        guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return }
-        let townPath = GasTownService.shared.townRoot?.path
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let _ = GasTownCLIRunner.runProcess(
-                executablePath: gtPath,
-                arguments: arguments,
-                townRootPath: townPath
-            )
+        Task {
+            _ = await GastownSocketHandlers.gastownAgentNuke(params: ["address": agentAddress])
         }
     }
 }

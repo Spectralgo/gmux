@@ -131,15 +131,11 @@ final class RigPanel: Panel, ObservableObject {
         }
     }
 
-    /// Spawn a new polecat in this rig via `gt polecat spawn <rig>`.
+    /// Spawn a new polecat in this rig via socket handler.
     func spawnPolecat() {
         let rigId = self.rigId
-        DispatchQueue.global(qos: .userInitiated).async {
-            guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return }
-            _ = GasTownCLIRunner.runProcess(
-                executablePath: gtPath,
-                arguments: ["polecat", "spawn", rigId]
-            )
+        Task {
+            _ = await GastownSocketHandlers.gastownPolecatSpawn(params: ["rig": rigId])
         }
     }
 

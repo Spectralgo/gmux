@@ -145,18 +145,12 @@ final class AgentProfilePanel: Panel, ObservableObject {
         }
     }
 
-    /// Add a memory via `gt remember`.
+    /// Add a memory via socket handler.
     func addMemory(_ text: String) {
-        guard let gtPath = GasTownCLIRunner.resolveGTCLI() else { return }
+        Task { [weak self] in
+            _ = await GastownSocketHandlers.gastownRemember(params: ["text": text])
 
-        DispatchQueue.global(qos: .userInitiated).async { [weak self, townRootPath = GasTownService.shared.townRoot?.path] in
-            let _ = GasTownCLIRunner.runProcess(
-                executablePath: gtPath,
-                arguments: ["remember", text],
-                townRootPath: townRootPath
-            )
-
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self?.refreshBeadHistory()
             }
         }
