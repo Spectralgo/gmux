@@ -542,7 +542,7 @@ enum GastownSocketHandlers {
 
         let message = trimmedString(params, "message") ?? "Check in"
 
-        let cmdResult = await GastownCommandRunner.gt(["nudge", address, message])
+        let cmdResult = await GastownCommandRunner.gt(["nudge", address, "--mode", "queue", "-m", message])
         guard cmdResult.succeeded else {
             let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             return .err(code: "command_failed", message: msg.isEmpty ? "gt nudge failed" : msg)
@@ -564,10 +564,10 @@ enum GastownSocketHandlers {
             return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
         }
 
-        let cmdResult = await GastownCommandRunner.gt(["nuke", address])
+        let cmdResult = await GastownCommandRunner.gt(["polecat", "nuke", address])
         guard cmdResult.succeeded else {
             let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-            return .err(code: "command_failed", message: msg.isEmpty ? "gt nuke failed" : msg)
+            return .err(code: "command_failed", message: msg.isEmpty ? "gt polecat nuke failed" : msg)
         }
 
         return .ok(["address": address, "nuked": true])
@@ -637,24 +637,30 @@ enum GastownSocketHandlers {
 
     // MARK: - gastown.agent.sling
 
-    /// Sling (assign) ready work to a crew agent.
+    /// Sling (assign) work to an agent.
     ///
     /// Params:
-    ///   - `address` (String, required): Crew agent address.
+    ///   - `address` (String, required): Target agent address or rig name.
+    ///   - `bead_id` (String, required): Bead ID to sling.
+    ///   - `merge` (String, optional): Merge strategy ("direct", "mr", "local"). Defaults to "direct".
     ///
     /// Focus-intent: NO.
     static func gastownAgentSling(params: [String: Any]) async -> Result {
         guard let address = trimmedString(params, "address") else {
             return .err(code: "invalid_params", message: "Missing or empty 'address' parameter")
         }
+        guard let beadId = trimmedString(params, "bead_id") else {
+            return .err(code: "invalid_params", message: "Missing or empty 'bead_id' parameter")
+        }
 
-        let cmdResult = await GastownCommandRunner.gt(["sling", "ready", address])
+        let merge = trimmedString(params, "merge") ?? "direct"
+        let cmdResult = await GastownCommandRunner.gt(["sling", beadId, address, "--merge", merge])
         guard cmdResult.succeeded else {
             let msg = cmdResult.timedOut ? "Timed out" : cmdResult.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             return .err(code: "command_failed", message: msg.isEmpty ? "gt sling failed" : msg)
         }
 
-        return .ok(["address": address, "slung": true])
+        return .ok(["address": address, "bead_id": beadId, "slung": true])
     }
 
     // MARK: - gastown.polecat.spawn

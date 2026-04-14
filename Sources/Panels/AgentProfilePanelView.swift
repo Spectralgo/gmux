@@ -150,6 +150,7 @@ struct AgentProfilePanelView: View {
             ActionsBarView(
                 agentAddress: panel.agentAddress,
                 role: panel.currentHealth?.role,
+                currentTask: panel.currentHealth?.currentTask,
                 onActionResult: { panel.showActionResult($0) }
             )
         }

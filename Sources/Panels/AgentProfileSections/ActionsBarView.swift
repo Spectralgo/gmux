@@ -10,6 +10,7 @@ import SwiftUI
 struct ActionsBarView: View {
     let agentAddress: String
     let role: String?
+    let currentTask: String?
     var onActionResult: ((GasTownActionResult) -> Void)?
 
     @Environment(\.colorScheme) private var colorScheme
@@ -108,27 +109,19 @@ struct ActionsBarView: View {
     // MARK: - Actions (via socket handlers)
 
     private func attachAction() {
-        Task {
-            let result = await GastownSocketHandlers.gastownAgentAttach(params: ["address": agentAddress])
-            reportResult(result, successLabel: String(
-                localized: "agentProfile.action.attached",
-                defaultValue: "Attached to \(agentAddress)"
-            ))
-        }
+        NotificationCenter.default.post(
+            name: .openTerminalAttach,
+            object: nil,
+            userInfo: ["sessionName": agentAddress]
+        )
     }
 
     private func sendMailAction() {
-        Task {
-            let result = await GastownSocketHandlers.gastownMailSend(params: [
-                "address": agentAddress,
-                "subject": "Message from profile",
-                "body": "",
-            ])
-            reportResult(result, successLabel: String(
-                localized: "agentProfile.action.mailSent",
-                defaultValue: "Mail sent to \(agentAddress)"
-            ))
-        }
+        NotificationCenter.default.post(
+            name: .openMailPanel,
+            object: nil,
+            userInfo: ["address": agentAddress]
+        )
     }
 
     private func nudgeAction() {
@@ -157,8 +150,18 @@ struct ActionsBarView: View {
     }
 
     private func assignAction() {
+        guard let beadId = currentTask, !beadId.isEmpty else {
+            onActionResult?(.failure(String(
+                localized: "agentProfile.action.noBeadToSling",
+                defaultValue: "No bead available to sling"
+            )))
+            return
+        }
         Task {
-            let result = await GastownSocketHandlers.gastownAgentSling(params: ["address": agentAddress])
+            let result = await GastownSocketHandlers.gastownAgentSling(params: [
+                "address": agentAddress,
+                "bead_id": beadId,
+            ])
             reportResult(result, successLabel: String(
                 localized: "agentProfile.action.assigned",
                 defaultValue: "Work assigned to \(agentAddress)"
