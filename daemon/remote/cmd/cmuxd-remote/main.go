@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -64,6 +65,7 @@ type rpcServer struct {
 	streams       map[string]*streamState
 	sessions      map[string]*sessionState
 	frameWriter   *stdioFrameWriter
+	gastown       *gastownDB
 }
 
 type sessionAttachment struct {
@@ -157,14 +159,30 @@ func runStdioServer(stdin io.Reader, stdout io.Writer) error {
 	writer := &stdioFrameWriter{
 		writer: bufio.NewWriter(stdout),
 	}
+
+	dsn := os.Getenv("GASTOWN_DOLT_DSN")
+	if dsn == "" {
+		dsn = "root@tcp(127.0.0.1:3307)/"
+	}
+	gastown := initGastown(dsn)
+
 	server := &rpcServer{
 		nextStreamID:  1,
 		nextSessionID: 1,
 		streams:       map[string]*streamState{},
 		sessions:      map[string]*sessionState{},
 		frameWriter:   writer,
+		gastown:       gastown,
 	}
 	defer server.closeAll()
+
+	if gastown != nil {
+		defer gastown.Close()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		watcher := newGastownWatcher(gastown, writer)
+		go watcher.run(ctx)
+	}
 
 	reader := bufio.NewReaderSize(stdin, 64*1024)
 	defer writer.writer.Flush()
@@ -307,20 +325,24 @@ func (s *rpcServer) handleRequest(req rpcRequest) rpcResponse {
 
 	switch req.Method {
 	case "hello":
+		capabilities := []string{
+			"session.basic",
+			"session.resize.min",
+			"proxy.http_connect",
+			"proxy.socks5",
+			"proxy.stream",
+			"proxy.stream.push",
+		}
+		if s.gastown != nil {
+			capabilities = append(capabilities, "gastown.v1")
+		}
 		return rpcResponse{
 			ID: req.ID,
 			OK: true,
 			Result: map[string]any{
-				"name":    "cmuxd-remote",
-				"version": version,
-				"capabilities": []string{
-					"session.basic",
-					"session.resize.min",
-					"proxy.http_connect",
-					"proxy.socks5",
-					"proxy.stream",
-					"proxy.stream.push",
-				},
+				"name":         "cmuxd-remote",
+				"version":      version,
+				"capabilities": capabilities,
 			},
 		}
 	case "ping":
@@ -351,6 +373,20 @@ func (s *rpcServer) handleRequest(req rpcRequest) rpcResponse {
 		return s.handleSessionDetach(req)
 	case "session.status":
 		return s.handleSessionStatus(req)
+	case "gastown.agents":
+		return s.handleGastownAgents(req)
+	case "gastown.beads":
+		return s.handleGastownBeads(req)
+	case "gastown.mail":
+		return s.handleGastownMail(req)
+	case "gastown.convoys":
+		return s.handleGastownConvoys(req)
+	case "gastown.diagnostics":
+		return s.handleGastownDiagnostics(req)
+	case "gastown.hash":
+		return s.handleGastownHash(req)
+	case "gastown.databases":
+		return s.handleGastownDatabases(req)
 	default:
 		return rpcResponse{
 			ID: req.ID,
