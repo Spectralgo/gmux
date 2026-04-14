@@ -156,13 +156,16 @@ struct RefineryAdapter: Sendable {
     }
 
     let environment: Environment
+    let rig: String
 
-    init(environment: Environment = .live) {
+    init(environment: Environment = .live, rig: String = "gmux") {
         self.environment = environment
+        self.rig = rig
     }
 
-    init(townRootPath: String) {
+    init(townRootPath: String, rig: String = "gmux") {
         self.environment = .withTownRoot(townRootPath)
+        self.rig = rig
     }
 
     // MARK: - Public API
@@ -170,10 +173,10 @@ struct RefineryAdapter: Sendable {
     /// Load a complete refinery snapshot for the merge queue.
     func loadSnapshot(rigId: String) async -> Result<RefinerySnapshot, RefineryAdapterError> {
         // 1. Load merge queue items
-        let queueResult = await loadMergeQueue(rigId: rigId)
+        let queueResult = await loadMergeQueue()
 
         // 2. Load refinery status
-        let health = await loadRefineryHealth(rigId: rigId)
+        let health = await loadRefineryHealth()
 
         // 3. Load recent merge history from git log
         let history = await loadMergeHistory()
@@ -203,11 +206,11 @@ struct RefineryAdapter: Sendable {
     ///
     /// Truncates at 50,000 characters per spec Section 4.3.
     func loadBuildLog(itemId: String) async -> Result<String, RefineryAdapterError> {
-        let result = await environment.runGT(["mq", "log", itemId])
+        let result = await environment.runGT(["mq", "log", rig, itemId])
 
         guard result.succeeded else {
             return .failure(.cliFailure(
-                command: "gt mq log \(itemId)",
+                command: "gt mq log \(rig) \(itemId)",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -250,8 +253,8 @@ struct RefineryAdapter: Sendable {
 
     // MARK: - CLI Commands
 
-    private func loadMergeQueue(rigId: String) async -> Result<[MergeQueueItem], RefineryAdapterError> {
-        let result = await environment.runGT(["mq", "list", rigId, "--json"])
+    private func loadMergeQueue() async -> Result<[MergeQueueItem], RefineryAdapterError> {
+        let result = await environment.runGT(["mq", "list", rig, "--json"])
 
         if !result.succeeded {
             // Empty queue is not an error — some gt versions exit 0 with empty array,
@@ -263,7 +266,7 @@ struct RefineryAdapter: Sendable {
                 return .failure(.gtCLINotFound)
             }
             return .failure(.cliFailure(
-                command: "gt mq list \(rigId) --json",
+                command: "gt mq list \(rig) --json",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -278,10 +281,10 @@ struct RefineryAdapter: Sendable {
         guard let data = trimmed.data(using: .utf8),
               let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return .failure(.parseFailure(
-                command: "gt mq list \(rigId) --json",
+                command: "gt mq list \(rig) --json",
                 detail: String(
                     localized: "refinery.mqList.parseFailed",
-                    defaultValue: "Expected JSON array from 'gt mq list \(rigId) --json'. Got: \(trimmed.prefix(200))"
+                    defaultValue: "Expected JSON array from 'gt mq list \(rig) --json'. Got: \(trimmed.prefix(200))"
                 )
             ))
         }
@@ -290,8 +293,8 @@ struct RefineryAdapter: Sendable {
         return .success(items)
     }
 
-    private func loadRefineryHealth(rigId: String) async -> RefineryHealth {
-        let result = await environment.runGT(["refinery", "status", rigId])
+    private func loadRefineryHealth() async -> RefineryHealth {
+        let result = await environment.runGT(["refinery", "status", rig])
 
         guard result.succeeded else {
             return .error
@@ -432,7 +435,7 @@ struct RefineryAdapter: Sendable {
 
     /// Retry a failed build.
     func retryItem(beadId: String, clean: Bool = false) async -> Result<String, RefineryAdapterError> {
-        var args = ["refinery", "retry", beadId]
+        var args = ["refinery", "retry", rig, beadId]
         if clean {
             args.append("--clean")
         }
@@ -440,7 +443,7 @@ struct RefineryAdapter: Sendable {
 
         guard result.succeeded else {
             return .failure(.cliFailure(
-                command: "gt refinery retry \(beadId)",
+                command: "gt refinery retry \(rig) \(beadId)",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -452,11 +455,11 @@ struct RefineryAdapter: Sendable {
 
     /// Skip a failed item, unblocking the queue.
     func skipItem(beadId: String) async -> Result<String, RefineryAdapterError> {
-        let result = await environment.runGT(["refinery", "skip", beadId])
+        let result = await environment.runGT(["refinery", "skip", rig, beadId])
 
         guard result.succeeded else {
             return .failure(.cliFailure(
-                command: "gt refinery skip \(beadId)",
+                command: "gt refinery skip \(rig) \(beadId)",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -468,11 +471,11 @@ struct RefineryAdapter: Sendable {
 
     /// Merge a single passed item.
     func mergeItem(beadId: String) async -> Result<String, RefineryAdapterError> {
-        let result = await environment.runGT(["refinery", "merge", beadId])
+        let result = await environment.runGT(["refinery", "merge", rig, beadId])
 
         guard result.succeeded else {
             return .failure(.cliFailure(
-                command: "gt refinery merge \(beadId)",
+                command: "gt refinery merge \(rig) \(beadId)",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -484,11 +487,11 @@ struct RefineryAdapter: Sendable {
 
     /// Merge all items with passing builds.
     func mergeAllPassed() async -> Result<String, RefineryAdapterError> {
-        let result = await environment.runGT(["refinery", "merge-all"])
+        let result = await environment.runGT(["refinery", "merge-all", rig])
 
         guard result.succeeded else {
             return .failure(.cliFailure(
-                command: "gt refinery merge-all",
+                command: "gt refinery merge-all \(rig)",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))
@@ -500,11 +503,11 @@ struct RefineryAdapter: Sendable {
 
     /// Force-merge despite failing build.
     func forceMergeItem(beadId: String) async -> Result<String, RefineryAdapterError> {
-        let result = await environment.runGT(["refinery", "force-merge", beadId])
+        let result = await environment.runGT(["refinery", "force-merge", rig, beadId])
 
         guard result.succeeded else {
             return .failure(.cliFailure(
-                command: "gt refinery force-merge \(beadId)",
+                command: "gt refinery force-merge \(rig) \(beadId)",
                 exitCode: result.exitCode,
                 stderr: result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             ))

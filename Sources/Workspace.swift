@@ -9830,9 +9830,9 @@ final class Workspace: Identifiable, ObservableObject {
 
         let adapter: RefineryAdapter
         if let townPath = GasTownService.shared.townRoot?.path {
-            adapter = RefineryAdapter(townRootPath: townPath)
+            adapter = RefineryAdapter(townRootPath: townPath, rig: resolvedRigId)
         } else {
-            adapter = RefineryAdapter()
+            adapter = RefineryAdapter(rig: resolvedRigId)
         }
         let panel = RefineryPanel(rigId: resolvedRigId, workspaceId: id, adapter: adapter)
         panels[panel.id] = panel
