@@ -307,35 +307,35 @@ final class RefineryPanel: Panel, ObservableObject {
     /// Merge a single passed item.
     func mergeItem(_ id: String) {
         runAction(label: "Merge \(id)") { adapter in
-            adapter.mergeItem(beadId: id)
+            await adapter.mergeItem(beadId: id)
         }
     }
 
     /// Merge all items with passing builds.
     func mergeAllPassed() {
         runAction(label: "Merge all passed") { adapter in
-            adapter.mergeAllPassed()
+            await adapter.mergeAllPassed()
         }
     }
 
     /// Retry a failed build.
     func retryItem(_ id: String, clean: Bool = false) {
         runAction(label: "Retry \(id)") { adapter in
-            adapter.retryItem(beadId: id, clean: clean)
+            await adapter.retryItem(beadId: id, clean: clean)
         }
     }
 
     /// Skip a failed item, unblocking the queue.
     func skipItem(_ id: String) {
         runAction(label: "Skip \(id)") { adapter in
-            adapter.skipItem(beadId: id)
+            await adapter.skipItem(beadId: id)
         }
     }
 
     /// Force-merge despite failing build.
     func forceMergeItem(_ id: String) {
         runAction(label: "Force merge \(id)") { adapter in
-            adapter.forceMergeItem(beadId: id)
+            await adapter.forceMergeItem(beadId: id)
         }
     }
 
