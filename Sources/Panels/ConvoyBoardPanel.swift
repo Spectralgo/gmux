@@ -13,7 +13,7 @@ enum ConvoyBoardLoadState: Equatable {
 /// Panel showing a board view of all active convoys with progress,
 /// attention states, and tracked issue drill-down.
 ///
-/// Uses ``ConvoyAdapter`` to fetch convoy data via the `gt` CLI.
+/// Uses ``GasTownSocketAdapter`` to fetch convoy data via direct Dolt reads.
 /// Auto-refreshes every 4th tick (~32s) via `GasTownService.shared.$refreshTick`.
 @MainActor
 final class ConvoyBoardPanel: Panel, ObservableObject {
@@ -99,13 +99,13 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
 
         Task { [weak self] in
             guard let self else { return }
-            let result = self.showClosed
-                ? await self.adapter.loadAllConvoys()
-                : await self.adapter.loadActiveConvoys()
+            let socketAdapter = GasTownSocketAdapter.shared
+            if !socketAdapter.isConnected {
+                await socketAdapter.refresh()
+            }
 
-            switch result {
-            case .success(let summaries):
-                // Diff before publish to avoid unnecessary SwiftUI churn.
+            if socketAdapter.isConnected {
+                let summaries = socketAdapter.toConvoySummaries(includeClosed: self.showClosed)
                 if self.convoys != summaries {
                     self.convoys = summaries
                 }
@@ -113,15 +113,17 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
                     self.loadState = .loaded
                 }
 
-                // Auto-select initial convoy on first load.
                 if let initial = self.initialConvoyId {
                     self.initialConvoyId = nil
                     self.selectConvoy(initial)
                 }
-
-            case .failure(let error):
+            } else if !silent {
+                let message = socketAdapter.lastError ?? String(
+                    localized: "convoyBoard.error.socketUnavailable",
+                    defaultValue: "Gas Town data socket is unavailable"
+                )
                 if !silent {
-                    self.loadState = .failed(self.errorMessage(error))
+                    self.loadState = .failed(message)
                 }
             }
         }
@@ -132,15 +134,12 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
     private func loadDetail(convoyId: String) {
         Task { [weak self] in
             guard let self else { return }
-            let result = await self.adapter.loadConvoyDetail(id: convoyId)
-
-            switch result {
-            case .success(let detail):
+            if let detail = await GasTownSocketAdapter.shared.convoyDetail(id: convoyId) {
                 if self.selectedDetail != detail {
                     self.selectedDetail = detail
                 }
                 self.refreshMoleculeProgress(for: detail.trackedIssues)
-            case .failure:
+            } else {
                 self.selectedDetail = nil
             }
         }
@@ -154,6 +153,13 @@ final class ConvoyBoardPanel: Panel, ObservableObject {
             .filter { $0.status != "closed" }
             .map(\.id)
         guard !activeIssueIds.isEmpty else { return }
+
+        if GasTownSocketAdapter.shared.isConnected {
+            if !moleculeProgress.isEmpty {
+                moleculeProgress = [:]
+            }
+            return
+        }
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }

@@ -126,8 +126,20 @@ final class MailPanel: Panel, ObservableObject {
             loadState = .loading
         }
 
-        // MailInboxStore is the primary data source and is already populated
-        // via socket push. We just signal loaded state.
+        let socketAdapter = GasTownSocketAdapter.shared
+        if socketAdapter.isConnected {
+            mailStore.mergePersistentMessages(socketAdapter.toMailMessages())
+        } else {
+            Task { [weak self] in
+                guard let self else { return }
+                await socketAdapter.refresh()
+                self.mailStore.mergePersistentMessages(socketAdapter.toMailMessages())
+                if self.loadState != .loaded {
+                    self.loadState = .loaded
+                }
+            }
+        }
+
         if loadState != .loaded {
             loadState = .loaded
         }

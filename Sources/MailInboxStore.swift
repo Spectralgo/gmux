@@ -172,6 +172,38 @@ final class MailInboxStore: ObservableObject {
         messages.removeAll(where: { $0.type == type })
     }
 
+    /// Merge persistent mail loaded from Dolt into the in-memory inbox.
+    ///
+    /// Runtime socket messages may still arrive independently; persistent
+    /// messages are matched by their backing bead ID so refreshes update
+    /// existing rows instead of duplicating them.
+    func mergePersistentMessages(_ persistentMessages: [MailMessage]) {
+        guard !persistentMessages.isEmpty else { return }
+        var existingByBeadId: [String: MailMessage] = [:]
+        for message in messages {
+            if let beadId = message.provenance.beadId {
+                existingByBeadId[beadId] = message
+            }
+        }
+
+        var merged = messages.filter { message in
+            guard let beadId = message.provenance.beadId else { return true }
+            return !persistentMessages.contains { $0.provenance.beadId == beadId }
+        }
+
+        for var message in persistentMessages {
+            if let beadId = message.provenance.beadId,
+               let existing = existingByBeadId[beadId] {
+                message.isRead = existing.isRead
+                message.isPinned = existing.isPinned || message.isPinned
+                message.isArchived = existing.isArchived || message.isArchived
+            }
+            merged.append(message)
+        }
+
+        messages = merged.sorted { $0.createdAt > $1.createdAt }
+    }
+
     // MARK: - Mail Panel Extensions
 
     /// Pinned standing orders, sorted by creation date (newest first).

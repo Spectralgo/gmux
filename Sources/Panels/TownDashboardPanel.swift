@@ -60,8 +60,7 @@ final class TownDashboardPanel: Panel, ObservableObject {
 
     // MARK: - Data Loading
 
-    /// Load all dashboard data. Tries the socket adapter (direct Dolt query)
-    /// first, then falls back to CLI subprocesses.
+    /// Load all dashboard data from the socket adapter's direct Dolt cache.
     ///
     /// - Parameter silent: When `true` (auto-refresh), skips `.loading` state
     ///   and only publishes if data changed.
@@ -70,7 +69,6 @@ final class TownDashboardPanel: Panel, ObservableObject {
             loadState = .loading
         }
 
-        // Try socket adapter first (no subprocess, direct Dolt query)
         let socketAdapter = GasTownSocketAdapter.shared
         if let snapshot = TownDashboardAdapter.loadSnapshotFromSocket(socketAdapter) {
             let newState = TownDashboardLoadState.loaded(snapshot)
@@ -80,17 +78,20 @@ final class TownDashboardPanel: Panel, ObservableObject {
             return
         }
 
-        // Fall back to async CLI command
-        let adapter = self.adapter
         Task {
-            let result = await adapter.loadSnapshot()
-            switch result {
-            case .success(let snapshot):
+            await socketAdapter.refresh()
+            if let snapshot = TownDashboardAdapter.loadSnapshotFromSocket(socketAdapter) {
                 let newState = TownDashboardLoadState.loaded(snapshot)
                 if self.loadState != newState {
                     self.loadState = newState
                 }
-            case .failure(let error):
+            } else {
+                let error = TownDashboardAdapterError.partialFailure(
+                    detail: socketAdapter.lastError ?? String(
+                        localized: "townDashboard.error.socketUnavailable",
+                        defaultValue: "Gas Town data socket is unavailable"
+                    )
+                )
                 let newState = TownDashboardLoadState.failed(error)
                 if self.loadState != newState {
                     self.loadState = newState

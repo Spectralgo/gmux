@@ -168,35 +168,29 @@ struct RefineryAdapter: Sendable {
     // MARK: - Public API
 
     /// Load a complete refinery snapshot for the merge queue.
+    @MainActor
     func loadSnapshot(rigId: String) async -> Result<RefinerySnapshot, RefineryAdapterError> {
-        // 1. Load merge queue items
-        let queueResult = await loadMergeQueue(rigId: rigId)
-
-        // 2. Load refinery status
-        let health = await loadRefineryHealth(rigId: rigId)
-
-        // 3. Load recent merge history from git log
-        let history = await loadMergeHistory()
-
-        switch queueResult {
-        case .success(let allItems):
-            let active = allItems.filter { $0.stage != .skipped && $0.stage != .merged }
-            let skipped = allItems.filter { $0.stage == .skipped }
-            let stageCounts = computeStageCounts(from: allItems)
-
-            let snapshot = RefinerySnapshot(
-                health: health,
-                rigId: rigId,
-                queue: active,
-                skipped: skipped,
-                history: history,
-                stageCounts: stageCounts
-            )
-            return .success(snapshot)
-
-        case .failure(let error):
-            return .failure(error)
+        let socketAdapter = GasTownSocketAdapter.shared
+        if !socketAdapter.isConnected {
+            await socketAdapter.refresh()
         }
+
+        let health: RefineryHealth = socketAdapter.isConnected ? .idle : .error
+        return .success(RefinerySnapshot(
+            health: health,
+            rigId: rigId,
+            queue: [],
+            skipped: [],
+            history: [],
+            stageCounts: PipelineStageCounts(
+                polecatDone: 0,
+                mergeReady: 0,
+                building: 0,
+                merged: 0,
+                failed: 0,
+                rework: 0
+            )
+        ))
     }
 
     /// Load a build log for a specific queue item.

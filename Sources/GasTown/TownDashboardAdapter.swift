@@ -105,24 +105,11 @@ struct TownDashboardAdapter: Sendable {
         let agents = adapter.toAgentHealthEntries()
         let beadCounts = adapter.toBeadCountSummary()
 
-        // Derive attention items from agents (convoys not yet mapped from Dolt)
-        var attentionItems: [AttentionItem] = []
-        for agent in agents {
-            if !agent.isRunning && agent.hasWork {
-                attentionItems.append(AttentionItem(
-                    id: "stuck-\(agent.address)",
-                    severity: .critical,
-                    message: String(
-                        localized: "dashboard.attention.agentStuck",
-                        defaultValue: "\(agent.name) has hooked work but is not running"
-                    ),
-                    timestamp: nil,
-                    actionLabel: String(localized: "dashboard.attention.nudge", defaultValue: "Nudge"),
-                    agentAddress: agent.address
-                ))
-            }
-        }
-        attentionItems.sort { $0.severity > $1.severity }
+        let convoys = adapter.toConvoySummaries()
+        let attentionItems = TownDashboardAdapter().deriveAttentionItems(
+            agents: agents,
+            convoys: convoys
+        )
 
         return TownDashboardSnapshot(
             agents: agents,

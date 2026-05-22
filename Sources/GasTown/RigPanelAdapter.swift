@@ -57,6 +57,7 @@ struct RigPanelAdapter: Sendable {
     }
 
     /// Load all rig panel data for the given rig.
+    @MainActor
     func loadSnapshot(rigId: String) async -> Result<RigPanelSnapshot, RigPanelAdapterError> {
         guard let townRootPath else {
             return .failure(.townRootNotAvailable)
@@ -69,32 +70,20 @@ struct RigPanelAdapter: Sendable {
             return .failure(.rigNotFound(rigId: rigId))
         }
 
-        // Load agents, filtered to this rig
-        var agents: [AgentHealthEntry]
-        switch await agentAdapter.loadAgents() {
-        case .success(let all):
-            agents = all.filter { $0.rig == rigId }
-        case .failure:
-            agents = []
+        let socketAdapter = GasTownSocketAdapter.shared
+        if !socketAdapter.isConnected {
+            await socketAdapter.refresh()
         }
 
-        // Resolve bead titles for agents with hook beads
-        await resolveBeadTitles(agents: &agents)
+        var agents = socketAdapter.toAgentHealthEntries().filter { $0.rig == rigId }
+        resolveBeadTitlesFromSocket(agents: &agents, socketAdapter: socketAdapter)
 
-        // Load convoys, filtered to this rig
-        let convoys: [ConvoySummary]
-        switch await convoyAdapter.loadActiveConvoys() {
-        case .success(let all):
-            convoys = all.filter { $0.rigIds.contains(rigId) }
-        case .failure:
-            convoys = []
-        }
+        let convoys = socketAdapter
+            .toConvoySummaries()
+            .filter { $0.rigIds.contains(rigId) }
 
-        // Load bead counts filtered by rig prefix
-        let beadCounts = await loadBeadCounts(prefix: rig.config.beads.prefix)
-
-        // Load health indicators
-        let health = await loadHealthIndicators(rig: rig)
+        let beadCounts = loadBeadCountsFromSocket(prefix: rig.config.beads.prefix, socketAdapter: socketAdapter)
+        let health = unloadedHealthIndicators()
 
         let snapshot = RigPanelSnapshot(
             rig: rig,
@@ -107,6 +96,7 @@ struct RigPanelAdapter: Sendable {
     }
 
     /// Load a lightweight snapshot without health indicators (for fast refresh).
+    @MainActor
     func loadLightSnapshot(rigId: String) async -> Result<RigPanelSnapshot, RigPanelAdapterError> {
         guard let townRootPath else {
             return .failure(.townRootNotAvailable)
@@ -118,35 +108,20 @@ struct RigPanelAdapter: Sendable {
             return .failure(.rigNotFound(rigId: rigId))
         }
 
-        var agents: [AgentHealthEntry]
-        switch await agentAdapter.loadAgents() {
-        case .success(let all):
-            agents = all.filter { $0.rig == rigId }
-        case .failure:
-            agents = []
+        let socketAdapter = GasTownSocketAdapter.shared
+        if !socketAdapter.isConnected {
+            await socketAdapter.refresh()
         }
 
-        // Resolve bead titles for agents with hook beads
-        await resolveBeadTitles(agents: &agents)
+        var agents = socketAdapter.toAgentHealthEntries().filter { $0.rig == rigId }
+        resolveBeadTitlesFromSocket(agents: &agents, socketAdapter: socketAdapter)
 
-        let convoys: [ConvoySummary]
-        switch await convoyAdapter.loadActiveConvoys() {
-        case .success(let all):
-            convoys = all.filter { $0.rigIds.contains(rigId) }
-        case .failure:
-            convoys = []
-        }
+        let convoys = socketAdapter
+            .toConvoySummaries()
+            .filter { $0.rigIds.contains(rigId) }
 
-        let beadCounts = await loadBeadCounts(prefix: rig.config.beads.prefix)
-
-        // Lightweight: skip health indicators
-        let health = RigHealthIndicators(
-            build: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
-            ci: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
-            dolt: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
-            disk: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
-            doctor: DoctorSummary(passCount: 0, warnCount: 0, failCount: 0, details: [])
-        )
+        let beadCounts = loadBeadCountsFromSocket(prefix: rig.config.beads.prefix, socketAdapter: socketAdapter)
+        let health = unloadedHealthIndicators()
 
         let snapshot = RigPanelSnapshot(
             rig: rig,
@@ -159,6 +134,63 @@ struct RigPanelAdapter: Sendable {
     }
 
     // MARK: - Bead Title Resolution
+
+    @MainActor
+    private func resolveBeadTitlesFromSocket(
+        agents: inout [AgentHealthEntry],
+        socketAdapter: GasTownSocketAdapter
+    ) {
+        var titlesById: [String: String] = [:]
+        for bead in socketAdapter.beads {
+            titlesById[bead.id] = bead.title
+        }
+        for i in agents.indices {
+            if let task = agents[i].currentTask, let title = titlesById[task] {
+                agents[i].hookBeadTitle = title
+            }
+        }
+    }
+
+    @MainActor
+    private func loadBeadCountsFromSocket(
+        prefix: String,
+        socketAdapter: GasTownSocketAdapter
+    ) -> BeadCountSummary {
+        let internalTypes: Set<String> = [
+            "wisp", "patrol", "gate", "molecule", "event", "heartbeat", "ping"
+        ]
+
+        var ready = 0
+        var inProgress = 0
+        var closed = 0
+
+        for bead in socketAdapter.beads {
+            if internalTypes.contains(bead.wispType) { continue }
+            guard bead.id.hasPrefix(prefix) else { continue }
+            switch bead.status {
+            case "open", "pinned":
+                ready += 1
+            case "in_progress", "hooked":
+                inProgress += 1
+            case "closed":
+                closed += 1
+            default:
+                break
+            }
+        }
+
+        return BeadCountSummary(ready: ready, inProgress: inProgress, closed: closed)
+    }
+
+    private func unloadedHealthIndicators() -> RigHealthIndicators {
+        RigHealthIndicators(
+            build: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
+            ci: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
+            dolt: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
+            disk: .unknown(String(localized: "rigPanel.health.notChecked", defaultValue: "not checked")),
+            doctor: DoctorSummary(passCount: 0, warnCount: 0, failCount: 0, details: [])
+        )
+    }
 
     /// Resolve bead titles for agents that have a hook bead ID.
     /// Calls `bd show <id> --json` for each unique bead ID and caches results.

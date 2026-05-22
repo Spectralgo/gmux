@@ -68,6 +68,9 @@ final class GasTownService: ObservableObject {
                     self.startRefreshTimer()
                     // Start the centralized Dolt socket adapter for
                     // direct-query data fetching (replaces CLI subprocesses).
+                    GasTownSocketAdapter.shared.configureDatabases(
+                        ["hq"] + discoveryResult.rigs.map(\.id)
+                    )
                     GasTownSocketAdapter.shared.startWatching()
                     #if DEBUG
                     dlog("GasTownService: detected \(discoveryResult.town.path) with \(discoveryResult.rigs.count) rigs")

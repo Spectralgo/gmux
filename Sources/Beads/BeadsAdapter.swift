@@ -134,6 +134,18 @@ final class BeadsAdapter: ObservableObject {
         lastError = nil
         defer { isLoading = false }
 
+        if let detail = await GasTownSocketAdapter.shared.fetchBeadDetail(id: beadId) {
+            return detail
+        }
+
+        if GasTownSocketAdapter.shared.isConnected {
+            lastError = String(
+                localized: "beadsAdapter.error.beadNotFound",
+                defaultValue: "Bead '\(beadId)' not found."
+            )
+            return nil
+        }
+
         do {
             let output = try await runBdAsync(arguments: ["show", beadId])
             return parseBeadShowOutput(output, beadId: beadId)

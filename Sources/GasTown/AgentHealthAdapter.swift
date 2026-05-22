@@ -136,10 +136,10 @@ struct AgentHealthAdapter: Sendable {
     ///
     /// This bypasses CLI subprocess calls entirely, reading from the
     /// centralized GasTownSocketAdapter which queries Dolt directly.
-    /// Falls back to `loadAgents()` (CLI) if socket adapter has no data.
+    /// Returns an empty array when the socket is connected but no agents exist.
     @MainActor
     static func loadAgentsFromSocket(_ adapter: GasTownSocketAdapter) -> [AgentHealthEntry]? {
-        guard adapter.isConnected, !adapter.agents.isEmpty else { return nil }
+        guard adapter.isConnected else { return nil }
         return adapter.toAgentHealthEntries()
     }
 

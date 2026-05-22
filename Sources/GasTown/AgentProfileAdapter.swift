@@ -35,7 +35,7 @@ enum AgentProfileLoadState: Equatable, Sendable {
 
 /// Adapter that fetches all data needed for an agent profile.
 ///
-/// Composes AgentHealthAdapter with bead and memory CLI calls.
+/// Composes GasTownSocketAdapter data for health and bead history.
 /// All methods are async.
 struct AgentProfileAdapter: Sendable {
     private let townRootPath: String?
@@ -51,37 +51,35 @@ struct AgentProfileAdapter: Sendable {
     }
 
     /// Load the full profile snapshot for an agent.
+    @MainActor
     func loadProfile(agentAddress: String) async -> Result<AgentProfileSnapshot, AgentProfileAdapterError> {
-        // 1. Load health (from gt status --json)
-        let healthEntry: AgentHealthEntry?
-        switch await agentAdapter.loadAgents() {
-        case .success(let entries):
-            healthEntry = entries.first { $0.address == agentAddress }
-        case .failure:
-            healthEntry = nil
+        let socketAdapter = GasTownSocketAdapter.shared
+        if !socketAdapter.isConnected {
+            await socketAdapter.refresh()
         }
 
-        // 2. Load bead history (from bd list --json --assignee <address>)
-        let beadHistory = await loadBeadHistory(assignee: agentAddress)
-
-        // 3. Load memories (from gt memories <address>)
-        let memories = await loadMemories(agentAddress: agentAddress)
+        let healthEntry = socketAdapter
+            .toAgentHealthEntries()
+            .first { $0.address == agentAddress }
+        let beadHistory = await socketAdapter.fetchBeadSummaries(assignee: agentAddress)
 
         return .success(AgentProfileSnapshot(
             health: healthEntry,
             beadHistory: beadHistory,
-            memories: memories
+            memories: []
         ))
     }
 
     /// Light refresh: only health data.
+    @MainActor
     func loadHealthOnly(agentAddress: String) async -> AgentHealthEntry? {
-        switch await agentAdapter.loadAgents() {
-        case .success(let entries):
-            return entries.first { $0.address == agentAddress }
-        case .failure:
-            return nil
+        let socketAdapter = GasTownSocketAdapter.shared
+        if !socketAdapter.isConnected {
+            await socketAdapter.refresh()
         }
+        return socketAdapter
+            .toAgentHealthEntries()
+            .first { $0.address == agentAddress }
     }
 
     // MARK: - Bead History

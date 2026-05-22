@@ -45,8 +45,7 @@ final class AgentHealthPanel: Panel, ObservableObject {
 
     // MARK: - Data Loading
 
-    /// Load agent health data. Tries the socket adapter (direct Dolt query)
-    /// first, then falls back to `gt status --json` via CLI subprocess.
+    /// Load agent health data from the socket adapter's direct Dolt cache.
     ///
     /// - Parameter silent: When `true` (used by auto-refresh), skips the
     ///   `.loading` transition and only publishes if the result differs from
@@ -56,7 +55,6 @@ final class AgentHealthPanel: Panel, ObservableObject {
             loadState = .loading
         }
 
-        // Try socket adapter first (no subprocess, direct Dolt query)
         let socketAdapter = GasTownSocketAdapter.shared
         if let entries = AgentHealthAdapter.loadAgentsFromSocket(socketAdapter) {
             let newState = AgentHealthLoadState.loaded(entries)
@@ -66,17 +64,23 @@ final class AgentHealthPanel: Panel, ObservableObject {
             return
         }
 
-        // Fall back to async CLI command
-        let adapter = self.adapter
         Task {
-            let result = await adapter.loadAgents()
-            switch result {
-            case .success(let entries):
+            await socketAdapter.refresh()
+            if let entries = AgentHealthAdapter.loadAgentsFromSocket(socketAdapter) {
                 let newState = AgentHealthLoadState.loaded(entries)
                 if self.loadState != newState {
                     self.loadState = newState
                 }
-            case .failure(let error):
+            } else {
+                let message = socketAdapter.lastError ?? String(
+                    localized: "agentHealth.error.socketUnavailable",
+                    defaultValue: "Gas Town data socket is unavailable"
+                )
+                let error = AgentHealthAdapterError.cliFailure(
+                    command: "GasTownSocketAdapter.refresh",
+                    exitCode: -1,
+                    stderr: message
+                )
                 let newState = AgentHealthLoadState.failed(error)
                 if self.loadState != newState {
                     self.loadState = newState

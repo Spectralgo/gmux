@@ -27,12 +27,16 @@ struct GasTownDoltAgent: Equatable, Sendable, Identifiable {
 struct GasTownDoltBead: Equatable, Sendable, Identifiable {
     let id: String
     let title: String
+    let description: String
+    let acceptanceCriteria: String
     let status: String
     let priority: Int
     let issueType: String
     let assignee: String
+    let owner: String
     let createdAt: String
     let updatedAt: String
+    let externalRef: String
     let sender: String
     let pinned: Bool
     let wispType: String
@@ -43,12 +47,24 @@ struct GasTownDoltBead: Equatable, Sendable, Identifiable {
 struct GasTownDoltMail: Equatable, Sendable, Identifiable {
     let id: String
     let title: String
+    let body: String
     let status: String
+    let issueType: String
     let sender: String
     let target: String
     let pinned: Bool
     let createdAt: String
     let database: String
+}
+
+/// A tracked issue inside a convoy.
+struct GasTownDoltConvoyTrackedIssue: Equatable, Sendable, Identifiable {
+    let id: String
+    let title: String
+    let status: String
+    let assignee: String?
+    let rigId: String?
+    let priority: Int
 }
 
 /// A convoy wisp from the wisps table (wisp_type = 'convoy').
@@ -60,6 +76,9 @@ struct GasTownDoltConvoy: Equatable, Sendable, Identifiable {
     let molType: String
     let workType: String
     let createdAt: String
+    let updatedAt: String
+    let description: String
+    let trackedIssues: [GasTownDoltConvoyTrackedIssue]
     let database: String
 }
 
@@ -107,7 +126,16 @@ private enum DoltQueryEngine {
     private static func queryViaDolt(doltPath: String, sql: String) async -> [[String: Any]]? {
         let result = await runProcess(
             executable: doltPath,
-            arguments: ["sql", "-q", sql, "--host", host, "--port", port, "--user", user, "-r", "json"]
+            arguments: [
+                "--host", host,
+                "--port", port,
+                "--user", user,
+                "--password", "",
+                "--no-tls",
+                "sql",
+                "-q", sql,
+                "-r", "json",
+            ]
         )
         guard let result, result.exitCode == 0 else { return nil }
         return parseJSONRows(from: result.stdout)
@@ -184,8 +212,13 @@ private enum DoltQueryEngine {
 
         // dolt sql -r json outputs: {"rows": [...]} or just [...]
         if let json = try? JSONSerialization.jsonObject(with: data) {
-            if let dict = json as? [String: Any], let rows = dict["rows"] as? [[String: Any]] {
-                return rows
+            if let dict = json as? [String: Any] {
+                if let rows = dict["rows"] as? [[String: Any]] {
+                    return rows
+                }
+                if dict.isEmpty {
+                    return []
+                }
             }
             if let rows = json as? [[String: Any]] {
                 return rows
@@ -249,8 +282,8 @@ final class GasTownSocketAdapter: ObservableObject {
 
     // MARK: - Configuration
 
-    /// Databases to query. Matches the Go daemon's allowedDatabases.
-    let databases = ["hq", "gmux"]
+    /// Databases to query. Updated from GasTownService discovery when available.
+    private(set) var databases = ["hq", "gmux"]
 
     // MARK: - Internals
 
@@ -261,6 +294,16 @@ final class GasTownSocketAdapter: ObservableObject {
     private var tableHashes: [String: String] = [:]
 
     // MARK: - Public API
+
+    /// Update the Dolt databases queried by the adapter.
+    func configureDatabases(_ names: [String]) {
+        let unique = Array(Set(names.filter { !$0.isEmpty })).sorted()
+        let configured = unique.isEmpty ? ["hq", "gmux"] : unique
+        if databases != configured {
+            databases = configured
+            tableHashes.removeAll()
+        }
+    }
 
     /// Refresh all data from Dolt.
     func refresh() async {
@@ -327,10 +370,9 @@ final class GasTownSocketAdapter: ObservableObject {
 
         for db in databases {
             for table in watchedTables {
-                let sql = "SELECT DOLT_HASHOF_TABLE('\(table)') AS hash FROM \(db).dual"
-                // Simpler approach: query the hash directly
+                let dbName = sqlIdentifier(db)
                 let hashSQL = "SELECT DOLT_HASHOF_TABLE('\(table)') AS hash"
-                let fullSQL = "USE `\(db)`; \(hashSQL)"
+                let fullSQL = "USE \(dbName); \(hashSQL)"
 
                 guard let rows = await DoltQueryEngine.query(fullSQL),
                       let row = rows.first,
@@ -353,10 +395,11 @@ final class GasTownSocketAdapter: ObservableObject {
     private func fetchAgents() async -> [GasTownDoltAgent] {
         var allAgents: [GasTownDoltAgent] = []
         for db in databases {
+            let dbName = sqlIdentifier(db)
             let sql = """
                 SELECT id, title, status, priority, role_type, rig, agent_state, \
                 hook_bead, role_bead, last_activity, assignee \
-                FROM `\(db)`.wisps \
+                FROM \(dbName).wisps \
                 WHERE role_type != '' OR agent_state != ''
                 """
             guard let rows = await DoltQueryEngine.query(sql) else { continue }
@@ -383,10 +426,12 @@ final class GasTownSocketAdapter: ObservableObject {
     private func fetchBeads() async -> [GasTownDoltBead] {
         var allBeads: [GasTownDoltBead] = []
         for db in databases {
+            let dbName = sqlIdentifier(db)
             let sql = """
-                SELECT id, title, status, priority, issue_type, assignee, \
-                created_at, updated_at, sender, pinned, wisp_type \
-                FROM `\(db)`.issues \
+                SELECT id, title, description, acceptance_criteria, status, \
+                priority, issue_type, assignee, owner, created_at, updated_at, \
+                external_ref, sender, pinned, wisp_type \
+                FROM \(dbName).issues \
                 ORDER BY updated_at DESC LIMIT 50
                 """
             guard let rows = await DoltQueryEngine.query(sql) else { continue }
@@ -394,12 +439,16 @@ final class GasTownSocketAdapter: ObservableObject {
                 allBeads.append(GasTownDoltBead(
                     id: row["id"] as? String ?? "",
                     title: row["title"] as? String ?? "",
+                    description: row["description"] as? String ?? "",
+                    acceptanceCriteria: row["acceptance_criteria"] as? String ?? "",
                     status: row["status"] as? String ?? "",
                     priority: asInt(row["priority"]),
                     issueType: row["issue_type"] as? String ?? "",
                     assignee: row["assignee"] as? String ?? "",
+                    owner: row["owner"] as? String ?? "",
                     createdAt: row["created_at"] as? String ?? "",
                     updatedAt: row["updated_at"] as? String ?? "",
+                    externalRef: row["external_ref"] as? String ?? "",
                     sender: row["sender"] as? String ?? "",
                     pinned: asBool(row["pinned"]),
                     wispType: row["wisp_type"] as? String ?? "",
@@ -413,10 +462,12 @@ final class GasTownSocketAdapter: ObservableObject {
     private func fetchMail() async -> [GasTownDoltMail] {
         var allMail: [GasTownDoltMail] = []
         for db in databases {
+            let dbName = sqlIdentifier(db)
             let sql = """
-                SELECT id, title, status, sender, assignee, pinned, created_at \
-                FROM `\(db)`.wisps \
-                WHERE wisp_type = 'mail' \
+                SELECT id, title, description, status, issue_type, sender, \
+                assignee, pinned, created_at \
+                FROM \(dbName).issues \
+                WHERE issue_type = 'message' OR wisp_type = 'mail' \
                 ORDER BY created_at DESC
                 """
             guard let rows = await DoltQueryEngine.query(sql) else { continue }
@@ -424,7 +475,9 @@ final class GasTownSocketAdapter: ObservableObject {
                 allMail.append(GasTownDoltMail(
                     id: row["id"] as? String ?? "",
                     title: row["title"] as? String ?? "",
+                    body: row["description"] as? String ?? "",
                     status: row["status"] as? String ?? "",
+                    issueType: row["issue_type"] as? String ?? "",
                     sender: row["sender"] as? String ?? "",
                     target: row["assignee"] as? String ?? "",
                     pinned: asBool(row["pinned"]),
@@ -439,21 +492,29 @@ final class GasTownSocketAdapter: ObservableObject {
     private func fetchConvoys() async -> [GasTownDoltConvoy] {
         var allConvoys: [GasTownDoltConvoy] = []
         for db in databases {
+            let dbName = sqlIdentifier(db)
             let sql = """
-                SELECT id, title, status, priority, mol_type, work_type, created_at \
-                FROM `\(db)`.wisps \
-                WHERE wisp_type = 'convoy'
+                SELECT id, title, description, status, priority, mol_type, \
+                work_type, created_at, updated_at \
+                FROM \(dbName).issues \
+                WHERE issue_type = 'convoy' OR wisp_type = 'convoy' \
+                ORDER BY updated_at DESC LIMIT 100
                 """
             guard let rows = await DoltQueryEngine.query(sql) else { continue }
             for row in rows {
+                let id = row["id"] as? String ?? ""
+                let trackedIssues = await fetchTrackedIssues(convoyId: id, database: db)
                 allConvoys.append(GasTownDoltConvoy(
-                    id: row["id"] as? String ?? "",
+                    id: id,
                     title: row["title"] as? String ?? "",
                     status: row["status"] as? String ?? "",
                     priority: asInt(row["priority"]),
                     molType: row["mol_type"] as? String ?? "",
                     workType: row["work_type"] as? String ?? "",
                     createdAt: row["created_at"] as? String ?? "",
+                    updatedAt: row["updated_at"] as? String ?? "",
+                    description: row["description"] as? String ?? "",
+                    trackedIssues: trackedIssues,
                     database: db
                 ))
             }
@@ -464,8 +525,9 @@ final class GasTownSocketAdapter: ObservableObject {
     private func fetchDiagnostics() async -> [GasTownDoltDiagnostic] {
         var allDiagnostics: [GasTownDoltDiagnostic] = []
         for db in databases {
+            let dbName = sqlIdentifier(db)
             // Config table
-            let configSQL = "SELECT `key`, `value` FROM `\(db)`.config"
+            let configSQL = "SELECT `key`, `value` FROM \(dbName).config"
             if let rows = await DoltQueryEngine.query(configSQL) {
                 for row in rows {
                     allDiagnostics.append(GasTownDoltDiagnostic(
@@ -477,7 +539,7 @@ final class GasTownSocketAdapter: ObservableObject {
             }
 
             // Metadata table
-            let metaSQL = "SELECT `key`, `value` FROM `\(db)`.metadata"
+            let metaSQL = "SELECT `key`, `value` FROM \(dbName).metadata"
             if let rows = await DoltQueryEngine.query(metaSQL) {
                 for row in rows {
                     allDiagnostics.append(GasTownDoltDiagnostic(
@@ -489,6 +551,94 @@ final class GasTownSocketAdapter: ObservableObject {
             }
         }
         return allDiagnostics
+    }
+
+    private func fetchTrackedIssues(convoyId: String, database: String) async -> [GasTownDoltConvoyTrackedIssue] {
+        guard !convoyId.isEmpty else { return [] }
+
+        let dbName = sqlIdentifier(database)
+        let id = sqlString(convoyId)
+        let dependencySQL = """
+            SELECT depends_on_id FROM \(dbName).dependencies \
+            WHERE issue_id = '\(id)' AND type = 'tracks'
+            """
+        guard let dependencyRows = await DoltQueryEngine.query(dependencySQL) else { return [] }
+        let trackedIds = dependencyRows.compactMap { $0["depends_on_id"] as? String }
+        guard !trackedIds.isEmpty else { return [] }
+
+        var issuesById: [String: GasTownDoltConvoyTrackedIssue] = [:]
+        let normalizedIds = trackedIds.map(normalizeTrackedIssueId)
+        for db in databases {
+            let dbName = sqlIdentifier(db)
+            let idList = normalizedIds
+                .map { "'\(sqlString($0))'" }
+                .joined(separator: ", ")
+            guard !idList.isEmpty else { continue }
+            let issuesSQL = """
+                SELECT id, title, status, priority, assignee FROM \(dbName).issues \
+                WHERE id IN (\(idList))
+                """
+            guard let issueRows = await DoltQueryEngine.query(issuesSQL) else { continue }
+            for row in issueRows {
+                let issueId = row["id"] as? String ?? ""
+                issuesById[issueId] = GasTownDoltConvoyTrackedIssue(
+                    id: issueId,
+                    title: row["title"] as? String ?? issueId,
+                    status: row["status"] as? String ?? "open",
+                    assignee: emptyStringAsNil(row["assignee"] as? String),
+                    rigId: db,
+                    priority: asInt(row["priority"])
+                )
+            }
+        }
+
+        return trackedIds.map { rawId in
+            let normalizedId = normalizeTrackedIssueId(rawId)
+            return issuesById[normalizedId] ?? GasTownDoltConvoyTrackedIssue(
+                id: normalizedId,
+                title: normalizedId,
+                status: "open",
+                assignee: nil,
+                rigId: nil,
+                priority: 0
+            )
+        }
+    }
+
+    private func fetchBeadRow(id beadId: String) async -> GasTownDoltBead? {
+        guard !beadId.isEmpty else { return nil }
+        let escapedId = sqlString(beadId)
+        for db in databases {
+            let dbName = sqlIdentifier(db)
+            let sql = """
+                SELECT id, title, description, acceptance_criteria, status, \
+                priority, issue_type, assignee, owner, created_at, updated_at, \
+                external_ref, sender, pinned, wisp_type \
+                FROM \(dbName).issues \
+                WHERE id = '\(escapedId)' LIMIT 1
+                """
+            guard let rows = await DoltQueryEngine.query(sql),
+                  let row = rows.first else { continue }
+            return GasTownDoltBead(
+                id: row["id"] as? String ?? beadId,
+                title: row["title"] as? String ?? beadId,
+                description: row["description"] as? String ?? "",
+                acceptanceCriteria: row["acceptance_criteria"] as? String ?? "",
+                status: row["status"] as? String ?? "open",
+                priority: asInt(row["priority"]),
+                issueType: row["issue_type"] as? String ?? "",
+                assignee: row["assignee"] as? String ?? "",
+                owner: row["owner"] as? String ?? "",
+                createdAt: row["created_at"] as? String ?? "",
+                updatedAt: row["updated_at"] as? String ?? "",
+                externalRef: row["external_ref"] as? String ?? "",
+                sender: row["sender"] as? String ?? "",
+                pinned: asBool(row["pinned"]),
+                wispType: row["wisp_type"] as? String ?? "",
+                database: db
+            )
+        }
+        return nil
     }
 
     // MARK: - Domain Model Conversions
@@ -544,7 +694,258 @@ final class GasTownSocketAdapter: ObservableObject {
         return BeadCountSummary(ready: ready, inProgress: inProgress, closed: closed)
     }
 
+    /// Convert cached Dolt convoys to Convoy Board summaries.
+    func toConvoySummaries(includeClosed: Bool = false) -> [ConvoySummary] {
+        convoys
+            .filter { includeClosed || $0.status != "closed" }
+            .map(convoySummary)
+    }
+
+    /// Load a single convoy detail via direct Dolt queries.
+    func convoyDetail(id: String) async -> ConvoyDetail? {
+        if let cached = convoys.first(where: { $0.id == id }) {
+            return convoyDetail(cached)
+        }
+
+        guard let row = await fetchConvoyRow(id: id) else { return nil }
+        return convoyDetail(row)
+    }
+
+    /// Convert cached persistent mail rows to MailMessage values.
+    func toMailMessages() -> [MailMessage] {
+        mail.map { row in
+            let type = mailMessageType(title: row.title, body: row.body)
+            return MailMessage(
+                id: deterministicUUID(from: row.id),
+                type: type,
+                subject: row.title,
+                body: row.body,
+                sender: row.sender.isEmpty ? row.database : row.sender,
+                provenance: MailProvenance(
+                    beadId: row.id,
+                    convoyId: nil,
+                    polecatName: nil,
+                    branch: nil,
+                    workspaceId: nil
+                ),
+                createdAt: parseDoltDate(row.createdAt) ?? Date(),
+                isRead: row.status == "closed",
+                isPinned: row.pinned,
+                isArchived: row.status == "closed",
+                priority: 2,
+                threadId: nil,
+                replyTo: nil
+            )
+        }
+        .sorted { $0.createdAt > $1.createdAt }
+    }
+
+    /// Fetch a single bead detail via direct Dolt query.
+    func fetchBeadDetail(id: String) async -> BeadDetail? {
+        let bead: GasTownDoltBead?
+        if let cachedBead = beads.first(where: { $0.id == id }) {
+            bead = cachedBead
+        } else {
+            bead = await fetchBeadRow(id: id)
+        }
+        guard let bead else { return nil }
+        let dependencies = await fetchDependencies(beadId: id)
+        return beadDetail(from: bead, dependencies: dependencies)
+    }
+
+    /// Fetch bead summaries for an assignee via direct Dolt query.
+    func fetchBeadSummaries(assignee: String) async -> [BeadSummary] {
+        let escapedAssignee = sqlString(assignee)
+        var summaries: [BeadSummary] = []
+        for db in databases {
+            let dbName = sqlIdentifier(db)
+            let sql = """
+                SELECT id, title, status, priority, issue_type, assignee, owner, created_at \
+                FROM \(dbName).issues \
+                WHERE assignee = '\(escapedAssignee)' \
+                ORDER BY updated_at DESC LIMIT 30
+                """
+            guard let rows = await DoltQueryEngine.query(sql) else { continue }
+            summaries.append(contentsOf: rows.compactMap(beadSummary))
+        }
+        return summaries
+    }
+
     // MARK: - Private Helpers
+
+    private func fetchConvoyRow(id convoyId: String) async -> GasTownDoltConvoy? {
+        let escapedId = sqlString(convoyId)
+        for db in databases {
+            let dbName = sqlIdentifier(db)
+            let sql = """
+                SELECT id, title, description, status, priority, mol_type, \
+                work_type, created_at, updated_at \
+                FROM \(dbName).issues \
+                WHERE id = '\(escapedId)' \
+                AND (issue_type = 'convoy' OR wisp_type = 'convoy') \
+                LIMIT 1
+                """
+            guard let rows = await DoltQueryEngine.query(sql),
+                  let row = rows.first else { continue }
+            let id = row["id"] as? String ?? convoyId
+            return GasTownDoltConvoy(
+                id: id,
+                title: row["title"] as? String ?? id,
+                status: row["status"] as? String ?? "open",
+                priority: asInt(row["priority"]),
+                molType: row["mol_type"] as? String ?? "",
+                workType: row["work_type"] as? String ?? "",
+                createdAt: row["created_at"] as? String ?? "",
+                updatedAt: row["updated_at"] as? String ?? "",
+                description: row["description"] as? String ?? "",
+                trackedIssues: await fetchTrackedIssues(convoyId: id, database: db),
+                database: db
+            )
+        }
+        return nil
+    }
+
+    private func fetchDependencies(beadId: String) async -> [BeadDependency] {
+        let escapedId = sqlString(beadId)
+        var dependencies: [BeadDependency] = []
+        for db in databases {
+            let dbName = sqlIdentifier(db)
+            let sql = """
+                SELECT depends_on_id FROM \(dbName).dependencies \
+                WHERE issue_id = '\(escapedId)'
+                """
+            guard let rows = await DoltQueryEngine.query(sql) else { continue }
+            for row in rows {
+                guard let dependencyId = row["depends_on_id"] as? String else { continue }
+                let normalizedId = normalizeTrackedIssueId(dependencyId)
+                let dependencyBead = await fetchBeadRow(id: normalizedId)
+                dependencies.append(BeadDependency(
+                    id: normalizedId,
+                    title: dependencyBead?.title ?? normalizedId,
+                    status: dependencyBead.flatMap { BeadStatus(rawValue: $0.status) }
+                ))
+            }
+        }
+        return dependencies
+    }
+
+    private func convoySummary(_ convoy: GasTownDoltConvoy) -> ConvoySummary {
+        let tracked = convoy.trackedIssues
+        let completed = tracked.filter { $0.status == "closed" }.count
+        let polecats = assignedPolecats(from: tracked)
+        let rigIds = Array(Set(tracked.compactMap(\.rigId))).sorted()
+
+        return ConvoySummary(
+            id: convoy.id,
+            title: convoy.title,
+            status: convoy.status,
+            totalIssues: tracked.count,
+            completedIssues: completed,
+            attention: convoyAttention(status: convoy.status, trackedIssues: tracked),
+            polecatDetails: polecats,
+            rigIds: rigIds,
+            createdAt: convoy.createdAt.isEmpty ? nil : convoy.createdAt,
+            updatedAt: convoy.updatedAt.isEmpty ? nil : convoy.updatedAt
+        )
+    }
+
+    private func convoyDetail(_ convoy: GasTownDoltConvoy) -> ConvoyDetail {
+        let tracked = convoy.trackedIssues.map { issue in
+            ConvoyTrackedIssue(
+                id: issue.id,
+                title: issue.title,
+                status: issue.status,
+                assignee: issue.assignee,
+                rigId: issue.rigId,
+                priority: issue.priority
+            )
+        }
+        let rigIds = Array(Set(tracked.compactMap(\.rigId))).sorted()
+
+        return ConvoyDetail(
+            id: convoy.id,
+            title: convoy.title,
+            status: convoy.status,
+            description: convoy.description.isEmpty ? nil : convoy.description,
+            trackedIssues: tracked,
+            attention: convoyAttention(status: convoy.status, trackedIssues: convoy.trackedIssues),
+            rigIds: rigIds,
+            createdAt: convoy.createdAt.isEmpty ? nil : convoy.createdAt,
+            updatedAt: convoy.updatedAt.isEmpty ? nil : convoy.updatedAt
+        )
+    }
+
+    private func beadDetail(from bead: GasTownDoltBead, dependencies: [BeadDependency]) -> BeadDetail {
+        BeadDetail(
+            id: bead.id,
+            title: bead.title,
+            status: BeadStatus(rawValue: bead.status) ?? .open,
+            priority: bead.priority,
+            type: bead.issueType.isEmpty ? nil : bead.issueType,
+            owner: bead.owner.isEmpty ? nil : bead.owner,
+            assignee: bead.assignee.isEmpty ? nil : bead.assignee,
+            description: bead.description,
+            acceptanceCriteria: splitMultiline(bead.acceptanceCriteria),
+            dependencies: dependencies,
+            createdDate: bead.createdAt.isEmpty ? nil : bead.createdAt,
+            updatedDate: bead.updatedAt.isEmpty ? nil : bead.updatedAt,
+            externalRef: bead.externalRef.isEmpty ? nil : bead.externalRef
+        )
+    }
+
+    private func beadSummary(_ row: [String: Any]) -> BeadSummary? {
+        guard let id = row["id"] as? String,
+              let title = row["title"] as? String else { return nil }
+        return BeadSummary(
+            id: id,
+            title: title,
+            status: row["status"] as? String ?? "open",
+            priority: asInt(row["priority"]),
+            issueType: row["issue_type"] as? String ?? "task",
+            assignee: emptyStringAsNil(row["assignee"] as? String),
+            owner: emptyStringAsNil(row["owner"] as? String),
+            createdAt: emptyStringAsNil(row["created_at"] as? String),
+            labels: [],
+            dependencyCount: 0,
+            dependentCount: 0
+        )
+    }
+
+    private func convoyAttention(
+        status: String,
+        trackedIssues: [GasTownDoltConvoyTrackedIssue]
+    ) -> ConvoyAttentionState {
+        if status == "closed" { return .normal }
+        let openIssues = trackedIssues.filter { $0.status != "closed" }
+        guard !openIssues.isEmpty else { return .normal }
+        let blocked = openIssues.filter { $0.status == "blocked" }
+        if blocked.count == openIssues.count { return .blocked }
+        let unblocked = openIssues.filter { $0.status != "blocked" }
+        let hasAssignedWork = unblocked.contains { issue in
+            guard let assignee = issue.assignee else { return false }
+            return assignee.contains("/polecats/")
+        }
+        return !unblocked.isEmpty && !hasAssignedWork ? .stranded : .normal
+    }
+
+    private func assignedPolecats(from issues: [GasTownDoltConvoyTrackedIssue]) -> [AssignedPolecat] {
+        var seen: Set<String> = []
+        var polecats: [AssignedPolecat] = []
+        for issue in issues {
+            guard let assignee = issue.assignee,
+                  assignee.contains("/polecats/"),
+                  !seen.contains(assignee) else { continue }
+            seen.insert(assignee)
+            let name = assignee.split(separator: "/").last.map(String.init) ?? assignee
+            let status: PolecatSwarmStatus = switch issue.status {
+            case "blocked": .stalled
+            case "in_progress", "hooked", "open": .working
+            default: .zombie
+            }
+            polecats.append(AssignedPolecat(name: name, address: assignee, status: status))
+        }
+        return polecats
+    }
 
     private func extractAgentName(from agent: GasTownDoltAgent) -> String {
         // Try to extract name from title (often "polecat/name" or just "name")
@@ -560,6 +961,77 @@ final class GasTownSocketAdapter: ObservableObject {
             }
         }
         return title.isEmpty ? agent.id : title
+    }
+
+    private func normalizeTrackedIssueId(_ id: String) -> String {
+        if id.hasPrefix("external:") {
+            return id.split(separator: ":").last.map(String.init) ?? id
+        }
+        return id
+    }
+
+    private func sqlIdentifier(_ value: String) -> String {
+        "`" + value.replacingOccurrences(of: "`", with: "``") + "`"
+    }
+
+    private func sqlString(_ value: String) -> String {
+        value.replacingOccurrences(of: "'", with: "''")
+    }
+
+    private func splitMultiline(_ value: String) -> [String] {
+        value.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    private func emptyStringAsNil(_ value: String?) -> String? {
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    private func mailMessageType(title: String, body: String) -> MailMessageType {
+        let text = "\(title)\n\(body)".uppercased()
+        if text.contains("MERGE_FAILED") { return .mergeFailed }
+        if text.contains("REWORK_REQUEST") || text.contains("FIX_NEEDED") { return .reworkRequest }
+        if text.contains("MERGE_READY") { return .mergeReady }
+        if text.contains("POLECAT_DONE") { return .polecatDone }
+        if text.contains("MERGED") { return .merged }
+        if text.contains("HANDOFF") { return .handoff }
+        if text.contains("WITNESS_PING") || text.contains("PATROL") { return .witnessPing }
+        if text.contains("HELP") || text.contains("BLOCKED") { return .help }
+        return .info
+    }
+
+    private func deterministicUUID(from value: String) -> UUID {
+        var first: UInt64 = 0xcbf29ce484222325
+        var second: UInt64 = 0x84222325cbf29ce4
+        for byte in value.utf8 {
+            first ^= UInt64(byte)
+            first &*= 0x100000001b3
+            second ^= UInt64(byte) &+ 0x9e3779b97f4a7c15
+            second &*= 0x100000001b3
+        }
+        let bytes = (0..<16).map { index -> UInt8 in
+            let source = index < 8 ? first : second
+            let shift = UInt64((7 - (index % 8)) * 8)
+            return UInt8((source >> shift) & 0xff)
+        }
+        return UUID(uuid: uuid_t(
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        ))
+    }
+
+    private func parseDoltDate(_ value: String) -> Date? {
+        if let date = ISO8601DateFormatter().date(from: value) {
+            return date
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter.date(from: value)
     }
 
     private func asInt(_ value: Any?) -> Int {
