@@ -1282,32 +1282,9 @@ struct cmuxApp: App {
     private func showGasTownRigOverview() {
         let service = GasTownService.shared
         let alert = NSAlert()
-        alert.messageText = String(
-            localized: "gastown.rigOverview.title",
-            defaultValue: "Gas Town Rig Overview"
-        )
-
-        var info = ""
-        if let town = service.townRoot {
-            info += "Town: \(town.path)\n"
-        }
-        info += "Rigs (\(service.rigs.count)):\n"
-        for rig in service.rigs {
-            info += "  • \(rig.name)"
-            if let prefix = rig.beadsPrefix {
-                info += " [\(prefix)]"
-            }
-            info += "\n"
-        }
-        if let gtPath = service.gtCLIPath {
-            info += "\ngt CLI: \(gtPath)"
-        }
-
-        alert.informativeText = info
-        alert.addButton(withTitle: String(
-            localized: "gastown.rigOverview.ok",
-            defaultValue: "OK"
-        ))
+        alert.messageText = service.rigOverviewTitle
+        alert.informativeText = service.rigOverviewInformativeText
+        alert.addButton(withTitle: service.rigOverviewOKButtonTitle)
         alert.runModal()
     }
 

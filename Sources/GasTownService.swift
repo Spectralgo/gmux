@@ -33,21 +33,87 @@ final class GasTownService: ObservableObject {
     /// Human-readable status summary for the status bar.
     var statusSummary: String {
         guard hasDiscovered else {
-            return String(localized: "gastown.status.discovering", defaultValue: "Gas Town: discovering…")
+            return String(localized: "gastown.status.discovering", defaultValue: "Gas Town: discovering...")
         }
         guard let townRoot else {
             return String(localized: "gastown.status.notConnected", defaultValue: "Gas Town: not connected")
         }
         let townName = ((townRoot.path as NSString).lastPathComponent)
         let rigCount = rigs.count
-        return String(
-            localized: "gastown.status.connected",
-            defaultValue: "Gas Town: \(townName) (\(rigCount) rigs)"
+        let format = String(
+            localized: "gastown.status.connected.format",
+            defaultValue: "Gas Town: %@ (%d rigs)"
         )
+        return String(format: format, townName, rigCount)
     }
 
     /// Whether a Gas Town workspace was detected.
     var isConnected: Bool { townRoot != nil }
+
+    var rigOverviewTitle: String {
+        String(localized: "gastown.rigOverview.title", defaultValue: "Gas Town Rig Overview")
+    }
+
+    var rigOverviewOKButtonTitle: String {
+        String(localized: "gastown.rigOverview.ok", defaultValue: "OK")
+    }
+
+    var rigOverviewInformativeText: String {
+        var lines: [String] = []
+
+        if let townRoot {
+            let format = String(
+                localized: "gastown.rigOverview.town.format",
+                defaultValue: "Town: %@"
+            )
+            lines.append(String(format: format, townRoot.path))
+        } else {
+            lines.append(String(
+                localized: "gastown.rigOverview.town.notConnected",
+                defaultValue: "Town: not connected"
+            ))
+        }
+
+        let rigsFormat = String(
+            localized: "gastown.rigOverview.rigs.format",
+            defaultValue: "Rigs (%d):"
+        )
+        lines.append(String(format: rigsFormat, rigs.count))
+
+        if rigs.isEmpty {
+            lines.append(String(
+                localized: "gastown.rigOverview.rigs.empty",
+                defaultValue: "  - No rigs discovered"
+            ))
+        } else {
+            for rig in rigs {
+                if let prefix = rig.beadsPrefix {
+                    let format = String(
+                        localized: "gastown.rigOverview.rigWithPrefix.format",
+                        defaultValue: "  - %@ [%@]"
+                    )
+                    lines.append(String(format: format, rig.name, prefix))
+                } else {
+                    let format = String(
+                        localized: "gastown.rigOverview.rig.format",
+                        defaultValue: "  - %@"
+                    )
+                    lines.append(String(format: format, rig.name))
+                }
+            }
+        }
+
+        if let gtCLIPath {
+            let format = String(
+                localized: "gastown.rigOverview.gtCLI.format",
+                defaultValue: "gt CLI: %@"
+            )
+            lines.append("")
+            lines.append(String(format: format, gtCLIPath))
+        }
+
+        return lines.joined(separator: "\n")
+    }
 
     private var refreshTimer: Timer?
 
