@@ -133,7 +133,7 @@ struct RefineryPanelView: View {
                     NotificationCenter.default.post(
                         name: .openDiagnosticsPanel,
                         object: nil,
-                        userInfo: ["workspaceId": panel.workspaceId]
+                        userInfo: PanelLinkUserInfo.diagnosticsPanel(workspaceId: panel.workspaceId)
                     )
                 }
                 .buttonStyle(.bordered)
@@ -330,6 +330,7 @@ struct RefineryPanelView: View {
                     QueueItemCard(
                         item: item,
                         isExpanded: panel.selectedItemId == item.id,
+                        workspaceId: panel.workspaceId,
                         onTap: {
                             if panel.selectedItemId == item.id {
                                 panel.collapseItem()
@@ -371,7 +372,7 @@ struct RefineryPanelView: View {
     private func skippedSection(_ items: [MergeQueueItem]) -> some View {
         DisclosureGroup {
             ForEach(items) { item in
-                SkippedItemRow(item: item)
+                SkippedItemRow(item: item, workspaceId: panel.workspaceId)
                 if item.id != items.last?.id {
                     Divider()
                         .padding(.leading, GasTownSpacing.rowPaddingH)
@@ -608,6 +609,7 @@ private struct FlowStageIndicator: View {
 private struct QueueItemCard: View, Equatable {
     let item: MergeQueueItem
     let isExpanded: Bool
+    let workspaceId: UUID
     let onTap: () -> Void
     let onMerge: () -> Void
     let onRetry: () -> Void
@@ -616,7 +618,9 @@ private struct QueueItemCard: View, Equatable {
     @State private var isHovering: Bool = false
 
     static func == (lhs: QueueItemCard, rhs: QueueItemCard) -> Bool {
-        lhs.item == rhs.item && lhs.isExpanded == rhs.isExpanded
+        lhs.item == rhs.item &&
+            lhs.isExpanded == rhs.isExpanded &&
+            lhs.workspaceId == rhs.workspaceId
     }
 
     var body: some View {
@@ -626,7 +630,7 @@ private struct QueueItemCard: View, Equatable {
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {
-                        BeadIdLink(beadId: item.id)
+                        BeadIdLink(beadId: item.id, workspaceId: workspaceId)
                         Text(item.title)
                             .font(GasTownTypography.label)
                             .lineLimit(1)
@@ -635,7 +639,8 @@ private struct QueueItemCard: View, Equatable {
                     HStack(spacing: 4) {
                         AgentNameLink(
                             name: item.author,
-                            agentAddress: item.author
+                            agentAddress: item.author,
+                            workspaceId: workspaceId
                         )
                         Text("\u{2192}")
                             .font(GasTownTypography.caption)
@@ -690,9 +695,10 @@ private struct QueueItemCard: View, Equatable {
             isHovering = hovering
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(
-            "\(item.title), by \(item.author), stage \(item.stage.rawValue)"
-        ))
+        .accessibilityLabel(Text(String(
+            localized: "refineryPanel.queueItem.a11y.label",
+            defaultValue: "\(item.title), by \(item.author), stage \(item.stage.rawValue)"
+        )))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -751,13 +757,13 @@ private struct QueueItemCard: View, Equatable {
             return String(localized: "refineryPanel.elapsed.now", defaultValue: "just now")
         } else if interval < 3600 {
             let minutes = Int(interval / 60)
-            return "\(minutes)m ago"
+            return String(localized: "refineryPanel.elapsed.minutes", defaultValue: "\(minutes)m ago")
         } else if interval < 86400 {
             let hours = Int(interval / 3600)
-            return "\(hours)h ago"
+            return String(localized: "refineryPanel.elapsed.hours", defaultValue: "\(hours)h ago")
         } else {
             let days = Int(interval / 86400)
-            return "\(days)d ago"
+            return String(localized: "refineryPanel.elapsed.days", defaultValue: "\(days)d ago")
         }
     }
 }
@@ -767,13 +773,17 @@ private struct QueueItemCard: View, Equatable {
 /// Clickable bead ID that opens the Bead Inspector.
 private struct BeadIdLink: View {
     let beadId: String
+    var workspaceId: UUID? = nil
 
     var body: some View {
         Button {
             NotificationCenter.default.post(
                 name: .openBeadInspector,
                 object: nil,
-                userInfo: ["beadId": beadId]
+                userInfo: PanelLinkUserInfo.beadInspector(
+                    beadId: beadId,
+                    workspaceId: workspaceId
+                )
             )
         } label: {
             Text(beadId)
@@ -954,7 +964,10 @@ private struct QueueItemDetail: View {
                 NotificationCenter.default.post(
                     name: .openDiffPanel,
                     object: nil,
-                    userInfo: ["commitSha": item.sourceBranch, "workspaceId": workspaceId]
+                    userInfo: PanelLinkUserInfo.diffPanel(
+                        commitSha: item.sourceBranch,
+                        workspaceId: workspaceId
+                    )
                 )
             } label: {
                 Label(
@@ -970,10 +983,10 @@ private struct QueueItemDetail: View {
                 NotificationCenter.default.post(
                     name: .openTerminalAttach,
                     object: nil,
-                    userInfo: [
-                        "sessionName": "refinery-\(rigId)",
-                        "workspaceId": workspaceId,
-                    ]
+                    userInfo: PanelLinkUserInfo.terminalAttach(
+                        sessionName: "refinery-\(rigId)",
+                        workspaceId: workspaceId
+                    )
                 )
             } label: {
                 Label(
@@ -1101,7 +1114,8 @@ private struct QueueItemDetail: View {
 
                     AgentNameLink(
                         name: reworkPolecat,
-                        agentAddress: reworkPolecat
+                        agentAddress: reworkPolecat,
+                        workspaceId: workspaceId
                     )
                     .accessibilityHint(Text(String(
                         localized: "refineryPanel.detail.viewAgent.hint",
@@ -1301,6 +1315,7 @@ private struct RefineryHealthBadge: View {
 
 private struct SkippedItemRow: View {
     let item: MergeQueueItem
+    let workspaceId: UUID
 
     var body: some View {
         HStack(spacing: GasTownSpacing.gridGap) {
@@ -1310,7 +1325,7 @@ private struct SkippedItemRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    BeadIdLink(beadId: item.id)
+                    BeadIdLink(beadId: item.id, workspaceId: workspaceId)
                     Text(item.title)
                         .font(GasTownTypography.label)
                         .foregroundColor(.secondary.opacity(0.6))
@@ -1318,7 +1333,8 @@ private struct SkippedItemRow: View {
                 }
                 AgentNameLink(
                     name: item.author,
-                    agentAddress: item.author
+                    agentAddress: item.author,
+                    workspaceId: workspaceId
                 )
             }
 
@@ -1348,7 +1364,10 @@ private struct HistoryEntryRow: View {
                         NotificationCenter.default.post(
                             name: .openDiffPanel,
                             object: nil,
-                            userInfo: ["commitSha": entry.id, "workspaceId": workspaceId]
+                            userInfo: PanelLinkUserInfo.diffPanel(
+                                commitSha: entry.id,
+                                workspaceId: workspaceId
+                            )
                         )
                     } label: {
                         Text(entry.id)
@@ -1371,10 +1390,11 @@ private struct HistoryEntryRow: View {
                 HStack(spacing: 4) {
                     AgentNameLink(
                         name: entry.author,
-                        agentAddress: entry.author
+                        agentAddress: entry.author,
+                        workspaceId: workspaceId
                     )
                     if let beadId = entry.beadId {
-                        BeadIdLink(beadId: beadId)
+                        BeadIdLink(beadId: beadId, workspaceId: workspaceId)
                     }
                 }
             }
@@ -1384,7 +1404,10 @@ private struct HistoryEntryRow: View {
         .padding(.horizontal, GasTownSpacing.rowPaddingH)
         .padding(.vertical, GasTownSpacing.rowPaddingV)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("\(entry.title), merged by \(entry.author)"))
+        .accessibilityLabel(Text(String(
+            localized: "refineryPanel.historyEntry.a11y.label",
+            defaultValue: "\(entry.title), merged by \(entry.author)"
+        )))
     }
 }
 

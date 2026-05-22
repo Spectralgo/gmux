@@ -11,6 +11,47 @@ extension Notification.Name {
     static let openDiagnosticsPanel = Notification.Name("com.cmux.openDiagnosticsPanel")
 }
 
+enum PanelLinkUserInfo {
+    static func agentProfile(agentAddress: String, workspaceId: UUID? = nil) -> [AnyHashable: Any] {
+        userInfo(["agentAddress": agentAddress], workspaceId: workspaceId)
+    }
+
+    static func beadInspector(beadId: String, workspaceId: UUID? = nil) -> [AnyHashable: Any] {
+        userInfo(["beadId": beadId], workspaceId: workspaceId)
+    }
+
+    static func diffPanel(commitSha: String, workspaceId: UUID? = nil) -> [AnyHashable: Any] {
+        userInfo(["commitSha": commitSha], workspaceId: workspaceId)
+    }
+
+    static func terminalAttach(sessionName: String, workspaceId: UUID? = nil) -> [AnyHashable: Any] {
+        userInfo(["sessionName": sessionName], workspaceId: workspaceId)
+    }
+
+    static func diagnosticsPanel(workspaceId: UUID? = nil) -> [AnyHashable: Any] {
+        userInfo([:], workspaceId: workspaceId)
+    }
+
+    static func refineryPanel(rigId: String? = nil, itemId: String? = nil, workspaceId: UUID? = nil) -> [AnyHashable: Any] {
+        var values: [String: Any] = [:]
+        if let rigId {
+            values["rigId"] = rigId
+        }
+        if let itemId {
+            values["itemId"] = itemId
+        }
+        return userInfo(values, workspaceId: workspaceId)
+    }
+
+    private static func userInfo(_ values: [String: Any], workspaceId: UUID?) -> [AnyHashable: Any] {
+        var userInfo = Dictionary(uniqueKeysWithValues: values.map { (AnyHashable($0.key), $0.value) })
+        if let workspaceId {
+            userInfo["workspaceId"] = workspaceId
+        }
+        return userInfo
+    }
+}
+
 /// Clickable agent name that navigates to Agent Profile.
 ///
 /// Posts ``Notification.Name/openAgentProfile`` with the agent address in
@@ -23,13 +64,17 @@ extension Notification.Name {
 struct AgentNameLink: View {
     let name: String
     let agentAddress: String
+    var workspaceId: UUID? = nil
 
     var body: some View {
         Button {
             NotificationCenter.default.post(
                 name: .openAgentProfile,
                 object: nil,
-                userInfo: ["agentAddress": agentAddress]
+                userInfo: PanelLinkUserInfo.agentProfile(
+                    agentAddress: agentAddress,
+                    workspaceId: workspaceId
+                )
             )
         } label: {
             Text(name)

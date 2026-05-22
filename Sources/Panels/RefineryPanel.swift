@@ -306,35 +306,45 @@ final class RefineryPanel: Panel, ObservableObject {
 
     /// Merge a single passed item.
     func mergeItem(_ id: String) {
-        runAction(label: "Merge \(id)") { adapter in
+        runAction(
+            label: String(localized: "refineryPanel.actionResult.mergeLabel", defaultValue: "Merge \(id)")
+        ) { adapter in
             await adapter.mergeItem(beadId: id)
         }
     }
 
     /// Merge all items with passing builds.
     func mergeAllPassed() {
-        runAction(label: "Merge all passed") { adapter in
+        runAction(
+            label: String(localized: "refineryPanel.actionResult.mergeAllLabel", defaultValue: "Merge all passed")
+        ) { adapter in
             await adapter.mergeAllPassed()
         }
     }
 
     /// Retry a failed build.
     func retryItem(_ id: String, clean: Bool = false) {
-        runAction(label: "Retry \(id)") { adapter in
+        runAction(
+            label: String(localized: "refineryPanel.actionResult.retryLabel", defaultValue: "Retry \(id)")
+        ) { adapter in
             await adapter.retryItem(beadId: id, clean: clean)
         }
     }
 
     /// Skip a failed item, unblocking the queue.
     func skipItem(_ id: String) {
-        runAction(label: "Skip \(id)") { adapter in
+        runAction(
+            label: String(localized: "refineryPanel.actionResult.skipLabel", defaultValue: "Skip \(id)")
+        ) { adapter in
             await adapter.skipItem(beadId: id)
         }
     }
 
     /// Force-merge despite failing build.
     func forceMergeItem(_ id: String) {
-        runAction(label: "Force merge \(id)") { adapter in
+        runAction(
+            label: String(localized: "refineryPanel.actionResult.forceMergeLabel", defaultValue: "Force merge \(id)")
+        ) { adapter in
             await adapter.forceMergeItem(beadId: id)
         }
     }
@@ -357,9 +367,15 @@ final class RefineryPanel: Panel, ObservableObject {
                 let message: String
                 switch error {
                 case .cliFailure(_, _, let stderr):
-                    message = "\(label) failed: \(String(stderr.prefix(120)))"
+                    message = String(
+                        localized: "refineryPanel.actionResult.failedWithOutput",
+                        defaultValue: "\(label) failed: \(String(stderr.prefix(120)))"
+                    )
                 default:
-                    message = "\(label) failed"
+                    message = String(
+                        localized: "refineryPanel.actionResult.failed",
+                        defaultValue: "\(label) failed"
+                    )
                 }
                 self.showActionResult(.failure(message))
             }

@@ -441,7 +441,9 @@ struct RefineryAdapter: Sendable {
         }
 
         let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .success(output.isEmpty ? "Retry queued for \(beadId)" : output)
+        return .success(output.isEmpty
+            ? String(localized: "refineryPanel.actionResult.retryQueued", defaultValue: "Retry queued for \(beadId)")
+            : output)
     }
 
     /// Skip a failed item, unblocking the queue.
@@ -457,7 +459,9 @@ struct RefineryAdapter: Sendable {
         }
 
         let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .success(output.isEmpty ? "Skipped \(beadId)" : output)
+        return .success(output.isEmpty
+            ? String(localized: "refineryPanel.actionResult.skipped", defaultValue: "Skipped \(beadId)")
+            : output)
     }
 
     /// Merge a single passed item.
@@ -473,7 +477,9 @@ struct RefineryAdapter: Sendable {
         }
 
         let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .success(output.isEmpty ? "Merge started for \(beadId)" : output)
+        return .success(output.isEmpty
+            ? String(localized: "refineryPanel.actionResult.mergeStarted", defaultValue: "Merge started for \(beadId)")
+            : output)
     }
 
     /// Merge all items with passing builds.
@@ -489,7 +495,9 @@ struct RefineryAdapter: Sendable {
         }
 
         let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .success(output.isEmpty ? "Merge all passed items queued" : output)
+        return .success(output.isEmpty
+            ? String(localized: "refineryPanel.actionResult.mergeAllQueued", defaultValue: "Merge all passed items queued")
+            : output)
     }
 
     /// Force-merge despite failing build.
@@ -505,7 +513,9 @@ struct RefineryAdapter: Sendable {
         }
 
         let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .success(output.isEmpty ? "Force merge started for \(beadId)" : output)
+        return .success(output.isEmpty
+            ? String(localized: "refineryPanel.actionResult.forceMergeStarted", defaultValue: "Force merge started for \(beadId)")
+            : output)
     }
 
     // MARK: - Helpers

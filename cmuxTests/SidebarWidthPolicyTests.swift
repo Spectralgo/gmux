@@ -15,3 +15,29 @@ final class SidebarWidthPolicyTests: XCTestCase {
         )
     }
 }
+
+final class PanelLinkUserInfoTests: XCTestCase {
+    func testAgentProfileLinkIncludesWorkspaceWhenProvided() {
+        let workspaceId = UUID()
+
+        let userInfo = PanelLinkUserInfo.agentProfile(
+            agentAddress: "gmux/polecats/chrome",
+            workspaceId: workspaceId
+        )
+
+        XCTAssertEqual(userInfo["agentAddress" as AnyHashable] as? String, "gmux/polecats/chrome")
+        XCTAssertEqual(userInfo["workspaceId" as AnyHashable] as? UUID, workspaceId)
+    }
+
+    func testBeadInspectorLinkIncludesWorkspaceWhenProvided() {
+        let workspaceId = UUID()
+
+        let userInfo = PanelLinkUserInfo.beadInspector(
+            beadId: "gm-ebc",
+            workspaceId: workspaceId
+        )
+
+        XCTAssertEqual(userInfo["beadId" as AnyHashable] as? String, "gm-ebc")
+        XCTAssertEqual(userInfo["workspaceId" as AnyHashable] as? UUID, workspaceId)
+    }
+}

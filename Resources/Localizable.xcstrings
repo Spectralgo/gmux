@@ -87255,6 +87255,1621 @@
           }
         }
       }
+    },
+    "refinery.mqList.parseFailed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Expected JSON array from 'gt mq list %@ --json'. Got: %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "'gt mq list %@ --json' から JSON 配列が返る必要があります。実際: %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.action.merge": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.action.merge.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.action.retry": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.action.retry.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry build for %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ のビルドを再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.action.skip": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skip"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "スキップ"
+                }
+            }
+        }
+    },
+    "refineryPanel.action.skip.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skip %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をスキップ"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.failed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ failed"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ に失敗しました"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.failedWithOutput": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@ failed: %2$@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@ に失敗しました: %2$@"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.forceMergeLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Force merge %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ を強制マージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.forceMergeStarted": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Force merge started for %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ の強制マージを開始しました"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.mergeAllLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge all passed"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功済みをすべてマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.mergeAllQueued": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge all passed items queued"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功済み項目すべてのマージをキューに追加しました"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.mergeLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.mergeStarted": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge started for %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ のマージを開始しました"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.retryLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ を再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.retryQueued": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry queued for %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ の再試行をキューに追加しました"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.skipLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skip %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をスキップ"
+                }
+            }
+        }
+    },
+    "refineryPanel.actionResult.skipped": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skipped %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をスキップしました"
+                }
+            }
+        }
+    },
+    "refineryPanel.cancel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Cancel"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "キャンセル"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.branch": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Branch:"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ブランチ:"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.buildLog": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Build Log"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ビルドログ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.buildLogLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Build log for %1$@, %2$lld lines"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@ のビルドログ、%2$lld 行"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.conflictFiles": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lld files in conflict"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "競合しているファイル %lld 件"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.conflictResolution": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Conflict resolution by:"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "競合解決:"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.errorsOnly": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Errors Only"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "エラーのみ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.fileCount": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lld files changed"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "変更ファイル %lld 件"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.forceMerge": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Force Merge"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "強制マージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.forceMerge.hint": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merges without a passing build. Use with caution."
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功したビルドなしでマージします。注意して使用してください。"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.forceMerge.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Force merge %@ without passing build"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功したビルドなしで %@ を強制マージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.loadingLog": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Loading build log..."
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ビルドログを読み込み中..."
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.logFailed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Failed to load build log: %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ビルドログを読み込めませんでした: %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.merge": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.merge.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.noErrors": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "No error lines found"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "エラー行は見つかりませんでした"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.openTerminal": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Open in Terminal"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ターミナルで開く"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.retry": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.retry.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry build for %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ のビルドを再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.retryClean": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry Clean"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "クリーン再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.retryClean.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry clean build for %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ のクリーンビルドを再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.reworkLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ has conflicts, being resolved by %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ に競合があります。%@ が解決中です"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.skip": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skip"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "スキップ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.skip.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skip %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%@ をスキップ"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.submittedBy": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Originally submitted by: %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "最初の提出者: %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.viewAgent.hint": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Opens the agent profile for the polecat resolving this conflict."
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "この競合を解決しているポールキャットのエージェントプロフィールを開きます。"
+                }
+            }
+        }
+    },
+    "refineryPanel.detail.viewDiff": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "View Diff"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "差分を表示"
+                }
+            }
+        }
+    },
+    "refineryPanel.elapsed.days": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lldd ago"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lld日前"
+                }
+            }
+        }
+    },
+    "refineryPanel.elapsed.hours": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lldh ago"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lld時間前"
+                }
+            }
+        }
+    },
+    "refineryPanel.elapsed.minutes": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lldm ago"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%lld分前"
+                }
+            }
+        }
+    },
+    "refineryPanel.elapsed.now": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "just now"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "たった今"
+                }
+            }
+        }
+    },
+    "refineryPanel.emptyQueue": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge queue is empty"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージキューは空です"
+                }
+            }
+        }
+    },
+    "refineryPanel.error.cliFailed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@ failed (exit %2$lld): %3$@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@ が失敗しました（終了コード %2$lld）: %3$@"
+                }
+            }
+        }
+    },
+    "refineryPanel.error.gtNotFound": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Gas Town CLI (gt) not found"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Gas Town CLI（gt）が見つかりません"
+                }
+            }
+        }
+    },
+    "refineryPanel.error.parseFailed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Failed to parse merge queue data: %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージキューデータを解析できませんでした: %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.error.refineryNotFound": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Refinery not found for rig '%@'"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "リグ '%@' の Refinery が見つかりません"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.building": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Building"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ビルド中"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.failed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Failed"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "失敗"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.mergeReady": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Ready"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "準備完了"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.merged": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merged"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージ済み"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.polecatDone": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Queued"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "キュー済み"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.rework": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Rework"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "修正"
+                }
+            }
+        }
+    },
+    "refineryPanel.flow.stageLabel": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@: %2$lld items"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@: %2$lld 件"
+                }
+            }
+        }
+    },
+    "refineryPanel.forceMerge.confirm.action": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Force Merge"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "強制マージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.forceMerge.confirm.title": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Force Merge Without Passing Build?"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功したビルドなしで強制マージしますか？"
+                }
+            }
+        }
+    },
+    "refineryPanel.header.title": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge Pipeline"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージパイプライン"
+                }
+            }
+        }
+    },
+    "refineryPanel.health.error": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Error"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "エラー"
+                }
+            }
+        }
+    },
+    "refineryPanel.health.idle": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Idle"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "アイドル"
+                }
+            }
+        }
+    },
+    "refineryPanel.health.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Refinery status: %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Refinery ステータス: %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.health.patrol": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Patrol"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "監視中"
+                }
+            }
+        }
+    },
+    "refineryPanel.health.processing": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Processing"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "処理中"
+                }
+            }
+        }
+    },
+    "refineryPanel.historyEntry.a11y.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@, merged by %2$@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@、%2$@ がマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.loading": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Loading merge pipeline..."
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージパイプラインを読み込み中..."
+                }
+            }
+        }
+    },
+    "refineryPanel.mergeAll.button": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge All Passed (%lld)"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功済みをすべてマージ（%lld）"
+                }
+            }
+        }
+    },
+    "refineryPanel.mergeAll.confirm.action": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge All"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "すべてマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.mergeAll.confirm.title": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge All Passed Items?"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功済み項目をすべてマージしますか？"
+                }
+            }
+        }
+    },
+    "refineryPanel.mergeAll.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge all %lld passed items"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "成功済み項目 %lld 件をすべてマージ"
+                }
+            }
+        }
+    },
+    "refineryPanel.openDiagnostics": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Open Diagnostics"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "診断を開く"
+                }
+            }
+        }
+    },
+    "refineryPanel.queueItem.a11y.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@, by %2$@, stage %3$@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "%1$@、%2$@、ステージ %3$@"
+                }
+            }
+        }
+    },
+    "refineryPanel.refresh": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Refresh"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "更新"
+                }
+            }
+        }
+    },
+    "refineryPanel.retry": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Retry"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "再試行"
+                }
+            }
+        }
+    },
+    "refineryPanel.reworkBy": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Rework by: %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "修正担当: %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.rigSelector.label": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Select rig, currently %@"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "リグを選択、現在 %@"
+                }
+            }
+        }
+    },
+    "refineryPanel.section.active": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Active"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "アクティブ"
+                }
+            }
+        }
+    },
+    "refineryPanel.section.attention": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Needs Attention"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "要対応"
+                }
+            }
+        }
+    },
+    "refineryPanel.section.history": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Recent Merges (%lld)"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "最近のマージ（%lld）"
+                }
+            }
+        }
+    },
+    "refineryPanel.section.skipped": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skipped (%lld)"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "スキップ済み（%lld）"
+                }
+            }
+        }
+    },
+    "refineryPanel.section.waiting": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Waiting"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "待機中"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.building": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Building"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "ビルド中"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.failed": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Failed"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "失敗"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.mergeReady": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Ready"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "準備完了"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.merged": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merged"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージ済み"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.polecatDone": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Queued"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "キュー済み"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.rework": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Rework"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "修正"
+                }
+            }
+        }
+    },
+    "refineryPanel.stage.skipped": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Skipped"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "スキップ済み"
+                }
+            }
+        }
+    },
+    "refineryPanel.title": {
+        "extractionState": "manual",
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "Merge Pipeline"
+                }
+            },
+            "ja": {
+                "stringUnit": {
+                    "state": "translated",
+                    "value": "マージパイプライン"
+                }
+            }
+        }
     }
   }
 }
